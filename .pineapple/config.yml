@@ -29,7 +29,7 @@ tracker: github-issues
 
 tracker_config:
   backend: gh
-  canonical_repo: leo-api          # tracker issues live in the backend repo
+  canonical_repo: leo-workstation  # issues live alongside code + PRs in this repo (2026-06-29)
 
 # Branch naming for workers. {issue} = issue number; {slug} = kebab from title.
 branch_format: "pin-{issue}/{slug}"

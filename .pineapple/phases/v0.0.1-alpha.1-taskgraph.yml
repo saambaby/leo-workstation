@@ -3,7 +3,7 @@ kind: TaskGraph
 metadata:
   project: leo-workstation
   phase: v0.0.1-alpha.1
-  status: awaiting-approval   # orchestrate changes to: approved | running | completed
+  status: approved            # human-approved 2026-06-29; orchestrate -> running | completed
   created: 2026-06-29
 
 waves:
