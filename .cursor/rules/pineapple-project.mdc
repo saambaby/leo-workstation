@@ -1,0 +1,23 @@
+---
+description: Pineapple project rules — leo-workstation client invariants and doc paths
+alwaysApply: true
+---
+
+# Project: leo-workstation
+
+Flutter ops client — interpreter, customer, dispatcher workstations in one app.
+
+## Read before editing
+
+- `docs/release-plan.md` / `docs/client-map.md` — what to build
+- `docs/architecture-overview.md` — MVVM + Riverpod
+- `docs/platform-references.md` — links to `../leo-api` (never copy platform docs)
+- `.pineapple/features/` — feature specs
+- `.pineapple/invariants-client.md` — INV-CLIENT-* rules
+- `.pineapple/phases/INDEX.md` — active phase
+
+## Do NOT
+
+- Build admin CRUD/reports in Flutter (BD7)
+- Cross-import feature `data/` layers
+- Persist PHI on device

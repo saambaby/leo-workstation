@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leo — Workstation Flow Mocks (full inventory)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   LEO WORKSTATION — full flow gallery
+   Companion to leo-ui.html (Batch 1). Tokens shared; screens are net-new:
+   the rest of the leo-workstation (Flutter) inventory across P2–P6.
+   Source map: docs/architecture-reference.md §6 E/F/G/H/M/N
+   ============================================================================ */
+:root {
+  --black-900: #0A0A0B; --black-800: #111114; --black-700: #18181D;
+  --black-600: #1E1E25; --black-500: #26262F; --black-400: #32323E;
+  --black-300: #4A4A5A; --black-200: #6E6E82; --black-100: #9E9EB5; --black-50: #C8C8D8;
+
+  --web-canvas: #F4F5F7; --web-surface: #FFFFFF; --web-border: #E4E6EB;
+  --web-muted: #7C8494; --web-text: #14161A; --web-text-2: #454C5C;
+
+  --signal-live:  #22C55E; --signal-warn: #F59E0B; --signal-error: #EF4444;
+  --signal-info:  #94A3B8; --signal-white: #F8F8FA;
+  --accent: #E8E8F0; --accent-dim: rgba(232,232,240,0.12);
+
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-2xl: 24px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: var(--font-body); background: #0E0E12; color: var(--signal-white); font-size: 13px; }
+
+.leo-icon { width: 1em; height: 1em; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+
+/* ── App shell / nav switcher (shared with leo-ui.html) ───────────────────── */
+.shell { display: flex; flex-direction: column; height: 100vh; }
+.shell-nav {
+  background: var(--black-800); border-bottom: 1px solid var(--black-600);
+  display: flex; align-items: center; padding: 0 16px; height: 44px; gap: 2px;
+  flex-shrink: 0; z-index: 100; overflow-x: auto;
+}
+.shell-nav::-webkit-scrollbar { height: 0; }
+.nav-logo {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  color: var(--signal-white); letter-spacing: 0.06em;
+  margin-right: 8px; padding-right: 12px; border-right: 1px solid var(--black-500);
+  white-space: nowrap;
+}
+.nav-logo span { color: var(--black-200); font-weight: 400; }
+.nav-group { display: flex; align-items: center; gap: 2px; }
+.nav-group-label {
+  font-size: 10px; font-family: var(--font-mono); color: var(--black-300);
+  letter-spacing: 0.1em; text-transform: uppercase; padding: 0 6px; margin-left: 2px; white-space: nowrap;
+}
+.nav-btn {
+  font-family: var(--font-body); font-size: 11px; font-weight: 400; color: var(--black-200);
+  background: none; border: none; cursor: pointer; padding: 5px 9px; border-radius: var(--r-sm);
+  transition: all 0.12s; white-space: nowrap;
+}
+.nav-btn:hover { background: var(--black-600); color: var(--signal-white); }
+.nav-btn.active { background: var(--black-500); color: var(--signal-white); font-weight: 500; }
+.nav-sep { width: 1px; height: 20px; background: var(--black-600); margin: 0 6px; flex-shrink: 0; }
+
+.phase-tag { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 9px; padding: 2px 5px; border-radius: 3px; margin-left: 4px; font-weight: 500; }
+.p1 { background: rgba(148,163,184,0.15); color: #94A3B8; }
+.p2 { background: rgba(34,197,94,0.12); color: #22C55E; }
+.p3 { background: rgba(245,158,11,0.12); color: #F59E0B; }
+.p4 { background: rgba(168,139,250,0.14); color: #A78BFA; }
+.p5 { background: rgba(96,165,250,0.14); color: #60A5FA; }
+.p6 { background: rgba(244,114,182,0.14); color: #F472B6; }
+
+.screen { display: none; flex: 1; overflow: hidden; }
+.screen.active { display: flex; }
+
+/* ── Workstation app frame: left rail + content ───────────────────────────── */
+.ws { width: 100%; height: 100%; background: var(--black-900); display: grid; grid-template-columns: 232px 1fr; overflow: hidden; }
+.ws.no-rail { grid-template-columns: 1fr; }
+.ws-rail { background: var(--black-800); border-right: 1px solid var(--black-600); display: flex; flex-direction: column; padding: 14px 0; }
+.ws-rail-logo { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--signal-white); letter-spacing: 0.06em; padding: 0 18px 12px; }
+.ws-rail-logo span { color: var(--black-300); font-weight: 400; font-size: 11px; }
+.ws-rail-section { font-size: 9px; font-family: var(--font-mono); color: var(--black-300); text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 18px 6px; }
+.ws-rail-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 18px; margin: 0 8px;
+  border-radius: var(--r-md); font-size: 13px; color: var(--black-100); cursor: pointer; transition: all 0.12s;
+}
+.ws-rail-item:hover { background: var(--black-700); color: var(--signal-white); }
+.ws-rail-item.active { background: var(--black-600); color: var(--signal-white); }
+.ws-rail-item .leo-icon { font-size: 16px; color: inherit; }
+.ws-rail-badge { margin-left: auto; font-size: 10px; font-family: var(--font-mono); background: rgba(245,158,11,0.15); color: var(--signal-warn); padding: 1px 6px; border-radius: 10px; }
+.ws-rail-badge.live { background: rgba(34,197,94,0.15); color: var(--signal-live); }
+.ws-rail-spacer { flex: 1; }
+.ws-rail-foot { padding: 10px 18px 0; border-top: 1px solid var(--black-600); margin-top: 10px; }
+.ws-rail-link { display: flex; align-items: center; gap: 8px; font-size: 11px; font-family: var(--font-mono); color: var(--black-200); cursor: pointer; padding: 6px 0; }
+.ws-rail-link:hover { color: var(--signal-white); }
+.ws-rail-status { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+.ws-rail-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--signal-live); box-shadow: 0 0 8px var(--signal-live); }
+.ws-rail-status-name { font-size: 12px; color: var(--signal-white); }
+.ws-rail-status-role { font-size: 9px; font-family: var(--font-mono); color: var(--black-300); }
+
+/* content area */
+.ws-content { display: flex; flex-direction: column; overflow: hidden; }
+.ws-header { height: 56px; border-bottom: 1px solid var(--black-600); display: flex; align-items: center; gap: 12px; padding: 0 22px; flex-shrink: 0; background: var(--black-900); }
+.ws-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; color: var(--signal-white); }
+.ws-route { font-size: 10px; font-family: var(--font-mono); color: var(--black-300); }
+.ws-header-spacer { flex: 1; }
+.ws-body { flex: 1; overflow-y: auto; padding: 22px; }
+.ws-body::-webkit-scrollbar { width: 8px; }
+.ws-body::-webkit-scrollbar-thumb { background: var(--black-600); border-radius: 8px; }
+
+/* ── Generic primitives ───────────────────────────────────────────────────── */
+.card { background: var(--black-800); border: 1px solid var(--black-600); border-radius: var(--r-lg); }
+.card-pad { padding: 16px; }
+.muted { color: var(--black-200); }
+.mono { font-family: var(--font-mono); }
+.row { display: flex; align-items: center; gap: 10px; }
+.col { display: flex; flex-direction: column; }
+.between { justify-content: space-between; }
+.grow { flex: 1; }
+
+.chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; padding: 3px 9px; border-radius: 20px; border: 1px solid var(--black-500); color: var(--black-100); background: var(--black-700); white-space: nowrap; }
+.chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--black-300); }
+.chip.live   { background: rgba(34,197,94,0.1);  color: var(--signal-live);  border-color: rgba(34,197,94,0.25); }
+.chip.live .dot { background: var(--signal-live); box-shadow: 0 0 6px var(--signal-live); }
+.chip.warn   { background: rgba(245,158,11,0.1); color: var(--signal-warn);  border-color: rgba(245,158,11,0.25); }
+.chip.warn .dot { background: var(--signal-warn); }
+.chip.error  { background: rgba(239,68,68,0.1);  color: var(--signal-error); border-color: rgba(239,68,68,0.25); }
+.chip.error .dot { background: var(--signal-error); }
+.chip.info   { background: rgba(148,163,184,0.1);color: var(--signal-info);  border-color: rgba(148,163,184,0.2); }
+
+.btn { font-family: var(--font-display); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; padding: 9px 16px; border-radius: var(--r-md); cursor: pointer; border: 1px solid var(--black-500); background: var(--black-700); color: var(--signal-white); transition: all 0.12s; }
+.btn:hover { border-color: var(--black-300); }
+.btn.primary { background: var(--signal-white); color: var(--black-900); border-color: var(--signal-white); }
+.btn.primary:hover { background: #E8E8F0; }
+.btn.accept { background: var(--signal-live); border-color: var(--signal-live); color: #06210F; }
+.btn.danger { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: var(--signal-error); }
+.btn.ghost { background: transparent; }
+.btn.sm { padding: 5px 10px; font-size: 11px; }
+
+.field-label { font-size: 11px; font-weight: 500; color: var(--black-100); margin-bottom: 6px; display: block; letter-spacing: 0.02em; }
+.input { width: 100%; background: var(--black-700); border: 1px solid var(--black-500); border-radius: var(--r-md); padding: 9px 11px; font-family: var(--font-body); font-size: 13px; color: var(--signal-white); outline: none; transition: border-color 0.12s; }
+.input:focus { border-color: var(--black-300); }
+.input::placeholder { color: var(--black-300); }
+select.input { appearance: none; }
+
+.section-label { font-size: 10px; font-family: var(--font-mono); color: var(--black-300); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+
+/* status pill for session state machine */
+.state-pill { font-family: var(--font-mono); font-size: 9px; padding: 2px 7px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; text-transform: lowercase; }
+.st-requested { background: rgba(148,163,184,0.12); color: var(--signal-info); }
+.st-routing   { background: rgba(148,163,184,0.12); color: var(--signal-info); }
+.st-ringing   { background: rgba(245,158,11,0.12); color: var(--signal-warn); }
+.st-connected { background: rgba(34,197,94,0.12); color: var(--signal-live); }
+.st-in_session{ background: rgba(34,197,94,0.14); color: var(--signal-live); }
+.st-queued    { background: rgba(245,158,11,0.12); color: var(--signal-warn); }
+.st-completed { background: rgba(148,163,184,0.12); color: var(--black-100); }
+.st-failed    { background: rgba(239,68,68,0.12); color: var(--signal-error); }
+.st-abandoned { background: rgba(239,68,68,0.1); color: var(--signal-error); }
+.st-scheduled { background: rgba(96,165,250,0.12); color: #60A5FA; }
+
+/* empty state */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 48px 20px; color: var(--black-300); gap: 8px; }
+.empty .leo-icon { font-size: 30px; opacity: 0.5; }
+.empty-title { font-family: var(--font-display); font-size: 14px; color: var(--black-100); }
+.empty-sub { font-size: 11px; font-family: var(--font-mono); }
+
+/* toast */
+.toast { display: flex; align-items: center; gap: 10px; background: var(--black-700); border: 1px solid var(--black-500); border-left: 3px solid var(--signal-info); border-radius: var(--r-md); padding: 11px 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.toast.taken { border-left-color: var(--signal-warn); }
+.toast.success { border-left-color: var(--signal-live); }
+.toast-title { font-size: 12px; font-weight: 500; color: var(--signal-white); }
+.toast-sub { font-size: 10px; font-family: var(--font-mono); color: var(--black-300); margin-top: 2px; }
+
+/* modal overlay */
+.modal-scrim { position: absolute; inset: 0; background: rgba(5,5,8,0.72); display: flex; align-items: center; justify-content: center; padding: 24px; backdrop-filter: blur(2px); }
+.modal { width: 420px; background: var(--black-800); border: 1px solid var(--black-500); border-radius: var(--r-xl); overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+.modal-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--black-600); }
+.modal-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+.modal-sub { font-size: 11px; font-family: var(--font-mono); color: var(--black-300); margin-top: 4px; }
+.modal-body { padding: 18px 20px; }
+.modal-foot { padding: 14px 20px; border-top: 1px solid var(--black-600); display: flex; gap: 8px; justify-content: flex-end; }
+
+/* note / callout */
+.note { display: flex; gap: 8px; align-items: flex-start; border-radius: var(--r-md); padding: 10px 12px; font-size: 11px; line-height: 1.5; }
+.note.warn { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); color: var(--signal-warn); }
+.note.info { background: rgba(148,163,184,0.06); border: 1px solid rgba(148,163,184,0.16); color: var(--signal-info); }
+.note.live { background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2); color: var(--signal-live); }
+.note .leo-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+/* spec footnote shown under each screen */
+.spec-foot { margin-top: 18px; font-size: 10px; font-family: var(--font-mono); color: var(--black-300); line-height: 1.6; border-top: 1px dashed var(--black-600); padding-top: 12px; }
+.spec-foot b { color: var(--black-100); font-weight: 500; }
+
+/* avatar */
+.avatar { border-radius: 50%; background: var(--black-600); border: 1px solid var(--black-400); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; color: var(--black-100); flex-shrink: 0; }
+
+/* lists / rows */
+.list-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--black-600); border-radius: var(--r-md); background: var(--black-800); margin-bottom: 8px; }
+.list-row:hover { border-color: var(--black-400); }
+
+/* KPI cards */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.kpi { background: var(--black-800); border: 1px solid var(--black-600); border-radius: var(--r-lg); padding: 14px; }
+.kpi-label { font-size: 10px; font-family: var(--font-mono); color: var(--black-300); text-transform: uppercase; letter-spacing: 0.06em; }
+.kpi-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--signal-white); margin-top: 6px; }
+.kpi-delta { font-size: 10px; font-family: var(--font-mono); margin-top: 4px; }
+.kpi-delta.up { color: var(--signal-live); }
+.kpi-delta.down { color: var(--signal-error); }
+
+/* video tiles (reused idiom from leo-ui in-session) */
+.vstage { background: #050508; border-radius: var(--r-lg); position: relative; overflow: hidden; }
+.vtile { background: var(--black-800); border: 1px solid var(--black-600); border-radius: var(--r-md); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.vtile-person { width: 48px; height: 48px; border-radius: 50%; background: var(--black-600); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--black-300); }
+.vtile-label { position: absolute; bottom: 8px; left: 10px; font-size: 10px; font-family: var(--font-mono); color: rgba(255,255,255,0.82); background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; }
+.vtile-role { position: absolute; top: 8px; left: 8px; font-size: 9px; font-family: var(--font-mono); color: var(--black-100); background: rgba(0,0,0,0.5); padding: 2px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+.speaking-ring { position: absolute; inset: 0; border-radius: var(--r-md); border: 2px solid rgba(34,197,94,0.5); pointer-events: none; }
+.ctrl-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--black-700); border: 1px solid var(--black-500); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.12s; color: var(--signal-white); }
+.ctrl-btn:hover { background: var(--black-600); border-color: var(--black-300); }
+.ctrl-btn.end { width: 48px; height: 48px; background: var(--signal-error); border-color: var(--signal-error); }
+.ctrl-btn.on { background: var(--black-500); }
+.ctrl-btn.danger-icon { color: var(--signal-error); }
+
+/* captions / RTT bar (deaf-first) */
+.caption-bar { background: rgba(0,0,0,0.78); border-top: 1px solid var(--black-600); padding: 12px 18px; }
+.caption-line { font-size: 15px; line-height: 1.5; }
+.caption-speaker { font-family: var(--font-mono); font-size: 10px; color: var(--signal-live); margin-right: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+.rtt-cursor { display: inline-block; width: 2px; height: 15px; background: var(--signal-live); margin-left: 2px; vertical-align: middle; animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* calendar */
+.cal { display: grid; grid-template-columns: 64px repeat(7, 1fr); border: 1px solid var(--black-600); border-radius: var(--r-lg); overflow: hidden; }
+.cal-head { background: var(--black-800); border-bottom: 1px solid var(--black-600); padding: 8px 6px; text-align: center; font-size: 10px; font-family: var(--font-mono); color: var(--black-200); }
+.cal-time { background: var(--black-800); border-right: 1px solid var(--black-600); padding: 6px; font-size: 9px; font-family: var(--font-mono); color: var(--black-300); text-align: right; }
+.cal-cell { border-right: 1px solid var(--black-700); border-bottom: 1px solid var(--black-700); min-height: 34px; position: relative; }
+.cal-block { position: absolute; inset: 2px; border-radius: var(--r-sm); font-size: 9px; font-family: var(--font-mono); padding: 3px 5px; line-height: 1.3; }
+.cal-block.avail { background: rgba(34,197,94,0.14); border: 1px solid rgba(34,197,94,0.3); color: var(--signal-live); }
+.cal-block.booked { background: rgba(96,165,250,0.16); border: 1px solid rgba(96,165,250,0.34); color: #60A5FA; }
+.cal-block.exception { background: rgba(239,68,68,0.1); border: 1px dashed rgba(239,68,68,0.3); color: var(--signal-error); }
+
+/* board columns (dispatch) */
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(248px, 1fr); gap: 12px; height: 100%; }
+.board-col { background: var(--black-850, #131318); border: 1px solid var(--black-600); border-radius: var(--r-lg); display: flex; flex-direction: column; overflow: hidden; }
+.board-col-head { padding: 11px 13px; border-bottom: 1px solid var(--black-600); display: flex; align-items: center; gap: 8px; }
+.board-col-title { font-family: var(--font-display); font-size: 12px; font-weight: 600; }
+.board-col-count { font-size: 10px; font-family: var(--font-mono); color: var(--black-300); background: var(--black-700); padding: 1px 7px; border-radius: 10px; }
+.board-col-body { padding: 10px; overflow-y: auto; flex: 1; }
+.disp-card { background: var(--black-800); border: 1px solid var(--black-600); border-radius: var(--r-md); padding: 11px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.12s; }
+.disp-card:hover { border-color: var(--black-400); }
+.disp-card.urgent { border-left: 3px solid var(--signal-error); }
+.disp-lang { font-family: var(--font-display); font-size: 13px; font-weight: 600; }
+.disp-meta { font-size: 10px; font-family: var(--font-mono); color: var(--black-300); margin: 4px 0 8px; }
+
+/* drawer */
+.drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 380px; background: var(--black-800); border-left: 1px solid var(--black-500); box-shadow: -16px 0 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
+.drawer-head { padding: 16px 18px; border-bottom: 1px solid var(--black-600); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
+.drawer-foot { padding: 14px 18px; border-top: 1px solid var(--black-600); }
+.kv { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--black-700); font-size: 12px; }
+.kv:last-child { border-bottom: none; }
+.kv-k { color: var(--black-300); font-family: var(--font-mono); font-size: 11px; }
+.kv-v { color: var(--signal-white); }
+
+/* chat (Ask Leo) */
+.chat-wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; height: 100%; }
+.chat-stream { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 12px; }
+.bubble { max-width: 78%; padding: 11px 14px; border-radius: var(--r-lg); font-size: 13px; line-height: 1.55; }
+.bubble.user { align-self: flex-end; background: var(--signal-white); color: var(--black-900); border-bottom-right-radius: 4px; }
+.bubble.leo { align-self: flex-start; background: var(--black-700); border: 1px solid var(--black-600); border-bottom-left-radius: 4px; }
+.bubble-actor { font-size: 9px; font-family: var(--font-mono); color: var(--black-300); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.08em; }
+.leo-action-card { margin-top: 10px; background: var(--black-800); border: 1px solid var(--black-500); border-radius: var(--r-md); padding: 11px; }
+.chat-input-row { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--black-600); }
+
+/* segmented control */
+.seg { display: inline-flex; background: var(--black-700); border: 1px solid var(--black-600); border-radius: var(--r-md); padding: 2px; }
+.seg-opt { padding: 5px 12px; font-size: 11px; font-family: var(--font-mono); color: var(--black-200); border-radius: 6px; cursor: pointer; border: none; background: none; }
+.seg-opt.active { background: var(--black-500); color: var(--signal-white); }
+
+/* wizard step rail */
+.wiz-steps { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+.wiz-step { display: flex; align-items: center; gap: 7px; font-size: 11px; font-family: var(--font-mono); color: var(--black-300); }
+.wiz-step.active { color: var(--signal-white); }
+.wiz-step.done { color: var(--signal-live); }
+.wiz-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--black-700); border: 1px solid var(--black-500); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--black-300); }
+.wiz-step.active .wiz-dot { background: var(--signal-white); color: var(--black-900); border-color: var(--signal-white); }
+.wiz-step.done .wiz-dot { background: var(--signal-live); color: #06210F; border-color: var(--signal-live); }
+.wiz-line { width: 26px; height: 1px; background: var(--black-600); }
+
+/* selectable option card */
+.opt-card { background: var(--black-700); border: 1px solid var(--black-500); border-radius: var(--r-md); padding: 14px; cursor: pointer; transition: all 0.12s; }
+.opt-card:hover { border-color: var(--black-300); }
+.opt-card.selected { border-color: var(--signal-white); background: var(--black-600); }
+.opt-card.disabled { opacity: 0.45; cursor: not-allowed; }
+.opt-icon { width: 34px; height: 34px; border-radius: var(--r-md); background: var(--black-600); display: flex; align-items: center; justify-content: center; font-size: 17px; margin-bottom: 9px; }
+
+/* ── Auth (dark, client+workstation surface) ──────────────────────────────── */
+.auth-stage { width: 100%; height: 100%; background: var(--black-900); display: flex; align-items: center; justify-content: center; position: relative; overflow-y: auto; padding: 24px; }
+.auth-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+.auth-card { width: 420px; background: var(--black-800); border: 1px solid var(--black-600); border-radius: var(--r-xl); padding: 32px 30px; position: relative; z-index: 1; }
+.auth-card.wide { width: 460px; }
+.auth-logo { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: 0.04em; color: var(--signal-white); }
+.auth-logo span { color: var(--black-300); font-weight: 400; }
+.auth-sub { font-size: 11px; font-family: var(--font-mono); color: var(--black-200); margin: 4px 0 24px; letter-spacing: 0.03em; }
+.divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: var(--black-300); font-size: 11px; font-family: var(--font-mono); }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--black-600); }
+.otp-row { display: flex; gap: 8px; margin: 14px 0; }
+.otp-cell { width: 46px; height: 54px; text-align: center; background: var(--black-700); border: 1px solid var(--black-500); border-radius: var(--r-md); font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--signal-white); outline: none; }
+.otp-cell:focus { border-color: var(--black-200); background: var(--black-600); }
+.otp-cell.filled { border-color: var(--black-400); }
+.link { color: var(--black-100); font-size: 11px; text-decoration: none; cursor: pointer; }
+.link:hover { color: var(--signal-white); }
+
+/* ── Light web onboarding surface (leo-web admin) ─────────────────────────── */
+.web-stage { width: 100%; height: 100%; background: var(--web-canvas); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 30px 16px; color: var(--web-text); }
+.web-card { width: 620px; background: var(--web-surface); border: 1px solid var(--web-border); border-radius: var(--r-xl); overflow: hidden; }
+.web-head { padding: 22px 26px; border-bottom: 1px solid var(--web-border); }
+.web-body { padding: 22px 26px; }
+.web-foot { padding: 16px 26px; border-top: 1px solid var(--web-border); display: flex; justify-content: space-between; align-items: center; }
+.web-logo { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--web-text); }
+.web-logo span { color: var(--web-muted); font-weight: 400; }
+.web-label { display: block; font-size: 12px; font-weight: 500; color: var(--web-text-2); margin-bottom: 6px; }
+.web-input { width: 100%; background: #fff; border: 1px solid var(--web-border); border-radius: var(--r-md); padding: 9px 12px; font-family: var(--font-body); font-size: 13px; color: var(--web-text); outline: none; }
+.web-input:focus { border-color: #9CA3AF; }
+.web-input::placeholder { color: #B0B8C8; }
+select.web-input { appearance: none; }
+.web-field { margin-bottom: 16px; }
+.web-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.web-section-label { font-size: 10px; font-family: var(--font-mono); color: var(--web-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+.web-step { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+.web-step-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--web-muted); font-family: var(--font-mono); }
+.web-step-item.active { color: var(--web-text); font-weight: 500; }
+.web-step-item.done { color: var(--signal-live); }
+.web-step-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--web-canvas); border: 1px solid var(--web-border); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--web-muted); font-family: var(--font-mono); }
+.web-step-item.active .web-step-dot { background: var(--web-text); color: #fff; border-color: var(--web-text); }
+.web-step-item.done .web-step-dot { background: var(--signal-live); color: #fff; border-color: var(--signal-live); }
+.web-step-line { width: 22px; height: 1px; background: var(--web-border); }
+.web-btn { padding: 9px 18px; border-radius: var(--r-md); font-family: var(--font-display); font-weight: 600; font-size: 12px; cursor: pointer; border: 1px solid var(--web-border); background: #fff; color: var(--web-text); }
+.web-btn.primary { background: var(--web-text); color: #fff; border-color: var(--web-text); }
+.web-btn.ghost { background: transparent; }
+.web-note { display: flex; gap: 8px; align-items: flex-start; background: var(--web-canvas); border: 1px solid var(--web-border); border-radius: var(--r-md); padding: 11px 13px; font-size: 11px; color: var(--web-text-2); line-height: 1.5; }
+.web-tag-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.web-tag { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--web-border); background: #fff; font-size: 12px; cursor: pointer; color: var(--web-text-2); }
+.web-tag.on { background: var(--web-text); color: #fff; border-color: var(--web-text); }
+.web-row-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--web-border); }
+.web-row-item:last-child { border-bottom: none; }
+.web-spec-foot { margin-top: 16px; font-size: 10px; font-family: var(--font-mono); color: var(--web-muted); line-height: 1.6; border-top: 1px dashed var(--web-border); padding-top: 12px; }
+.web-spec-foot b { color: var(--web-text-2); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="shell-nav">
+    <div class="nav-logo">LEO <span>· workstation</span></div>
+
+    <div class="nav-group">
+      <span class="nav-group-label">Entry</span>
+      <button class="nav-btn active" onclick="show('a-login')">Sign in <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('a-forgot')">Forgot pw <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('a-reset')">Reset pw <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('a-mfa')">MFA <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('a-mfa-enroll')">MFA enroll <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('a-signup')">Signup <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('a-verify')">Verify <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('a-invite')">Invite <span class="phase-tag p1">P1</span></button>
+    </div>
+    <span class="nav-sep"></span>
+    <div class="nav-group">
+      <span class="nav-group-label">Onboarding</span>
+      <button class="nav-btn" onclick="show('o-personal')">Personal <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('o-customer')">Customer <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('o-lsp')">LSP <span class="phase-tag p2">P2</span></button>
+    </div>
+    <span class="nav-sep"></span>
+    <div class="nav-group">
+      <span class="nav-group-label">Interpreter</span>
+      <button class="nav-btn" onclick="show('i-idle')">Idle <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('i-requests')">Requests <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('i-tasks')">My Tasks <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('i-session')">In-session <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('i-affiliation')">Affiliation <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('i-availability')">Availability <span class="phase-tag p3">P3</span></button>
+      <button class="nav-btn" onclick="show('i-conference')">Conference <span class="phase-tag p3">P3</span></button>
+    </div>
+    <span class="nav-sep"></span>
+    <div class="nav-group">
+      <span class="nav-group-label">Customer</span>
+      <button class="nav-btn" onclick="show('c-new')">New call <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('c-phi')">PHI step <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('c-schedule')">Schedule <span class="phase-tag p3">P3</span></button>
+      <button class="nav-btn" onclick="show('c-requests')">My Requests <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('c-incall')">In-call <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('c-deaf')">Deaf-first <span class="phase-tag p3">P3</span></button>
+      <button class="nav-btn" onclick="show('c-opi')">OPI <span class="phase-tag p3">P3</span></button>
+      <button class="nav-btn" onclick="show('c-cancel')">Cancel <span class="phase-tag p4">P4</span></button>
+      <button class="nav-btn" onclick="show('c-nosupply')">No-supply <span class="phase-tag p5">P5</span></button>
+      <button class="nav-btn" onclick="show('c-guest')">Guest join <span class="phase-tag p3">P3</span></button>
+    </div>
+    <span class="nav-sep"></span>
+    <div class="nav-group">
+      <span class="nav-group-label">Dispatch</span>
+      <button class="nav-btn" onclick="show('d-unassigned')">Unassigned <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('d-active')">In-progress <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('d-scheduled')">Scheduled <span class="phase-tag p3">P3</span></button>
+      <button class="nav-btn" onclick="show('d-escalations')">Escalations <span class="phase-tag p3">P3</span></button>
+    </div>
+    <span class="nav-sep"></span>
+    <div class="nav-group">
+      <span class="nav-group-label">Shared</span>
+      <button class="nav-btn" onclick="show('s-notifications')">Notifications <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('s-settings')">Settings <span class="phase-tag p2">P2</span></button>
+      <button class="nav-btn" onclick="show('s-switch')">Switch tenant <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('s-expired')">Expired <span class="phase-tag p1">P1</span></button>
+      <button class="nav-btn" onclick="show('s-leo')">Ask Leo <span class="phase-tag p6">P6</span></button>
+    </div>
+  </div>
+
+  <!-- ===================== SCREENS INSERTED BELOW ===================== -->
+
+  <!-- ███████████████████  INTERPRETER  ███████████████████ -->
+
+  <!-- ── I-REQUESTS · /idle/requests · P2 ──────────────────────────────── -->
+  <div class="screen" id="i-requests">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>interpreter</span></div>
+        <div class="ws-rail-section">Session</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Idle</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Requests<span class="ws-rail-badge">3</span></div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M9 3v4M15 3v4M4 11h16"/></svg>My Tasks<span class="ws-rail-badge">2</span></div>
+        <div class="ws-rail-section">Me</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Availability</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 11a4 4 0 1 0-8 0M4 20a8 8 0 0 1 16 0"/></svg>Affiliations</div>
+        <div class="ws-rail-spacer"></div>
+        <div class="ws-rail-foot">
+          <div class="ws-rail-status"><span class="ws-rail-status-dot"></span><div><div class="ws-rail-status-name">Active</div><div class="ws-rail-status-role">On-demand · matchable</div></div></div>
+          <div class="ws-rail-link"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.6H9.5l-.4 2.6a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.6h4.9l.4-2.6a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5c.06-.33.1-.66.1-1Z"/></svg>Settings</div>
+        </div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header">
+          <div><div class="ws-title">Requests</div><div class="ws-route">/idle/requests · WSS request.broadcast</div></div>
+          <div class="ws-header-spacer"></div>
+          <span class="chip live"><span class="dot"></span>Active — receiving broadcasts</span>
+        </div>
+        <div class="ws-body" style="position:relative">
+          <div class="section-label">Live broadcast queue · single-accept (first wins)</div>
+
+          <div class="list-row">
+            <div class="avatar" style="width:40px;height:40px;font-size:13px">SP</div>
+            <div class="grow">
+              <div class="row between"><div class="disp-lang">Spanish · Video</div><span class="state-pill st-routing">routing</span></div>
+              <div class="disp-meta">Acme Health Clinic · On-demand · Medical · waiting <span class="wait-clock mono" data-secs="22">0:22</span></div>
+              <div class="row" style="gap:6px"><span class="chip info">PHI masked</span><span class="chip">Tier 2</span></div>
+            </div>
+            <div class="row" style="gap:8px"><button class="btn ghost sm">Decline</button><button class="btn accept">Accept</button></div>
+          </div>
+
+          <div class="list-row">
+            <div class="avatar" style="width:40px;height:40px;font-size:13px">AS</div>
+            <div class="grow">
+              <div class="row between"><div class="disp-lang">ASL · Video <span class="chip" style="margin-left:6px">signed → video only</span></div><span class="state-pill st-routing">routing</span></div>
+              <div class="disp-meta">Riverside School District · On-demand · Education · waiting <span class="wait-clock mono" data-secs="8">0:08</span></div>
+            </div>
+            <div class="row" style="gap:8px"><button class="btn ghost sm">Decline</button><button class="btn accept">Accept</button></div>
+          </div>
+
+          <div class="list-row" style="opacity:0.55">
+            <div class="avatar" style="width:40px;height:40px;font-size:13px">MN</div>
+            <div class="grow">
+              <div class="row between"><div class="disp-lang">Mandarin · Video</div><span class="state-pill st-completed">taken</span></div>
+              <div class="disp-meta">Taken by another interpreter · removed on next refresh</div>
+            </div>
+            <div class="row"><span class="chip">409 request.taken</span></div>
+          </div>
+
+          <div class="note info" style="margin-top:14px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Accept races to Redis single-accept. Losing the race returns <b>409</b> and the card flips to <b>request.taken</b> — never a silent failure.</div>
+
+          <!-- incoming overlay + toast (static demo of states) -->
+          <div style="display:flex;gap:16px;margin-top:22px;align-items:flex-start;flex-wrap:wrap">
+            <div class="card" style="width:300px">
+              <div class="card-pad" style="border-bottom:1px solid var(--black-600)"><div class="section-label" style="margin:0">Incoming request overlay</div></div>
+              <div class="card-pad" style="text-align:center">
+                <div class="avatar" style="width:54px;height:54px;margin:0 auto 10px;font-size:16px">SP</div>
+                <div class="disp-lang" style="font-size:16px">Spanish · Video</div>
+                <div class="disp-meta">Acme Health Clinic · Medical</div>
+                <div class="mono" style="font-size:26px;color:var(--signal-warn);margin:6px 0">0:09</div>
+                <div class="row" style="gap:8px"><button class="btn ghost grow">Decline</button><button class="btn accept grow">Accept</button></div>
+              </div>
+            </div>
+            <div class="col" style="gap:10px;width:300px">
+              <div class="toast taken"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-warn)" stroke-width="1.6" style="font-size:18px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><div class="toast-title">Request taken</div><div class="toast-sub">Mandarin · claimed by another interpreter</div></div></div>
+              <div class="toast success"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-live)" stroke-width="1.6" style="font-size:18px"><path d="M20 6 9 17l-5-5"/></svg><div><div class="toast-title">You're connected</div><div class="toast-sub">Spanish · routing media…</div></div></div>
+            </div>
+          </div>
+
+          <div class="spec-foot"><b>States:</b> empty (no broadcasts) · live queue · request taken (409) · accepted→routing. <b>Read-only mobile</b> hides Accept entirely. <b>API:</b> POST /sessions/:id/accept · WSS request.broadcast / request.taken.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── I-TASKS · /idle/tasks · P2 ────────────────────────────────────── -->
+  <div class="screen" id="i-tasks">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>interpreter</span></div>
+        <div class="ws-rail-section">Session</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Idle</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Requests<span class="ws-rail-badge">3</span></div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M9 3v4M15 3v4M4 11h16"/></svg>My Tasks<span class="ws-rail-badge">2</span></div>
+        <div class="ws-rail-section">Me</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Availability</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 11a4 4 0 1 0-8 0M4 20a8 8 0 0 1 16 0"/></svg>Affiliations</div>
+        <div class="ws-rail-spacer"></div>
+        <div class="ws-rail-foot"><div class="ws-rail-status"><span class="ws-rail-status-dot" style="background:var(--signal-warn);box-shadow:0 0 8px var(--signal-warn)"></span><div><div class="ws-rail-status-name">Booked</div><div class="ws-rail-status-role">Scheduled assignment</div></div></div></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">My Tasks</div><div class="ws-route">/idle/tasks · assigned + scheduled</div></div><div class="ws-header-spacer"></div>
+          <div class="seg"><button class="seg-opt active">All</button><button class="seg-opt">Today</button><button class="seg-opt">Upcoming</button></div></div>
+        <div class="ws-body">
+          <div class="section-label">Next up</div>
+          <div class="list-row" style="border-color:var(--signal-warn);border-left:3px solid var(--signal-warn)">
+            <div class="col" style="align-items:center;width:54px"><div class="mono" style="font-size:11px;color:var(--black-300)">2:30</div><div class="mono" style="font-size:9px;color:var(--black-300)">PM</div></div>
+            <div class="grow"><div class="row between"><div class="disp-lang">Mandarin · Video · Scheduled</div><span class="state-pill st-scheduled">scheduled</span></div>
+              <div class="disp-meta">Acme Health Clinic · 45 min · Cardiology follow-up</div>
+              <div class="row" style="gap:6px"><span class="chip warn">Starts in 18m</span><span class="chip">Booked for you</span></div></div>
+            <button class="btn sm">Open brief</button>
+          </div>
+          <div class="section-label" style="margin-top:18px">Later today</div>
+          <div class="list-row">
+            <div class="col" style="align-items:center;width:54px"><div class="mono" style="font-size:11px;color:var(--black-300)">4:00</div><div class="mono" style="font-size:9px;color:var(--black-300)">PM</div></div>
+            <div class="grow"><div class="row between"><div class="disp-lang">Spanish · Telephone · Scheduled</div><span class="state-pill st-scheduled">scheduled</span></div>
+              <div class="disp-meta">Riverside School District · 30 min · Parent conference</div></div>
+            <button class="btn ghost sm">Details</button>
+          </div>
+          <div class="list-row">
+            <div class="col" style="align-items:center;width:54px"><div class="mono" style="font-size:11px;color:var(--black-300)">5:15</div><div class="mono" style="font-size:9px;color:var(--black-300)">PM</div></div>
+            <div class="grow"><div class="row between"><div class="disp-lang">ASL · On-site · Scheduled</div><span class="state-pill st-scheduled">scheduled</span></div>
+              <div class="disp-meta">Downtown Legal Aid · 60 min · 200 Market St, Suite 4</div>
+              <div class="row" style="gap:6px"><span class="chip info">On-site · address confirmed</span></div></div>
+            <button class="btn ghost sm">Map</button>
+          </div>
+          <div class="spec-foot"><b>Source:</b> assigned on-demand carry-overs + scheduled bookings. Empty state shows "No tasks scheduled." <b>Signed languages</b> never offer telephone. On-site rows expose address + map only when confirmed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── I-AVAILABILITY · /settings/availability · P3 ──────────────────── -->
+  <div class="screen" id="i-availability">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>interpreter</span></div>
+        <div class="ws-rail-section">Session</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Idle</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Requests</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M9 3v4M15 3v4M4 11h16"/></svg>My Tasks</div>
+        <div class="ws-rail-section">Me</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Availability</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 11a4 4 0 1 0-8 0M4 20a8 8 0 0 1 16 0"/></svg>Affiliations</div>
+        <div class="ws-rail-spacer"></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">Availability</div><div class="ws-route">/settings/availability · recurring + exceptions</div></div><div class="ws-header-spacer"></div>
+          <button class="btn ghost sm">+ Add exception</button><button class="btn primary sm">Save schedule</button></div>
+        <div class="ws-body">
+          <div class="row" style="gap:14px;margin-bottom:14px">
+            <span class="chip live"><span class="dot"></span>Available block</span>
+            <span class="chip" style="color:#60A5FA;border-color:rgba(96,165,250,0.34);background:rgba(96,165,250,0.12)"><span class="dot" style="background:#60A5FA"></span>Booked</span>
+            <span class="chip error"><span class="dot"></span>Exception (time off)</span>
+          </div>
+          <div class="cal">
+            <div class="cal-head"></div>
+            <div class="cal-head">Mon 23</div><div class="cal-head">Tue 24</div><div class="cal-head">Wed 25</div><div class="cal-head">Thu 26</div><div class="cal-head">Fri 27</div><div class="cal-head">Sat 28</div><div class="cal-head">Sun 29</div>
+            <div class="cal-time">8 AM</div>
+            <div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            <div class="cal-time">10 AM</div>
+            <div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block booked">Booked · ES</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block exception">Time off</div></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            <div class="cal-time">12 PM</div>
+            <div class="cal-cell"></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            <div class="cal-time">2 PM</div>
+            <div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block booked">Booked · MN</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"></div><div class="cal-cell"></div>
+            <div class="cal-time">4 PM</div>
+            <div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"><div class="cal-block avail">Avail</div></div><div class="cal-cell"></div><div class="cal-cell"></div><div class="cal-cell"></div>
+          </div>
+          <div class="row" style="gap:14px;margin-top:16px;align-items:flex-start">
+            <div class="card grow"><div class="card-pad">
+              <div class="section-label">Recurring weekly pattern</div>
+              <div class="kv"><span class="kv-k">Mon–Fri</span><span class="kv-v">8:00 AM – 6:00 PM</span></div>
+              <div class="kv"><span class="kv-k">Saturday</span><span class="kv-v">Off</span></div>
+              <div class="kv"><span class="kv-k">Timezone</span><span class="kv-v">America/New_York (display)</span></div>
+            </div></div>
+            <div class="card grow"><div class="card-pad">
+              <div class="section-label">Upcoming exceptions</div>
+              <div class="kv"><span class="kv-k">Fri Jun 27, AM</span><span class="kv-v" style="color:var(--signal-error)">Time off</span></div>
+              <div class="kv"><span class="kv-k">Jul 4</span><span class="kv-v" style="color:var(--signal-error)">Holiday — unavailable</span></div>
+            </div></div>
+          </div>
+          <div class="spec-foot"><b>Drives:</b> scheduled assignment (Booked presence) — on-demand matching still requires live <b>Active</b>. Times stored UTC, shown in user tz. <b>API:</b> GET/POST /interpreters/:id/availability.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── I-CONFERENCE · in-session P3 conference / dial ────────────────── -->
+  <div class="screen" id="i-conference">
+    <div class="ws no-rail">
+      <div class="ws-content">
+        <div class="ws-header" style="background:var(--black-800)">
+          <span class="mono" style="font-size:11px;color:var(--black-200)">SESS #0042</span>
+          <span class="live-clock mono" data-secs="514" style="font-size:18px;font-weight:500;letter-spacing:0.08em">08:34</span>
+          <span class="session-state-pill st-in_session" style="font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:20px">● in_session</span>
+          <div class="ws-route">interpreter view · conferencing (P3)</div>
+          <div class="ws-header-spacer"></div>
+          <span class="chip warn"><span class="dot"></span>Adding participant</span>
+        </div>
+        <div class="ws-body" style="padding:0;display:grid;grid-template-columns:1fr 300px">
+          <div style="position:relative;background:#050508;padding:8px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px">
+            <div class="vtile"><div class="speaking-ring"></div><div class="vtile-person">DR</div><span class="vtile-role">Provider</span><span class="vtile-label">Dr. Okafor</span></div>
+            <div class="vtile"><div class="vtile-person">PT</div><span class="vtile-role">Patient</span><span class="vtile-label">Patient (ES)</span></div>
+            <div class="vtile"><div class="vtile-person" style="color:var(--black-200)">ME</div><span class="vtile-role">Interpreter · you</span><span class="vtile-label">You</span></div>
+            <div class="vtile" style="border-style:dashed;flex-direction:column;gap:6px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-warn)" stroke-width="1.6" style="font-size:22px"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span class="mono" style="font-size:10px;color:var(--signal-warn)">dialing 3rd party…</span></div>
+            <div class="session-controls" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10">
+              <div class="ctrl-btn"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3Z"/><path d="M19 10a7 7 0 0 1-14 0M12 17v4"/></svg></div>
+              <div class="ctrl-btn"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 8.5V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1.5l5 3.5V5l-5 3.5Z"/></svg></div>
+              <div class="ctrl-btn on"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 19a7 7 0 0 0 7-7h-2a5 5 0 0 1-10 0H5a7 7 0 0 0 7 7Zm0-15a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z"/></svg></div>
+              <div class="ctrl-btn end"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4l14 14M19 4 5 18"/></svg></div>
+            </div>
+          </div>
+          <div style="border-left:1px solid var(--black-600);background:var(--black-800);display:flex;flex-direction:column;overflow:hidden">
+            <div style="padding:12px 14px;border-bottom:1px solid var(--black-600)"><div class="section-label" style="margin:0">Conference (interpreter-only)</div></div>
+            <div style="padding:12px 14px;border-bottom:1px solid var(--black-600)">
+              <div class="field-label">Dial participant</div>
+              <div class="row" style="gap:6px"><input class="input" placeholder="+1 (555) 000-0000" style="font-family:var(--font-mono)"><button class="btn accept sm">Dial</button></div>
+              <div class="mono" style="font-size:9px;color:var(--black-300);margin-top:6px">POST /sessions/:id/conference · leg added to existing media room</div>
+            </div>
+            <div style="padding:12px 14px;overflow-y:auto;flex:1">
+              <div class="field-label">Available interpreters</div>
+              <div class="search-wrap" style="position:relative;margin-bottom:8px"><input class="input" placeholder="Search by language…" style="padding-left:12px"></div>
+              <div class="list-row" style="margin-bottom:6px;padding:8px 10px"><div class="avatar" style="width:26px;height:26px;font-size:9px">RL</div><div class="grow"><div style="font-size:12px;font-weight:500">R. López</div><div class="mono" style="font-size:9px;color:var(--black-300)">Spanish · Medical</div></div><span class="chip live" style="font-size:9px"><span class="dot"></span>Active</span></div>
+              <div class="list-row" style="margin-bottom:6px;padding:8px 10px"><div class="avatar" style="width:26px;height:26px;font-size:9px">JK</div><div class="grow"><div style="font-size:12px;font-weight:500">J. Kim</div><div class="mono" style="font-size:9px;color:var(--black-300)">Mandarin · Legal</div></div><span class="chip live" style="font-size:9px"><span class="dot"></span>Active</span></div>
+              <div class="list-row" style="padding:8px 10px;opacity:0.55"><div class="avatar" style="width:26px;height:26px;font-size:9px">TN</div><div class="grow"><div style="font-size:12px;font-weight:500">T. Nguyen</div><div class="mono" style="font-size:9px;color:var(--black-300)">Vietnamese</div></div><span class="chip warn" style="font-size:9px"><span class="dot"></span>Break</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="ws-body" style="flex:0;padding:14px 22px"><div class="spec-foot" style="margin:0;border:none;padding:0"><b>Interpreter-only controls.</b> Conference a second interpreter (handoff/overflow) or dial an external participant (provider, family). Customer never sees these. <b>API:</b> POST /sessions/:id/conference.</div></div>
+      </div>
+    </div>
+  </div>
+  <!-- ███████████████████  CUSTOMER  ███████████████████ -->
+
+  <!-- ── C-NEW · /call/new step 1 · type picker · P2 ───────────────────── -->
+  <div class="screen" id="c-new">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>customer</span></div>
+        <div class="ws-rail-section">Connect</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>Ask Leo</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>New call</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>My Requests<span class="ws-rail-badge live">1</span></div>
+        <div class="ws-rail-spacer"></div>
+        <div class="ws-rail-foot"><div class="ws-rail-link"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>Organization settings</div></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">New call</div><div class="ws-route">/call/new · POST /sessions</div></div></div>
+        <div class="ws-body">
+          <div style="max-width:640px;margin:0 auto">
+            <div class="wiz-steps">
+              <div class="wiz-step active"><span class="wiz-dot">1</span>Type &amp; language</div><div class="wiz-line"></div>
+              <div class="wiz-step"><span class="wiz-dot">2</span>Patient &amp; context</div><div class="wiz-line"></div>
+              <div class="wiz-step"><span class="wiz-dot">3</span>Connect</div>
+            </div>
+
+            <div class="field-label">Session type</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
+              <div class="opt-card selected"><div class="opt-icon">🎥</div><div style="font-family:var(--font-display);font-weight:600;font-size:13px">Video</div><div class="mono" style="font-size:9px;color:var(--black-300);margin-top:3px">On-demand · P2</div></div>
+              <div class="opt-card disabled"><div class="opt-icon">📞</div><div style="font-family:var(--font-display);font-weight:600;font-size:13px">Telephone</div><div class="mono" style="font-size:9px;color:var(--signal-error);margin-top:3px">Disabled for signed lang</div></div>
+              <div class="opt-card disabled"><div class="opt-icon">📍</div><div style="font-family:var(--font-display);font-weight:600;font-size:13px">On-site</div><div class="mono" style="font-size:9px;color:var(--black-300);margin-top:3px">Scheduled only · P3</div></div>
+            </div>
+
+            <div class="field-label">Language</div>
+            <select class="input" style="margin-bottom:8px"><option>ASL — American Sign Language (signed)</option><option>Spanish</option><option>Mandarin</option></select>
+            <div class="note warn" style="margin-bottom:18px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>ASL is a <b>signed language</b> → video only. Telephone is disabled and the on-site option requires scheduling.</div>
+
+            <div class="field-label">Tier &amp; certification (optional)</div>
+            <div class="row" style="gap:10px;margin-bottom:22px">
+              <select class="input"><option>Any qualified</option><option>Tier 2 — Medical</option><option>Court certified</option></select>
+              <select class="input"><option>No specific interpreter</option><option>Prefer R. López (last used)</option></select>
+            </div>
+
+            <div class="row between">
+              <button class="btn ghost">Cancel</button>
+              <button class="btn primary" onclick="show('c-phi')">Continue →</button>
+            </div>
+          </div>
+          <div class="spec-foot"><b>Rule:</b> signed languages force video; telephone option visibly disabled with reason (never hidden). <b>Specific-interpreter</b> picks route to hold / auto-match / pick-another (never silent substitution).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-PHI · /call/new step 2 · PHI + consent · P2 ─────────────────── -->
+  <div class="screen" id="c-phi">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>customer</span></div>
+        <div class="ws-rail-section">Connect</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>Ask Leo</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>New call</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>My Requests</div>
+        <div class="ws-rail-spacer"></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">Patient &amp; context</div><div class="ws-route">/call/new · org-configured fields</div></div></div>
+        <div class="ws-body">
+          <div style="max-width:640px;margin:0 auto">
+            <div class="wiz-steps">
+              <div class="wiz-step done"><span class="wiz-dot">✓</span>Type &amp; language</div><div class="wiz-line"></div>
+              <div class="wiz-step active"><span class="wiz-dot">2</span>Patient &amp; context</div><div class="wiz-line"></div>
+              <div class="wiz-step"><span class="wiz-dot">3</span>Connect</div>
+            </div>
+            <div class="note info" style="margin-bottom:16px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>These fields are configured per-org (billing popup config). PHI is encrypted &amp; masked downstream — interpreters see it only with consent.</div>
+
+            <div class="row" style="gap:14px;margin-bottom:14px">
+              <div class="grow"><label class="field-label">Patient name <span class="chip warn" style="font-size:9px;margin-left:4px">PHI · required</span></label><input class="input" placeholder="Full name"></div>
+              <div style="width:180px"><label class="field-label">MRN <span class="chip warn" style="font-size:9px;margin-left:4px">PHI</span></label><input class="input" placeholder="Medical record #" style="font-family:var(--font-mono)"></div>
+            </div>
+            <div class="row" style="gap:14px;margin-bottom:14px">
+              <div class="grow"><label class="field-label">Department</label><input class="input" placeholder="e.g. Cardiology"></div>
+              <div class="grow"><label class="field-label">Reference / encounter ID</label><input class="input" placeholder="optional" style="font-family:var(--font-mono)"></div>
+            </div>
+            <label class="field-label">Notes for interpreter (no PHI)</label>
+            <input class="input" placeholder="Context that helps the interpreter prepare" style="margin-bottom:16px">
+
+            <div class="card" style="margin-bottom:20px"><div class="card-pad" style="padding:12px 14px">
+              <label class="row" style="gap:10px;align-items:flex-start;cursor:pointer">
+                <span style="width:16px;height:16px;border-radius:3px;background:var(--signal-white);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;color:var(--black-900);font-size:11px;font-weight:700">✓</span>
+                <span style="font-size:11px;color:var(--black-100);line-height:1.5"><b style="color:var(--signal-white)">PHI share consent.</b> I authorize sharing the patient information above with the matched interpreter for this session. <span class="mono" style="font-size:9px;color:var(--black-300)">phi_share_consent = true</span></span>
+              </label>
+            </div></div>
+
+            <div class="row between">
+              <button class="btn ghost" onclick="show('c-new')">← Back</button>
+              <button class="btn primary" onclick="show('c-incall')">Find interpreter →</button>
+            </div>
+          </div>
+          <div class="spec-foot"><b>PHI handling:</b> patient_name / mrn encrypted; masked by default. <b>Consent gate:</b> phi_share_consent required before broadcast. Fields driven by org billing-field config (web).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-SCHEDULE · /call/schedule + on-site confirm · P3 ────────────── -->
+  <div class="screen" id="c-schedule">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>customer</span></div>
+        <div class="ws-rail-section">Connect</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>Ask Leo</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>New call</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>My Requests</div>
+        <div class="ws-rail-spacer"></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">Schedule a session</div><div class="ws-route">/call/schedule · POST /sessions (scheduled)</div></div></div>
+        <div class="ws-body">
+          <div class="row" style="gap:18px;align-items:flex-start;max-width:880px;margin:0 auto">
+            <div class="card grow"><div class="card-pad">
+              <div class="section-label">Date &amp; time</div>
+              <div class="row" style="gap:12px;margin-bottom:14px"><div class="grow"><label class="field-label">Date</label><input class="input" value="Thu, Jun 26 2026" style="font-family:var(--font-mono)"></div><div style="width:140px"><label class="field-label">Time</label><input class="input" value="2:30 PM" style="font-family:var(--font-mono)"></div></div>
+              <div class="row" style="gap:12px;margin-bottom:14px"><div style="width:140px"><label class="field-label">Duration</label><select class="input"><option>45 min</option><option>30 min</option><option>60 min</option></select></div><div class="grow"><label class="field-label">Type</label><select class="input"><option>Video</option><option>Telephone</option><option>On-site</option></select></div></div>
+              <label class="field-label">Language</label>
+              <select class="input" style="margin-bottom:14px"><option>ASL (signed)</option><option>Spanish</option></select>
+              <label class="field-label">Interpreter preference</label>
+              <select class="input"><option>Auto-assign best match</option><option>Prefer R. López</option><option>Specific — require approval</option></select>
+            </div></div>
+            <div class="col" style="width:320px;gap:14px">
+              <div class="card"><div class="card-pad">
+                <div class="section-label">On-site address</div>
+                <div class="note info" style="margin-bottom:10px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>Defaults to your org's registered address — confirm or override.</div>
+                <div class="card" style="background:var(--black-700);margin-bottom:8px"><div class="card-pad" style="padding:10px 12px"><div style="font-size:12px;font-weight:500">Acme Health Clinic</div><div class="mono" style="font-size:10px;color:var(--black-300);margin-top:2px">200 Market St, Suite 4 · San Jose, CA</div><span class="chip live" style="margin-top:8px;font-size:9px">Registered address</span></div></div>
+                <button class="btn ghost sm" style="width:100%">Use a different address</button>
+              </div></div>
+              <div class="card"><div class="card-pad">
+                <div class="section-label">Summary</div>
+                <div class="kv"><span class="kv-k">When</span><span class="kv-v">Jun 26, 2:30 PM</span></div>
+                <div class="kv"><span class="kv-k">Type</span><span class="kv-v">Video · ASL</span></div>
+                <div class="kv"><span class="kv-k">Est. cost</span><span class="kv-v mono">$0.00 until billed</span></div>
+                <button class="btn primary" style="width:100%;margin-top:12px">Confirm booking</button>
+              </div></div>
+            </div>
+          </div>
+          <div class="spec-foot"><b>On-site</b> defaults to org registered_address with explicit confirm. Times stored UTC, shown local. Reminder prefs honored. <b>State:</b> scheduled → queued at T−0.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-REQUESTS · /call/requests + access code · P2/P3 ─────────────── -->
+  <div class="screen" id="c-requests">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>customer</span></div>
+        <div class="ws-rail-section">Connect</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>Ask Leo</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>New call</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>My Requests<span class="ws-rail-badge live">1</span></div>
+        <div class="ws-rail-spacer"></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">My Requests</div><div class="ws-route">/call/requests</div></div><div class="ws-header-spacer"></div>
+          <div class="seg"><button class="seg-opt active">All</button><button class="seg-opt">Active</button><button class="seg-opt">Scheduled</button><button class="seg-opt">Past</button></div></div>
+        <div class="ws-body">
+          <div class="list-row" style="border-color:rgba(34,197,94,0.3)">
+            <span class="state-pill st-in_session" style="width:78px;justify-content:center">in_session</span>
+            <div class="grow"><div class="disp-lang">Spanish · Video · #0042</div><div class="disp-meta">R. López · started <span class="live-clock mono" data-secs="514">08:34</span> ago · Cardiology</div></div>
+            <button class="btn accept sm" onclick="show('c-incall')">Rejoin</button>
+          </div>
+          <div class="list-row">
+            <span class="state-pill st-scheduled" style="width:78px;justify-content:center">scheduled</span>
+            <div class="grow"><div class="disp-lang">ASL · Video · #0048</div><div class="disp-meta">Tomorrow 2:30 PM · 45 min · access code below</div></div>
+            <span class="chip info">Guest join enabled</span>
+          </div>
+          <!-- access code share -->
+          <div class="card" style="margin:4px 0 8px"><div class="card-pad" style="padding:12px 14px;display:flex;align-items:center;gap:14px">
+            <div><div class="mono" style="font-size:10px;color:var(--black-300);margin-bottom:4px">#0048 · ASL · Video</div><div style="font-size:11px;color:var(--black-100)">Guest join access code — shareable before the session starts</div></div>
+            <div style="margin-left:auto;text-align:right"><div class="mono" style="font-size:22px;font-weight:600;letter-spacing:0.12em;color:var(--signal-white)">LEO-4829</div>
+              <button class="btn ghost sm" style="margin-top:6px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:11px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy code</button></div>
+          </div></div>
+          <div class="list-row" style="opacity:0.7">
+            <span class="state-pill st-completed" style="width:78px;justify-content:center">completed</span>
+            <div class="grow"><div class="disp-lang">Mandarin · Telephone · #0039</div><div class="disp-meta">Yesterday · 22 min · billed</div></div>
+            <button class="btn ghost sm">View record</button>
+          </div>
+          <div class="list-row" style="opacity:0.7">
+            <span class="state-pill st-abandoned" style="width:78px;justify-content:center">abandoned</span>
+            <div class="grow"><div class="disp-lang">Vietnamese · Video · #0036</div><div class="disp-meta">No interpreter available · no charge</div></div>
+            <span class="chip">$0.00</span>
+          </div>
+          <div class="spec-foot"><b>Status chips</b> map to the session FSM. Access code shows on detail after creation, expires at session end. Abandoned = never charged. <b>API:</b> GET /sessions, GET /sessions/:id/access-code.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-INCALL · /session/:id customer view · P2 ────────────────────── -->
+  <div class="screen" id="c-incall">
+    <div class="ws no-rail">
+      <div class="ws-content">
+        <div class="ws-header" style="background:var(--black-800)">
+          <span class="mono" style="font-size:11px;color:var(--black-200)">SESS #0042</span>
+          <span class="live-clock mono" data-secs="514" style="font-size:18px;font-weight:500;letter-spacing:0.08em">08:34</span>
+          <span class="session-state-pill st-in_session" style="font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:20px">● in_session</span>
+          <div class="ws-route">customer view · no interpreter-only controls</div>
+          <div class="ws-header-spacer"></div>
+          <span class="chip live"><span class="dot"></span>Spanish · R. López</span>
+        </div>
+        <div class="ws-body" style="padding:0;position:relative;background:#050508">
+          <div style="position:absolute;inset:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div class="vtile"><div class="speaking-ring"></div><div class="vtile-person">RL</div><span class="vtile-role">Interpreter</span><span class="vtile-label">R. López · Spanish</span></div>
+            <div class="vtile"><div class="vtile-person" style="color:var(--black-200)">ME</div><span class="vtile-role">You</span><span class="vtile-label">You</span></div>
+          </div>
+          <div class="session-controls" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10">
+            <div class="ctrl-btn"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3Z"/><path d="M19 10a7 7 0 0 1-14 0M12 17v4"/></svg></div>
+            <div class="ctrl-btn"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 8.5V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1.5l5 3.5V5l-5 3.5Z"/></svg></div>
+            <div class="ctrl-btn"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16v10H4z"/><path d="M9 11h6M9 14h4"/></svg></div>
+            <div class="ctrl-btn end"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4l14 14M19 4 5 18"/></svg></div>
+          </div>
+          <div style="position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:10"><span class="chip"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:12px"><path d="M4 7h16v10H4z"/></svg>Captions on</span></div>
+        </div>
+        <div class="ws-body" style="flex:0;padding:14px 22px"><div class="spec-foot" style="margin:0;border:none;padding:0"><b>Customer controls only:</b> mute, camera, captions toggle, end. No conference/dial/transfer (interpreter-only). No recording UI, ever. <b>WSS:</b> session.state.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-DEAF · Deaf-first multi-party · P3 ──────────────────────────── -->
+  <div class="screen" id="c-deaf">
+    <div class="ws no-rail">
+      <div class="ws-content">
+        <div class="ws-header" style="background:var(--black-800)">
+          <span class="mono" style="font-size:11px;color:var(--black-200)">SESS #0051</span>
+          <span class="live-clock mono" data-secs="142" style="font-size:18px;font-weight:500;letter-spacing:0.08em">02:22</span>
+          <span class="session-state-pill st-in_session" style="font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:20px">● in_session</span>
+          <div class="ws-route">Deaf-first multi-party · captions + RTT</div>
+          <div class="ws-header-spacer"></div>
+          <span class="chip live"><span class="dot"></span>ASL · 3 participants</span>
+        </div>
+        <div class="ws-body" style="padding:0;display:flex;flex-direction:column;background:#050508">
+          <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px">
+            <div class="vtile"><div class="speaking-ring"></div><div class="vtile-person">IN</div><span class="vtile-role">Interpreter · ASL</span><span class="vtile-label">A. Rivera</span></div>
+            <div class="vtile"><div class="vtile-person">DP</div><span class="vtile-role">Deaf participant</span><span class="vtile-label">You</span></div>
+            <div class="vtile"><div class="vtile-person">DR</div><span class="vtile-role">Provider</span><span class="vtile-label">Dr. Okafor</span></div>
+          </div>
+          <div class="caption-bar">
+            <div class="row" style="gap:12px;margin-bottom:8px"><span class="chip live" style="font-size:9px"><span class="dot"></span>Live captions</span><span class="chip" style="font-size:9px">RTT</span><span class="mono" style="font-size:9px;color:var(--black-300);margin-left:auto">Large text · high contrast</span></div>
+            <div class="caption-line"><span class="caption-speaker">Dr. Okafor</span>Let's review your test results from last week, and I'll explain what the numbers mean<span class="rtt-cursor"></span></div>
+          </div>
+        </div>
+        <div class="ws-body" style="flex:0;padding:14px 22px"><div class="spec-foot" style="margin:0;border:none;padding:0"><b>Deaf-first layout:</b> equal interpreter + participant tiles, persistent captions/RTT, large high-contrast text, no audio-only fallback. WCAG 2.1 AA. <b>P3</b> multi-party.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-OPI · Telephone / OPI legs · P3 ─────────────────────────────── -->
+  <div class="screen" id="c-opi">
+    <div class="ws no-rail">
+      <div class="ws-content">
+        <div class="ws-header" style="background:var(--black-800)">
+          <span class="mono" style="font-size:11px;color:var(--black-200)">SESS #0055</span>
+          <span class="live-clock mono" data-secs="63" style="font-size:18px;font-weight:500;letter-spacing:0.08em">01:03</span>
+          <span class="session-state-pill st-connected" style="font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(34,197,94,0.12);color:var(--signal-live)">● connected</span>
+          <div class="ws-route">Telephone / OPI · conference legs</div>
+          <div class="ws-header-spacer"></div>
+          <span class="chip live"><span class="dot"></span>Spanish · audio</span>
+        </div>
+        <div class="ws-body">
+          <div style="max-width:560px;margin:0 auto">
+            <div class="section-label">Conference legs</div>
+            <div class="list-row" style="border-color:rgba(34,197,94,0.3)">
+              <div class="avatar" style="width:38px;height:38px;font-size:12px">RL</div>
+              <div class="grow"><div style="font-size:13px;font-weight:500">R. López <span class="mono" style="font-size:10px;color:var(--black-300)">· interpreter</span></div><div class="disp-meta" style="margin:2px 0 0">+1 (555) 014-2200</div></div>
+              <span class="chip live"><span class="dot"></span>Connected</span>
+            </div>
+            <div class="list-row" style="border-color:rgba(34,197,94,0.3)">
+              <div class="avatar" style="width:38px;height:38px;font-size:12px">ME</div>
+              <div class="grow"><div style="font-size:13px;font-weight:500">You <span class="mono" style="font-size:10px;color:var(--black-300)">· caller</span></div><div class="disp-meta" style="margin:2px 0 0">+1 (555) 098-0034</div></div>
+              <span class="chip live"><span class="dot"></span>Connected</span>
+            </div>
+            <div class="list-row">
+              <div class="avatar" style="width:38px;height:38px;font-size:12px">PT</div>
+              <div class="grow"><div style="font-size:13px;font-weight:500">Patient line <span class="mono" style="font-size:10px;color:var(--black-300)">· 3rd party</span></div><div class="disp-meta" style="margin:2px 0 0">+1 (555) 771-9981 · ringing…</div></div>
+              <span class="chip warn"><span class="dot"></span>Ringing</span>
+            </div>
+            <div class="row" style="gap:10px;justify-content:center;margin-top:24px">
+              <div class="ctrl-btn"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3Z"/><path d="M19 10a7 7 0 0 1-14 0M12 17v4"/></svg></div>
+              <div class="ctrl-btn"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="6" height="16"/><rect x="14" y="4" width="6" height="16"/></svg></div>
+              <div class="ctrl-btn end"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.9v2a2 2 0 0 1-2.2 2 19 19 0 0 1-8.3-3 19 19 0 0 1-6-6 19 19 0 0 1-3-8.4A2 2 0 0 1 4.1 3h2a2 2 0 0 1 2 1.7l.5 2.7a2 2 0 0 1-.6 1.8L7 10.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.8-.5l2.7.5a2 2 0 0 1 1.7 2Z"/></svg></div>
+            </div>
+          </div>
+          <div class="spec-foot"><b>OPI</b> shows per-leg conference status (ringing / connected / dropped). Audio modality — never offered for signed languages. <b>WSS:</b> session.state per leg.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-CANCEL · cancel with tier preview · P4 ──────────────────────── -->
+  <div class="screen" id="c-cancel">
+    <div class="ws no-rail">
+      <div class="ws-content" style="position:relative">
+        <div class="ws-header"><div><div class="ws-title">My Requests</div><div class="ws-route">/call/requests · cancel modal (P4)</div></div></div>
+        <div class="ws-body" style="filter:blur(1px);opacity:0.5">
+          <div class="list-row"><span class="state-pill st-scheduled" style="width:78px;justify-content:center">scheduled</span><div class="grow"><div class="disp-lang">ASL · Video · #0048</div><div class="disp-meta">Tomorrow 2:30 PM · 45 min</div></div><button class="btn ghost sm">Cancel</button></div>
+        </div>
+        <div class="modal-scrim">
+          <div class="modal">
+            <div class="modal-head"><div class="modal-title">Cancel session #0048?</div><div class="modal-sub">ASL · Video · Tomorrow 2:30 PM</div></div>
+            <div class="modal-body">
+              <div class="note warn" style="margin-bottom:14px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>This is within the <b>24-hour window</b> — a cancellation fee applies per your org's policy.</div>
+              <div class="card" style="background:var(--black-700)"><div class="card-pad" style="padding:12px 14px">
+                <div class="kv"><span class="kv-k">Time to start</span><span class="kv-v">18h 04m</span></div>
+                <div class="kv"><span class="kv-k">Cancellation tier</span><span class="kv-v" style="color:var(--signal-warn)">12–24h → 50%</span></div>
+                <div class="kv"><span class="kv-k">Booked rate (45m)</span><span class="kv-v mono">$90.00</span></div>
+                <div class="kv"><span class="kv-k" style="color:var(--signal-white);font-weight:500">Estimated charge</span><span class="kv-v mono" style="color:var(--signal-warn);font-size:14px">$45.00</span></div>
+              </div></div>
+              <div class="mono" style="font-size:9px;color:var(--black-300);margin-top:8px">Preview only — final charge computed at cancel time from the rate card &amp; tier matrix.</div>
+            </div>
+            <div class="modal-foot"><button class="btn ghost">Keep session</button><button class="btn danger">Cancel &amp; accept $45.00</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-NOSUPPLY · no-supply choice · P5 ────────────────────────────── -->
+  <div class="screen" id="c-nosupply">
+    <div class="ws no-rail">
+      <div class="ws-content" style="position:relative">
+        <div class="ws-header"><div><div class="ws-title">Finding an interpreter…</div><div class="ws-route">/call/new · no-supply choice (P5)</div></div></div>
+        <div class="ws-body" style="filter:blur(1px);opacity:0.4"><div class="empty"><div class="empty-title">Searching for ASL interpreters…</div></div></div>
+        <div class="modal-scrim">
+          <div class="modal" style="width:440px">
+            <div class="modal-head"><div class="modal-title">No interpreter available right now</div><div class="modal-sub">ASL · Video · queued <span class="wait-clock mono" data-secs="252">4:12</span></div></div>
+            <div class="modal-body">
+              <div class="note info" style="margin-bottom:16px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>We've broadcast to every eligible interpreter and retried. You won't be charged unless a session connects.</div>
+              <div class="col" style="gap:8px">
+                <div class="opt-card" style="display:flex;align-items:center;gap:12px"><div class="opt-icon" style="margin:0">⏳</div><div class="grow"><div style="font-family:var(--font-display);font-weight:600;font-size:13px">Keep waiting</div><div class="mono" style="font-size:9px;color:var(--black-300)">Stay in queue — we'll keep retrying</div></div></div>
+                <div class="opt-card" style="display:flex;align-items:center;gap:12px"><div class="opt-icon" style="margin:0">📅</div><div class="grow"><div style="font-family:var(--font-display);font-weight:600;font-size:13px">Convert to scheduled</div><div class="mono" style="font-size:9px;color:var(--black-300)">Book the next available slot instead</div></div></div>
+                <div class="opt-card" style="display:flex;align-items:center;gap:12px"><div class="opt-icon" style="margin:0">✕</div><div class="grow"><div style="font-family:var(--font-display);font-weight:600;font-size:13px">Cancel</div><div class="mono" style="font-size:9px;color:var(--signal-live)">No charge — marks request abandoned</div></div></div>
+              </div>
+            </div>
+            <div class="modal-foot"><span class="chip warn" style="margin-right:auto"><span class="dot"></span>Dispatcher notified</span><button class="btn primary">Continue</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── C-GUEST · guest join · /join · P3 ─────────────────────────────── -->
+  <div class="screen" id="c-guest">
+    <div class="ws no-rail">
+      <div class="ws-content" style="align-items:center;justify-content:center;background:var(--black-900)">
+        <div style="width:100%;max-width:420px;margin:auto">
+          <div class="card"><div class="card-pad" style="padding:28px">
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:0.04em;margin-bottom:4px">LEO <span style="color:var(--black-300);font-weight:400">· guest join</span></div>
+            <div class="mono" style="font-size:11px;color:var(--black-200);margin-bottom:24px">/join · enter the access code you were given</div>
+
+            <label class="field-label">Access code</label>
+            <div class="row" style="gap:6px;margin-bottom:18px">
+              <input class="input" value="LEO-4829" style="font-family:var(--font-mono);font-size:18px;letter-spacing:0.1em;text-align:center">
+            </div>
+            <label class="field-label">Your name (shown to participants)</label>
+            <input class="input" placeholder="e.g. Family member" style="margin-bottom:18px">
+
+            <div class="card" style="background:var(--black-700);margin-bottom:18px"><div class="card-pad" style="padding:12px 14px">
+              <div class="row between" style="margin-bottom:8px"><span style="font-size:12px;font-weight:500">Session #0048</span><span class="chip">ASL · Video</span></div>
+              <div class="row" style="gap:8px"><button class="ctrl-btn" style="width:34px;height:34px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:14px"><path d="M15 8.5V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1.5l5 3.5V5l-5 3.5Z"/></svg></button><button class="ctrl-btn" style="width:34px;height:34px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:14px"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3Z"/><path d="M19 10a7 7 0 0 1-14 0M12 17v4"/></svg></button><span class="mono" style="font-size:10px;color:var(--black-300);margin-left:4px">Camera &amp; mic check</span></div>
+            </div></div>
+
+            <button class="btn primary" style="width:100%">Join session</button>
+            <div class="note info" style="margin-top:14px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Guests get camera/mic only — no app navigation, no PHI, no history. Code expires when the session ends.</div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ███████████████████  DISPATCH  ███████████████████ -->
+
+  <!-- ── D-UNASSIGNED · /dispatch/unassigned · P2 ──────────────────────── -->
+  <div class="screen" id="d-unassigned">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>dispatch</span></div>
+        <div class="ws-rail-section">Boards</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Unassigned<span class="ws-rail-badge">5</span></div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>In-progress<span class="ws-rail-badge live">3</span></div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Scheduled</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 20h20L12 2Z"/><path d="M12 9v5M12 17h.01"/></svg>Escalations<span class="ws-rail-badge">2</span></div>
+        <div class="ws-rail-spacer"></div>
+        <div class="ws-rail-foot">
+          <div class="ws-rail-status"><span class="ws-rail-status-dot"></span><div><div class="ws-rail-status-name">Acme Language Services</div><div class="ws-rail-status-role">LSP Admin · dispatch</div></div></div>
+          <div class="ws-rail-link"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>Open Admin Dashboard →</div>
+        </div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">Live board</div><div class="ws-route">/dispatch · WSS session.state + presence.update</div></div><div class="ws-header-spacer"></div>
+          <span class="chip live"><span class="dot"></span>Realtime</span><span class="chip warn"><span class="dot"></span>5 unassigned</span></div>
+        <div class="ws-body" style="padding:14px">
+          <div class="board">
+            <div class="board-col">
+              <div class="board-col-head"><span class="board-col-title">Unassigned</span><span class="board-col-count">5</span><span class="chip warn" style="margin-left:auto;font-size:9px"><span class="dot"></span>SLA</span></div>
+              <div class="board-col-body">
+                <div class="disp-card urgent"><div class="row between"><span class="disp-lang">Spanish · Video</span><span class="state-pill st-requested">requested</span></div><div class="disp-meta">Acme Health · Medical · waiting <span class="wait-clock mono" data-secs="252">4:12</span></div><div class="row" style="gap:6px"><button class="btn accept sm grow">Assign</button><button class="btn ghost sm">Reject</button></div></div>
+                <div class="disp-card"><div class="row between"><span class="disp-lang">ASL · Video</span><span class="state-pill st-requested">requested</span></div><div class="disp-meta">Riverside School · waiting <span class="wait-clock mono" data-secs="48">0:48</span></div><div class="row" style="gap:6px"><button class="btn accept sm grow">Assign</button><button class="btn ghost sm">Reject</button></div></div>
+                <div class="disp-card"><div class="row between"><span class="disp-lang">Mandarin · Tel</span><span class="state-pill st-queued">queued</span></div><div class="disp-meta">Downtown Legal · waiting <span class="wait-clock mono" data-secs="22">0:22</span></div><div class="row" style="gap:6px"><button class="btn accept sm grow">Assign</button><button class="btn ghost sm">Reject</button></div></div>
+              </div>
+            </div>
+            <div class="board-col">
+              <div class="board-col-head"><span class="board-col-title">Routing</span><span class="board-col-count">2</span></div>
+              <div class="board-col-body">
+                <div class="disp-card"><div class="row between"><span class="disp-lang">Spanish · Video</span><span class="state-pill st-routing">routing</span></div><div class="disp-meta">Broadcasting to 6 interpreters…</div></div>
+                <div class="disp-card"><div class="row between"><span class="disp-lang">Vietnamese · Video</span><span class="state-pill st-ringing">ringing</span></div><div class="disp-meta">T. Nguyen · ringing <span class="wait-clock mono" data-secs="8">0:08</span></div></div>
+              </div>
+            </div>
+            <div class="board-col">
+              <div class="board-col-head"><span class="board-col-title">Connected</span><span class="board-col-count">3</span><span class="chip live" style="margin-left:auto;font-size:9px"><span class="dot"></span>live</span></div>
+              <div class="board-col-body">
+                <div class="disp-card" onclick="show('d-active')"><div class="row between"><span class="disp-lang">Spanish · #0042</span><span class="state-pill st-in_session">in_session</span></div><div class="disp-meta">R. López · <span class="live-clock mono" data-secs="514">08:34</span></div></div>
+                <div class="disp-card"><div class="row between"><span class="disp-lang">ASL · #0044</span><span class="state-pill st-in_session">in_session</span></div><div class="disp-meta">A. Rivera · <span class="live-clock mono" data-secs="320">05:20</span></div></div>
+                <div class="disp-card"><div class="row between"><span class="disp-lang">Mandarin · #0045</span><span class="state-pill st-connected">connected</span></div><div class="disp-meta">J. Kim · connecting media…</div></div>
+              </div>
+            </div>
+            <div class="board-col">
+              <div class="board-col-head"><span class="board-col-title">Available interpreters</span><span class="board-col-count">7</span></div>
+              <div class="board-col-body">
+                <div class="list-row" style="margin-bottom:6px;padding:8px 10px"><div class="avatar" style="width:26px;height:26px;font-size:9px">RL</div><div class="grow"><div style="font-size:12px;font-weight:500">R. López</div><div class="mono" style="font-size:9px;color:var(--black-300)">ES · in session</div></div><span class="chip" style="font-size:9px"><span class="dot"></span>Booked</span></div>
+                <div class="list-row" style="margin-bottom:6px;padding:8px 10px"><div class="avatar" style="width:26px;height:26px;font-size:9px">JK</div><div class="grow"><div style="font-size:12px;font-weight:500">J. Kim</div><div class="mono" style="font-size:9px;color:var(--black-300)">MN · Legal</div></div><span class="chip live" style="font-size:9px"><span class="dot"></span>Active</span></div>
+                <div class="list-row" style="margin-bottom:6px;padding:8px 10px"><div class="avatar" style="width:26px;height:26px;font-size:9px">AR</div><div class="grow"><div style="font-size:12px;font-weight:500">A. Rivera</div><div class="mono" style="font-size:9px;color:var(--black-300)">ASL</div></div><span class="chip live" style="font-size:9px"><span class="dot"></span>Active</span></div>
+                <div class="list-row" style="padding:8px 10px;opacity:0.6"><div class="avatar" style="width:26px;height:26px;font-size:9px">TN</div><div class="grow"><div style="font-size:12px;font-weight:500">T. Nguyen</div><div class="mono" style="font-size:9px;color:var(--black-300)">VI</div></div><span class="chip warn" style="font-size:9px"><span class="dot"></span>15m Break</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="spec-foot"><b>Actions per card:</b> assign · unassign · transfer · reject · start · complete. Presence column updates from WSS presence.update. <b>lsp_admin</b> sees Admin Dashboard link; <b>sub_admin</b> does not.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── D-ACTIVE · in-progress + session drawer · P2 ──────────────────── -->
+  <div class="screen" id="d-active">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>dispatch</span></div>
+        <div class="ws-rail-section">Boards</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Unassigned<span class="ws-rail-badge">5</span></div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>In-progress<span class="ws-rail-badge live">3</span></div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Scheduled</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 20h20L12 2Z"/><path d="M12 9v5M12 17h.01"/></svg>Escalations<span class="ws-rail-badge">2</span></div>
+        <div class="ws-rail-spacer"></div>
+      </div>
+      <div class="ws-content" style="position:relative">
+        <div class="ws-header"><div><div class="ws-title">In progress</div><div class="ws-route">/dispatch/active · ringing · connected · in_session</div></div><div class="ws-header-spacer"></div><span class="chip live"><span class="dot"></span>3 live</span></div>
+        <div class="ws-body" style="padding:16px 18px;margin-right:380px">
+          <div class="list-row" style="border-color:rgba(34,197,94,0.3);cursor:pointer">
+            <span class="state-pill st-in_session" style="width:80px;justify-content:center">in_session</span>
+            <div class="grow"><div class="disp-lang">Spanish · Video · #0042</div><div class="disp-meta">R. López ↔ Acme Health Clinic · Cardiology</div></div>
+            <span class="live-clock mono" data-secs="514" style="font-size:15px">08:34</span>
+            <button class="btn ghost sm">Open ▸</button>
+          </div>
+          <div class="list-row" style="border-color:rgba(34,197,94,0.3)">
+            <span class="state-pill st-in_session" style="width:80px;justify-content:center">in_session</span>
+            <div class="grow"><div class="disp-lang">ASL · Video · #0044</div><div class="disp-meta">A. Rivera ↔ Riverside School</div></div>
+            <span class="live-clock mono" data-secs="320" style="font-size:15px">05:20</span>
+            <button class="btn ghost sm">Open ▸</button>
+          </div>
+          <div class="list-row">
+            <span class="state-pill st-ringing" style="width:80px;justify-content:center">ringing</span>
+            <div class="grow"><div class="disp-lang">Mandarin · Video · #0045</div><div class="disp-meta">J. Kim · ringing — no answer yet</div></div>
+            <span class="wait-clock mono" data-secs="14" style="font-size:15px;color:var(--signal-warn)">0:14</span>
+            <button class="btn ghost sm">Open ▸</button>
+          </div>
+        </div>
+        <!-- session detail drawer -->
+        <div class="drawer">
+          <div class="drawer-head"><div class="row between"><div><div style="font-family:var(--font-display);font-size:15px;font-weight:600">Session #0042</div><div class="mono" style="font-size:10px;color:var(--black-300);margin-top:3px">Spanish · Video</div></div><span class="state-pill st-in_session">in_session</span></div></div>
+          <div class="drawer-body">
+            <div class="row" style="justify-content:center;margin-bottom:14px"><span class="live-clock mono" data-secs="514" style="font-size:28px;font-weight:600;letter-spacing:0.08em">08:34</span></div>
+            <div class="section-label">Parties</div>
+            <div class="kv"><span class="kv-k">Interpreter</span><span class="kv-v">R. López · Tier 2 Medical</span></div>
+            <div class="kv"><span class="kv-k">Customer</span><span class="kv-v">Acme Health Clinic</span></div>
+            <div class="kv"><span class="kv-k">Requested by</span><span class="kv-v">Dr. Okafor</span></div>
+            <div class="section-label" style="margin-top:16px">Context</div>
+            <div class="kv"><span class="kv-k">Patient</span><span class="kv-v phi" style="font-family:var(--font-mono);color:var(--black-300)">●●●●●●● masked</span></div>
+            <div class="kv"><span class="kv-k">Department</span><span class="kv-v">Cardiology</span></div>
+            <div class="kv"><span class="kv-k">Started</span><span class="kv-v mono">2:18 PM</span></div>
+            <div class="note info" style="margin-top:14px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>PHI stays masked in dispatch. No unlock here — operational view only.</div>
+          </div>
+          <div class="drawer-foot">
+            <div class="row" style="gap:8px;margin-bottom:8px"><button class="btn ghost sm grow">Transfer</button><button class="btn ghost sm grow">Unassign</button></div>
+            <button class="btn danger" style="width:100%">Force complete</button>
+          </div>
+        </div>
+        <div class="ws-body" style="flex:0;padding:12px 18px;margin-right:380px"><div class="spec-foot" style="margin:0;border:none;padding:0"><b>Drawer actions:</b> assign · unassign · transfer · reject · start · complete. <b>PHI never unlockable</b> in dispatch (operational-only). <b>API:</b> POST /sessions/:id/{transfer,complete}.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── D-SCHEDULED · /dispatch/scheduled · P3 ────────────────────────── -->
+  <div class="screen" id="d-scheduled">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>dispatch</span></div>
+        <div class="ws-rail-section">Boards</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Unassigned</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>In-progress<span class="ws-rail-badge live">3</span></div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Scheduled</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 20h20L12 2Z"/><path d="M12 9v5M12 17h.01"/></svg>Escalations<span class="ws-rail-badge">2</span></div>
+        <div class="ws-rail-spacer"></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">Scheduled board</div><div class="ws-route">/dispatch/scheduled · T−0 escalations</div></div><div class="ws-header-spacer"></div>
+          <div class="seg"><button class="seg-opt active">Today</button><button class="seg-opt">Tomorrow</button><button class="seg-opt">Week</button></div></div>
+        <div class="ws-body">
+          <div class="board" style="grid-auto-columns:minmax(240px,1fr)">
+            <div class="board-col"><div class="board-col-head"><span class="board-col-title">Unassigned</span><span class="board-col-count">2</span><span class="chip warn" style="margin-left:auto;font-size:9px">needs interpreter</span></div><div class="board-col-body">
+              <div class="disp-card urgent"><div class="row between"><span class="disp-lang">ASL · 2:30 PM</span><span class="state-pill st-scheduled">scheduled</span></div><div class="disp-meta">Acme Health · T−18m · no interpreter</div><button class="btn accept sm" style="width:100%">Assign now</button></div>
+              <div class="disp-card"><div class="row between"><span class="disp-lang">Spanish · 4:00 PM</span><span class="state-pill st-scheduled">scheduled</span></div><div class="disp-meta">Riverside School · T−1h48m</div><button class="btn accept sm" style="width:100%">Assign</button></div>
+            </div></div>
+            <div class="board-col"><div class="board-col-head"><span class="board-col-title">Assigned</span><span class="board-col-count">3</span></div><div class="board-col-body">
+              <div class="disp-card"><div class="row between"><span class="disp-lang">Mandarin · 3:15 PM</span><span class="chip" style="font-size:9px">J. Kim</span></div><div class="disp-meta">Downtown Legal · T−1h03m</div></div>
+              <div class="disp-card"><div class="row between"><span class="disp-lang">ASL · 5:15 PM</span><span class="chip" style="font-size:9px">A. Rivera</span></div><div class="disp-meta">Legal Aid · on-site · 200 Market St</div></div>
+              <div class="disp-card"><div class="row between"><span class="disp-lang">Spanish · 6:00 PM</span><span class="chip" style="font-size:9px">R. López</span></div><div class="disp-meta">Acme Health · video</div></div>
+            </div></div>
+            <div class="board-col"><div class="board-col-head"><span class="board-col-title">Starting soon (T−15m)</span><span class="board-col-count">1</span><span class="chip live" style="margin-left:auto;font-size:9px"><span class="dot"></span>watch</span></div><div class="board-col-body">
+              <div class="disp-card urgent"><div class="row between"><span class="disp-lang">ASL · 2:30 PM</span><span class="state-pill st-queued">queued</span></div><div class="disp-meta">T−14m · escalating — still unassigned</div><button class="btn danger sm" style="width:100%">Escalate</button></div>
+            </div></div>
+          </div>
+          <div class="spec-foot"><b>T−0 escalations:</b> a scheduled session still unassigned at its lead-time threshold auto-flags and can escalate to the Escalations board. <b>State:</b> scheduled → queued at T−0.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── D-ESCALATIONS · /dispatch/escalations · P3 ────────────────────── -->
+  <div class="screen" id="d-escalations">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>dispatch</span></div>
+        <div class="ws-rail-section">Boards</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Unassigned</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>In-progress<span class="ws-rail-badge live">3</span></div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Scheduled</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 20h20L12 2Z"/><path d="M12 9v5M12 17h.01"/></svg>Escalations<span class="ws-rail-badge">2</span></div>
+        <div class="ws-rail-spacer"></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">Escalations</div><div class="ws-route">/dispatch/escalations · no-supply &amp; lead-time shortage</div></div><div class="ws-header-spacer"></div><span class="chip error"><span class="dot"></span>2 need action</span></div>
+        <div class="ws-body">
+          <div class="list-row" style="border-color:rgba(239,68,68,0.4);border-left:3px solid var(--signal-error)">
+            <svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-error)" stroke-width="1.6" style="font-size:22px"><path d="M12 2 2 20h20L12 2Z"/><path d="M12 9v5M12 17h.01"/></svg>
+            <div class="grow"><div class="row between"><span class="disp-lang">ASL · Video · #0048</span><span class="chip error">No-supply</span></div><div class="disp-meta">Acme Health · on-demand · queued <span class="wait-clock mono" data-secs="312">5:12</span> · 0 interpreters available</div>
+              <div class="row" style="gap:6px;margin-top:4px"><span class="chip">Customer notified</span><span class="chip warn">Awaiting choice: extend / schedule / cancel</span></div></div>
+            <div class="col" style="gap:6px"><button class="btn accept sm">Manual assign</button><button class="btn ghost sm">Convert to scheduled</button></div>
+          </div>
+          <div class="list-row" style="border-color:rgba(245,158,11,0.4);border-left:3px solid var(--signal-warn)">
+            <svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-warn)" stroke-width="1.6" style="font-size:22px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <div class="grow"><div class="row between"><span class="disp-lang">Mandarin · On-site · #0050</span><span class="chip warn">Lead-time shortage</span></div><div class="disp-meta">Downtown Legal · scheduled 2:30 PM · T−14m · still unassigned</div></div>
+            <div class="col" style="gap:6px"><button class="btn accept sm">Assign now</button><button class="btn ghost sm">Notify partner LSP</button></div>
+          </div>
+          <div class="empty" style="margin-top:8px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6 9 17l-5-5"/></svg><div class="empty-title">No older escalations</div><div class="empty-sub">Resolved items move to history</div></div>
+          <div class="spec-foot"><b>Sources:</b> on-demand no-supply (queue exhausted) and scheduled lead-time shortage. Overflow/partner-LSP routing is P5 — badge shows "Partner LSP" with operational-only PHI when active.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ███████████████████  SHARED SHELL + LEO AI  ███████████████████ -->
+
+  <!-- ── S-NOTIFICATIONS · notification center · P1–P3 ─────────────────── -->
+  <div class="screen" id="s-notifications">
+    <div class="ws no-rail">
+      <div class="ws-content" style="background:var(--black-900)">
+        <div class="ws-header"><div><div class="ws-title">Notifications</div><div class="ws-route">notification center · WSS notification.push</div></div><div class="ws-header-spacer"></div>
+          <div class="seg"><button class="seg-opt active">All</button><button class="seg-opt">Unread</button><button class="seg-opt">Sessions</button></div>
+          <button class="btn ghost sm">Mark all read</button></div>
+        <div class="ws-body">
+          <div style="max-width:680px;margin:0 auto">
+            <div class="section-label">Today</div>
+            <div class="list-row" style="border-left:3px solid var(--signal-live)">
+              <div class="avatar" style="width:34px;height:34px;font-size:11px;background:rgba(34,197,94,0.12);color:var(--signal-live);border-color:rgba(34,197,94,0.25)">●</div>
+              <div class="grow"><div style="font-size:13px;font-weight:500">New request — Spanish · Video</div><div class="disp-meta" style="margin:2px 0 0">Acme Health Clinic · broadcast to you · 2m ago</div></div>
+              <button class="btn accept sm">Open</button>
+            </div>
+            <div class="list-row">
+              <div class="avatar" style="width:34px;height:34px;font-size:11px;background:rgba(245,158,11,0.12);color:var(--signal-warn);border-color:rgba(245,158,11,0.25)">!</div>
+              <div class="grow"><div style="font-size:13px;font-weight:500">Session #0048 cancelled by customer</div><div class="disp-meta" style="margin:2px 0 0">ASL · scheduled 2:30 PM · 14m ago <span class="chip" style="margin-left:6px;font-size:9px">non-optional</span></div></div>
+            </div>
+            <div class="list-row">
+              <div class="avatar" style="width:34px;height:34px;font-size:11px">★</div>
+              <div class="grow"><div style="font-size:13px;font-weight:500">You received a 5-star rating</div><div class="disp-meta" style="margin:2px 0 0">Acme Health Clinic · 1h ago</div></div>
+            </div>
+            <div class="section-label" style="margin-top:18px">Earlier</div>
+            <div class="list-row" style="opacity:0.7">
+              <div class="avatar" style="width:34px;height:34px;font-size:11px">⏱</div>
+              <div class="grow"><div style="font-size:13px;font-weight:500">Certification expiring in 30 days</div><div class="disp-meta" style="margin:2px 0 0">CCHI · Medical · renew before Jul 25</div></div>
+              <button class="btn ghost sm">Renew</button>
+            </div>
+            <div class="note info" style="margin-top:16px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><b>Accessible channels only.</b> Deaf/HoH users never get audio-only alerts — visual, SMS, and vibration are used. Cancellations are non-optional notifications.</div>
+            <div class="spec-foot"><b>Driven by</b> WSS notification.push. Cross-app: same center in workstation &amp; web. Bell badge counts unread. <b>No PHI</b> in any preview text.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S-SETTINGS · personal & ops settings · P2 ─────────────────────── -->
+  <div class="screen" id="s-settings">
+    <div class="ws no-rail">
+      <div class="ws-content" style="background:var(--black-900)">
+        <div class="ws-header"><div><div class="ws-title">Settings</div><div class="ws-route">workstation · personal &amp; session-ops only</div></div></div>
+        <div class="ws-body">
+          <div class="row" style="gap:18px;align-items:flex-start;max-width:880px;margin:0 auto">
+            <div class="col" style="width:200px;gap:2px;flex-shrink:0">
+              <div class="ws-rail-item active" style="margin:0">Account</div>
+              <div class="ws-rail-item" style="margin:0">Appearance</div>
+              <div class="ws-rail-item" style="margin:0">Notifications</div>
+              <div class="ws-rail-item" style="margin:0">Communication / a11y</div>
+              <div class="ws-rail-item" style="margin:0">Camera &amp; mic</div>
+              <div class="ws-rail-item" style="margin:0">Status &amp; session</div>
+            </div>
+            <div class="col grow" style="gap:14px">
+              <div class="card"><div class="card-pad">
+                <div class="section-label">Appearance</div>
+                <div class="row between" style="padding:10px 0;border-bottom:1px solid var(--black-700)"><div><div style="font-size:13px;font-weight:500">Theme</div><div class="mono" style="font-size:10px;color:var(--black-300)">Night mode applies app-wide</div></div>
+                  <div class="seg"><button class="seg-opt">System</button><button class="seg-opt">Light</button><button class="seg-opt active">Dark</button></div></div>
+                <div class="row between" style="padding:10px 0"><div><div style="font-size:13px;font-weight:500">Reduce motion</div><div class="mono" style="font-size:10px;color:var(--black-300)">Minimise animations</div></div>
+                  <span style="width:38px;height:22px;border-radius:20px;background:var(--black-600);position:relative;display:inline-block"><span style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--black-300)"></span></span></div>
+              </div></div>
+              <div class="card"><div class="card-pad">
+                <div class="section-label">Communication &amp; accessibility profile</div>
+                <div class="row between" style="padding:10px 0;border-bottom:1px solid var(--black-700)"><div><div style="font-size:13px;font-weight:500">Deaf-first mode</div><div class="mono" style="font-size:10px;color:var(--black-300)">Captions on by default · no audio-only alerts</div></div>
+                  <span style="width:38px;height:22px;border-radius:20px;background:var(--signal-live);position:relative;display:inline-block"><span style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff"></span></span></div>
+                <div class="kv"><span class="kv-k">communication_preferences</span><span class="kv-v mono" style="font-size:11px">visual + SMS</span></div>
+                <div class="kv"><span class="kv-k">Locale / timezone</span><span class="kv-v">en-US · America/New_York</span></div>
+              </div></div>
+              <div class="card"><div class="card-pad">
+                <div class="section-label">Interpreter status &amp; session prefs <span class="chip" style="font-size:9px;margin-left:4px">interpreter</span></div>
+                <div class="row between" style="padding:10px 0;border-bottom:1px solid var(--black-700)"><div style="font-size:13px;font-weight:500">Default sign-on status</div><select class="input" style="width:160px"><option>Active</option><option>Booked</option></select></div>
+                <div class="row between" style="padding:10px 0"><div style="font-size:13px;font-weight:500">Auto-show camera preview</div>
+                  <span style="width:38px;height:22px;border-radius:20px;background:var(--signal-live);position:relative;display:inline-block"><span style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff"></span></span></div>
+              </div></div>
+              <div class="card" style="border-style:dashed"><div class="card-pad" style="display:flex;align-items:center;gap:12px">
+                <svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--black-200)" stroke-width="1.6" style="font-size:20px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
+                <div class="grow"><div style="font-size:13px;font-weight:500">Account security &amp; organization settings</div><div class="mono" style="font-size:10px;color:var(--black-300)">Full security UI, users, rates, billing → leo-web</div></div>
+                <button class="btn ghost sm">Open web →</button>
+              </div></div>
+            </div>
+          </div>
+          <div class="spec-foot"><b>Workstation owns</b> personal + session-ops settings only. User CRUD, rate cards, billing, onboarding wizards are web — surfaced here as a <b>link out</b>, never inline.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S-EXPIRED · session expired overlay · P1 ──────────────────────── -->
+  <div class="screen" id="s-expired">
+    <div class="ws no-rail">
+      <div class="ws-content" style="position:relative;background:var(--black-900)">
+        <div class="ws-header"><div><div class="ws-title">Requests</div><div class="ws-route">/idle/requests</div></div></div>
+        <div class="ws-body" style="filter:blur(2px);opacity:0.4"><div class="list-row"><div class="avatar" style="width:40px;height:40px">SP</div><div class="grow"><div class="disp-lang">Spanish · Video</div><div class="disp-meta">Acme Health · waiting</div></div></div></div>
+        <div class="modal-scrim">
+          <div class="modal" style="width:380px;text-align:center">
+            <div class="modal-body" style="padding:28px 24px">
+              <div class="avatar" style="width:48px;height:48px;margin:0 auto 14px;background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.25)"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-warn)" stroke-width="1.6" style="font-size:22px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+              <div class="modal-title">Your session expired</div>
+              <div class="modal-sub" style="margin-top:6px">For your security you've been signed out after inactivity (401). Sign in again to continue.</div>
+              <button class="btn primary" style="width:100%;margin-top:20px">Sign in again</button>
+              <div class="mono" style="font-size:9px;color:var(--black-300);margin-top:10px">No work lost — drafts are preserved.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S-LEO · Ask Leo (Leo Text) · /leo · P6 ────────────────────────── -->
+  <div class="screen" id="s-leo">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>customer</span></div>
+        <div class="ws-rail-section">Connect</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>Ask Leo</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>New call</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>My Requests</div>
+        <div class="ws-rail-spacer"></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">Ask Leo</div><div class="ws-route">/leo · Leo Text · schedule · request · cancel</div></div><div class="ws-header-spacer"></div><span class="chip"><span class="dot" style="background:#F472B6"></span>Leo Text · not Voice (Deaf-first)</span></div>
+        <div class="ws-body">
+          <div class="chat-wrap">
+            <div class="chat-stream">
+              <div class="bubble leo"><div class="bubble-actor">Leo</div>Hi! I can help you request an interpreter, schedule a session, or check a booking. What do you need?</div>
+              <div class="bubble user">I need an ASL interpreter for a cardiology appointment tomorrow afternoon.</div>
+              <div class="bubble leo"><div class="bubble-actor">Leo</div>Got it — ASL, video (signed languages are video only). Tomorrow afternoon. Roughly what time and how long?
+                <div class="leo-action-card">
+                  <div class="row between" style="margin-bottom:8px"><span class="mono" style="font-size:10px;color:var(--black-300)">DRAFT REQUEST</span><span class="chip">ASL · Video</span></div>
+                  <div class="kv"><span class="kv-k">When</span><span class="kv-v">Jun 26 · 2:30 PM</span></div>
+                  <div class="kv"><span class="kv-k">Duration</span><span class="kv-v">45 min</span></div>
+                  <div class="kv"><span class="kv-k">Department</span><span class="kv-v">Cardiology</span></div>
+                  <div class="row" style="gap:8px;margin-top:10px"><button class="btn ghost sm grow">Edit</button><button class="btn primary sm grow">Confirm &amp; book</button></div>
+                </div>
+              </div>
+              <div class="bubble user">Actually can you connect me to a dispatcher? I have a few specific needs.</div>
+              <div class="bubble leo" style="border-color:rgba(245,158,11,0.3)"><div class="bubble-actor" style="color:var(--signal-warn)">Leo · low confidence → handoff</div>
+                Of course — connecting you to a dispatcher now.
+                <div class="leo-action-card" style="border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.05)">
+                  <div class="row" style="gap:8px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-warn)" stroke-width="1.6" style="font-size:16px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span style="font-size:12px;color:var(--signal-warn)">Connecting to a dispatcher… you're #2 in queue</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-row">
+              <input class="input" placeholder="Message Leo…">
+              <button class="btn primary">Send</button>
+            </div>
+          </div>
+          <div class="spec-foot" style="max-width:640px;margin-left:auto;margin-right:auto"><b>Leo Text</b> (not Voice) for Deaf/HoH. Can schedule / request / cancel via confirmable action cards — never acts silently. <b>Low-confidence → handoff</b> drops into the dispatcher queue. AI interactions are audited (P6).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ███████████████████  ENTRY · AUTH  ███████████████████ -->
+
+  <!-- ── A-LOGIN · /login · P1 (both apps; workstation = dark) ─────────── -->
+  <div class="screen active" id="a-login">
+    <div class="auth-stage">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card">
+        <div class="auth-logo">LEO <span>connexio</span></div>
+        <div class="auth-sub">Sign in to your workstation</div>
+        <label class="field-label">Email</label>
+        <input class="input" value="r.lopez@acmelang.com" style="margin-bottom:14px">
+        <label class="field-label">Password</label>
+        <input class="input" type="password" value="••••••••••" style="margin-bottom:6px">
+        <div class="row between" style="margin-bottom:18px"><label class="row" style="gap:7px;font-size:11px;color:var(--black-200);cursor:pointer"><span style="width:14px;height:14px;border-radius:3px;border:1px solid var(--black-400);background:var(--black-600);display:inline-block"></span>Remember device</label><span class="link">Forgot password?</span></div>
+        <button class="btn primary" style="width:100%" onclick="show('a-mfa')">Sign in</button>
+        <div class="note warn" style="margin-top:14px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Privileged roles (interpreter, dispatcher, admin) are prompted for <b>MFA</b> after password.</div>
+        <div class="divider">new to Leo?</div>
+        <button class="btn ghost" style="width:100%" onclick="show('a-signup')">Create an account</button>
+        <div class="spec-foot"><b>POST /auth/login</b> → 200 issues JWT; privileged roles return mfa_required → /mfa. 401 on bad credentials. Same screen, both apps (dark in workstation, light in web).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── A-MFA · /mfa · P1 ─────────────────────────────────────────────── -->
+  <div class="screen" id="a-mfa">
+    <div class="auth-stage">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card">
+        <div class="auth-logo">LEO <span>connexio</span></div>
+        <div class="auth-sub">Two-factor verification</div>
+        <div class="note info" style="margin-bottom:6px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>Enter the 6-digit code from your authenticator app.</div>
+        <div class="otp-row">
+          <input class="otp-cell filled" value="4" maxlength="1"><input class="otp-cell filled" value="8" maxlength="1"><input class="otp-cell filled" value="2" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1">
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:8px" onclick="show('i-requests')">Verify &amp; continue</button>
+        <div class="row between" style="margin-top:14px"><span class="link">Use a backup code</span><span class="link">Resend</span></div>
+        <div class="spec-foot"><b>POST /auth/mfa</b> for platform_admin · lsp_admin · sub_admin (and interpreters per org policy). First login routes to <b>/mfa/enroll</b> (QR + backup codes).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── A-SIGNUP · /signup union picker · P1 ──────────────────────────── -->
+  <div class="screen" id="a-signup">
+    <div class="auth-stage">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card wide">
+        <div class="auth-logo">LEO <span>connexio</span></div>
+        <div class="auth-sub">Create an account · one signup, three paths</div>
+
+        <div class="wiz-steps" style="margin-bottom:18px">
+          <div class="wiz-step active"><span class="wiz-dot">1</span>Account type</div><div class="wiz-line"></div>
+          <div class="wiz-step"><span class="wiz-dot">2</span>Details</div><div class="wiz-line"></div>
+          <div class="wiz-step"><span class="wiz-dot">3</span>Verify email</div>
+        </div>
+
+        <div class="field-label">What describes you?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div class="opt-card selected"><div class="opt-icon">👤</div><div style="font-family:var(--font-display);font-weight:600;font-size:13px">Personal</div><div class="mono" style="font-size:9px;color:var(--black-300);margin-top:3px">Interpreter / individual</div></div>
+          <div class="opt-card"><div class="opt-icon">🏢</div><div style="font-family:var(--font-display);font-weight:600;font-size:13px">Business</div><div class="mono" style="font-size:9px;color:var(--black-300);margin-top:3px">Organization</div></div>
+        </div>
+
+        <div class="field-label">Business sub-type <span class="mono" style="font-size:9px;color:var(--black-300)">(if Business)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+          <div class="opt-card" style="padding:11px 12px;display:flex;align-items:center;gap:9px"><span style="width:7px;height:7px;border-radius:50%;background:var(--black-400)"></span><div><div style="font-size:12px;font-weight:500">Customer</div><div class="mono" style="font-size:9px;color:var(--black-300)">type=customer · books interpreters</div></div></div>
+          <div class="opt-card" style="padding:11px 12px;display:flex;align-items:center;gap:9px"><span style="width:7px;height:7px;border-radius:50%;background:var(--black-400)"></span><div><div style="font-size:12px;font-weight:500">LSP</div><div class="mono" style="font-size:9px;color:var(--black-300)">type=lsp · provides interpreters</div></div></div>
+        </div>
+
+        <div class="card" style="background:var(--black-700);margin-bottom:16px"><div class="card-pad" style="padding:12px 14px">
+          <div class="mono" style="font-size:9px;color:var(--black-300);margin-bottom:8px">RESULTING ONBOARDING PATH →</div>
+          <div class="row" style="gap:8px;flex-wrap:wrap">
+            <span class="chip" onclick="show('o-personal')" style="cursor:pointer">Personal → interpreter profile</span>
+            <span class="chip" onclick="show('o-customer')" style="cursor:pointer">Customer → org + members</span>
+            <span class="chip" onclick="show('o-lsp')" style="cursor:pointer">LSP → languages + pricing</span>
+          </div>
+        </div></div>
+
+        <div class="row between">
+          <span class="link" onclick="show('a-login')">← Back to sign in</span>
+          <button class="btn primary" onclick="show('a-verify')">Continue →</button>
+        </div>
+        <div class="spec-foot"><b>POST /auth/signup</b> union: <b>personal</b> | <b>business+customer</b> | <b>business+lsp</b> — not per-role endpoints. Returns email_verification_required:true → /signup/success → /verify-email. Org rows are organizations.type = customer|lsp.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── A-VERIFY · /verify-email + success · P1 ───────────────────────── -->
+  <div class="screen" id="a-verify">
+    <div class="auth-stage">
+      <div class="auth-grid-bg"></div>
+      <div class="row" style="gap:20px;align-items:flex-start;z-index:1">
+        <div class="auth-card" style="width:380px">
+          <div class="auth-logo">LEO <span>connexio</span></div>
+          <div class="auth-sub">Verify your email</div>
+          <div class="note info" style="margin-bottom:14px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>We sent a verification link to <b style="color:var(--signal-white)">r.lopez@acmelang.com</b>. Enter the code or click the link.</div>
+          <label class="field-label">Verification code</label>
+          <div class="otp-row" style="margin-bottom:4px">
+            <input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1">
+          </div>
+          <button class="btn primary" style="width:100%;margin-top:10px">Verify email</button>
+          <div class="row between" style="margin-top:14px"><span class="mono" style="font-size:10px;color:var(--black-300)">Resend in 0:42</span><span class="link">Change email</span></div>
+        </div>
+        <div class="auth-card" style="width:320px;text-align:center">
+          <div class="mono" style="font-size:9px;color:var(--black-300);margin-bottom:14px">SUCCESS STATE</div>
+          <div class="avatar" style="width:52px;height:52px;margin:0 auto 14px;background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3)"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-live)" stroke-width="2" style="font-size:24px"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:600">Email verified</div>
+          <div class="mono" style="font-size:10px;color:var(--black-300);margin:6px 0 16px">Let's finish setting up your account</div>
+          <button class="btn primary" style="width:100%" onclick="show('o-personal')">Continue to onboarding</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── A-INVITE · /invite/accept · P1 ────────────────────────────────── -->
+  <div class="screen" id="a-invite">
+    <div class="auth-stage">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card">
+        <div class="auth-logo">LEO <span>connexio</span></div>
+        <div class="auth-sub">You've been invited</div>
+        <div class="card" style="background:var(--black-700);margin-bottom:18px"><div class="card-pad" style="padding:14px;display:flex;align-items:center;gap:12px">
+          <div class="avatar" style="width:40px;height:40px;font-size:13px">AL</div>
+          <div class="grow"><div style="font-size:13px;font-weight:600">Acme Language Services</div><div class="mono" style="font-size:10px;color:var(--black-300);margin-top:2px">invited you as <b style="color:var(--signal-white)">Sub-Admin / Dispatcher</b></div></div>
+          <span class="chip info">sub_admin</span>
+        </div></div>
+        <label class="field-label">Your name</label>
+        <input class="input" placeholder="Full name" style="margin-bottom:14px">
+        <label class="field-label">Set a password</label>
+        <input class="input" type="password" placeholder="Create a password" style="margin-bottom:6px">
+        <div class="mono" style="font-size:9px;color:var(--black-300);margin-bottom:16px">Min 12 chars · privileged role → MFA enrollment next</div>
+        <button class="btn primary" style="width:100%" onclick="show('a-mfa')">Accept &amp; join</button>
+        <div class="spec-foot"><b>POST /invitations/accept</b> with the emailed token. Role &amp; org are fixed by the invitation (sub_admin or customer_user). Privileged invitees enroll MFA before first landing.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ███████████████████  ONBOARDING (per account type)  ███████████████████ -->
+
+  <!-- ── O-PERSONAL · interpreter / individual onboarding · P1 (dark) ───── -->
+  <div class="screen" id="o-personal">
+    <div class="auth-stage" style="align-items:flex-start;padding-top:30px">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card wide" style="width:560px">
+        <div class="row between" style="margin-bottom:4px"><div class="auth-logo" style="margin:0">LEO <span>· welcome</span></div><span class="chip info">Personal · interpreter</span></div>
+        <div class="auth-sub">Set up your interpreter profile</div>
+        <div class="wiz-steps" style="margin-bottom:20px">
+          <div class="wiz-step done"><span class="wiz-dot">✓</span>Account</div><div class="wiz-line"></div>
+          <div class="wiz-step active"><span class="wiz-dot">2</span>Profile &amp; languages</div><div class="wiz-line"></div>
+          <div class="wiz-step"><span class="wiz-dot">3</span>Affiliate</div>
+        </div>
+        <div class="row" style="gap:14px;margin-bottom:14px"><div class="grow"><label class="field-label">Display name</label><input class="input" value="Rosa López"></div><div style="width:180px"><label class="field-label">Timezone</label><select class="input"><option>America/New_York</option></select></div></div>
+
+        <label class="field-label">Languages you interpret</label>
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <span class="chip live"><span class="dot"></span>Spanish ✓</span><span class="chip live"><span class="dot"></span>English ✓</span><span class="chip">+ ASL</span><span class="chip">+ Mandarin</span><span class="chip" style="border-style:dashed">+ add</span>
+        </div>
+
+        <label class="field-label">Certifications <span class="mono" style="font-size:9px;color:var(--black-300)">(picked from global catalog; LSP verifies later)</span></label>
+        <div class="col" style="gap:8px;margin-bottom:14px">
+          <div class="list-row" style="margin:0;padding:10px 12px"><div class="grow"><div style="font-size:12px;font-weight:500">CCHI — Medical</div><div class="mono" style="font-size:9px;color:var(--black-300)">Cert # · expires 07/2027</div></div><button class="btn ghost sm">Upload proof</button></div>
+          <div class="list-row" style="margin:0;padding:10px 12px"><div class="grow"><div style="font-size:12px;font-weight:500">RID — interpreting</div><div class="mono" style="font-size:9px;color:var(--black-300)">optional</div></div><span class="chip">+ add</span></div>
+        </div>
+        <div class="note info" style="margin-bottom:18px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>You interpret <b>through an LSP</b>. Next, request an affiliation — an LSP must approve you before you receive requests.</div>
+        <div class="row between"><span class="link" onclick="show('a-verify')">← Back</span><button class="btn primary" onclick="show('i-affiliation')">Next: affiliate with an LSP →</button></div>
+        <div class="spec-foot"><b>Personal account</b> = interpreter identity; it gains a tenant context only via an approved affiliation. Cert proofs reviewed by LSP (web). Catalog (languages/certs) is read-only here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── O-CUSTOMER · customer org onboarding · P1 (dark) ──────────────── -->
+  <div class="screen" id="o-customer">
+    <div class="auth-stage" style="align-items:flex-start;padding-top:30px">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card wide" style="width:560px">
+        <div class="row between" style="margin-bottom:4px"><div class="auth-logo" style="margin:0">LEO <span>· welcome</span></div><span class="chip info">Business · customer</span></div>
+        <div class="auth-sub">Set up your organization</div>
+        <div class="wiz-steps" style="margin-bottom:20px">
+          <div class="wiz-step done"><span class="wiz-dot">✓</span>Account</div><div class="wiz-line"></div>
+          <div class="wiz-step active"><span class="wiz-dot">2</span>Org profile</div><div class="wiz-line"></div>
+          <div class="wiz-step"><span class="wiz-dot">3</span>Invite team</div><div class="wiz-line"></div>
+          <div class="wiz-step"><span class="wiz-dot">4</span>Done</div>
+        </div>
+        <div class="row" style="gap:14px;margin-bottom:14px"><div class="grow"><label class="field-label">Organization name</label><input class="input" value="Acme Health Clinic"></div><div style="width:160px"><label class="field-label">Industry</label><select class="input"><option>Healthcare</option><option>Education</option><option>Legal</option></select></div></div>
+        <label class="field-label">Registered address <span class="mono" style="font-size:9px;color:var(--black-300)">(default on-site address)</span></label>
+        <input class="input" value="200 Market St, Suite 4, San Jose, CA" style="margin-bottom:14px">
+
+        <label class="field-label">Invite your team <span class="mono" style="font-size:9px;color:var(--black-300)">(customer users)</span></label>
+        <div class="col" style="gap:6px;margin-bottom:14px">
+          <div class="row" style="gap:8px"><input class="input" value="dr.okafor@acme.health" style="font-size:12px"><select class="input" style="width:140px"><option>Customer User</option><option>Customer Admin</option></select></div>
+          <div class="row" style="gap:8px"><input class="input" placeholder="email@org.com" style="font-size:12px"><button class="btn ghost sm">+ Row</button></div>
+        </div>
+        <div class="note info" style="margin-bottom:18px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>You'll configure <b>required billing-popup fields</b> (PHI &amp; context the interpreter sees) and LSP links in your web portal after setup.</div>
+        <div class="row between"><span class="link" onclick="show('a-verify')">← Back</span><button class="btn primary" onclick="show('c-new')">Finish &amp; place first call →</button></div>
+        <div class="spec-foot"><b>Business+customer</b> creates organizations.type=customer + a customer_admin membership. Onboarding wizards are <b>leo-web</b>; this app surfaces only the post-setup call flow. Members invited via POST /invitations.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── O-LSP · LSP onboarding wizard · P2 (LIGHT web admin) ──────────── -->
+  <div class="screen" id="o-lsp">
+    <div class="web-stage">
+      <div class="web-card">
+        <div class="web-head">
+          <div class="row between"><div class="web-logo">LEO <span>· LSP onboarding</span></div><span class="web-pill">leo-web · admin</span></div>
+          <div class="web-step" style="margin-top:16px">
+            <div class="web-step-item done"><span class="web-step-dot">✓</span>Account</div><span class="web-step-line"></span>
+            <div class="web-step-item done"><span class="web-step-dot">✓</span>Org</div><span class="web-step-line"></span>
+            <div class="web-step-item active"><span class="web-step-dot">3</span>Languages</div><span class="web-step-line"></span>
+            <div class="web-step-item"><span class="web-step-dot">4</span>Partners</div><span class="web-step-line"></span>
+            <div class="web-step-item"><span class="web-step-dot">5</span>Pricing</div>
+          </div>
+        </div>
+        <div class="web-body">
+          <div class="web-section-label">Service languages</div>
+          <div class="web-field"><label class="web-label">Which languages do you provide?</label>
+            <div class="web-tag-grid">
+              <span class="web-tag on">Spanish</span><span class="web-tag on">ASL</span><span class="web-tag on">Mandarin</span><span class="web-tag">Vietnamese</span><span class="web-tag">Arabic</span><span class="web-tag">Russian</span><span class="web-tag">+ more</span>
+            </div>
+          </div>
+          <div class="web-note" style="margin-bottom:18px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:14px;color:var(--web-muted)"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span><b>ASL is a signed language</b> — sessions in it are video-only across the platform. Telephone/OPI is auto-disabled for signed languages.</span></div>
+
+          <div class="web-section-label">Recognized certifications</div>
+          <div class="web-field"><label class="web-label">Subset of the global catalog you accept</label>
+            <div class="web-tag-grid"><span class="web-tag on">CCHI</span><span class="web-tag on">NBCMI</span><span class="web-tag on">RID</span><span class="web-tag">Court certified</span><span class="web-tag">State registry</span></div>
+          </div>
+
+          <div class="web-row2">
+            <div class="web-field"><label class="web-label">Default login policy</label><select class="web-input"><option>MFA required for admins &amp; dispatchers</option><option>MFA required for all</option></select></div>
+            <div class="web-field"><label class="web-label">Interpreter approval</label><select class="web-input"><option>Manual review (recommended)</option><option>Auto-approve verified certs</option></select></div>
+          </div>
+
+          <div class="web-note"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:14px;color:var(--signal-warn)"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span><b>Activation</b> (Stripe verification + platform BAA) happens in the Compliance hub — sessions are blocked until your BAA is on file (P2 manual / P4 self-serve).</span></div>
+
+          <div class="web-spec-foot"><b>Post-signup, not in the signup txn.</b> business+lsp creates organizations.type=lsp + lsp_admin. Wizard sets partners (rank), languages, pricing, login prefs. Next: <b>rate cards</b> &amp; <b>compliance/activation</b>.</div>
+        </div>
+        <div class="web-foot"><button class="web-btn ghost">← Back</button><div class="row" style="gap:8px"><button class="web-btn">Save &amp; exit</button><button class="web-btn primary">Next: partner ranking →</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── I-AFFILIATION · /settings/affiliations · P1 alpha.5 (dark) ─────── -->
+  <div class="screen" id="i-affiliation">
+    <div class="ws">
+      <div class="ws-rail">
+        <div class="ws-rail-logo">LEO <span>interpreter</span></div>
+        <div class="ws-rail-section">Session</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Idle</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Requests</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M9 3v4M15 3v4M4 11h16"/></svg>My Tasks</div>
+        <div class="ws-rail-section">Me</div>
+        <div class="ws-rail-item active"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 11a4 4 0 1 0-8 0M4 20a8 8 0 0 1 16 0"/></svg>Affiliations</div>
+        <div class="ws-rail-item"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Availability</div>
+        <div class="ws-rail-spacer"></div>
+        <div class="ws-rail-foot"><div class="ws-rail-status"><span class="ws-rail-status-dot"></span><div><div class="ws-rail-status-name">Rosa López</div><div class="ws-rail-status-role">Interpreter · 2 affiliations</div></div></div></div>
+      </div>
+      <div class="ws-content">
+        <div class="ws-header"><div><div class="ws-title">Affiliations</div><div class="ws-route">/settings/affiliations · GET /affiliations</div></div><div class="ws-header-spacer"></div><button class="btn primary sm">+ Request affiliation</button></div>
+        <div class="ws-body">
+          <div class="row" style="gap:18px;align-items:flex-start">
+            <div class="grow">
+              <div class="section-label">Your affiliations</div>
+              <div class="list-row"><div class="avatar" style="width:36px;height:36px;font-size:12px">AL</div><div class="grow"><div style="font-size:13px;font-weight:500">Acme Language Services</div><div class="disp-meta" style="margin:2px 0 0">Member since Mar 2026 · receives your on-demand requests</div></div><span class="chip live"><span class="dot"></span>active</span></div>
+              <div class="list-row"><div class="avatar" style="width:36px;height:36px;font-size:12px">GL</div><div class="grow"><div style="font-size:13px;font-weight:500">Global Interpreters Co.</div><div class="disp-meta" style="margin:2px 0 0">Requested 2 days ago · awaiting LSP approval</div></div><span class="chip warn"><span class="dot"></span>pending</span></div>
+              <div class="list-row" style="opacity:0.7"><div class="avatar" style="width:36px;height:36px;font-size:12px">BR</div><div class="grow"><div style="font-size:13px;font-weight:500">Bridge Language Partners</div><div class="disp-meta" style="margin:2px 0 0">Declined — capacity full</div></div><span class="chip error"><span class="dot"></span>rejected</span></div>
+
+              <div class="section-label" style="margin-top:20px">Incoming invitation</div>
+              <div class="list-row" style="border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.04)"><div class="avatar" style="width:36px;height:36px;font-size:12px">NW</div><div class="grow"><div style="font-size:13px;font-weight:500">Northwest Language Hub</div><div class="disp-meta" style="margin:2px 0 0">invited you to affiliate · Medical + Legal</div></div><div class="row" style="gap:6px"><button class="btn ghost sm">Decline</button><button class="btn accept sm">Accept</button></div></div>
+            </div>
+            <div class="card" style="width:300px"><div class="card-pad">
+              <div class="section-label">Request a new affiliation</div>
+              <div class="search-wrap" style="position:relative;margin-bottom:10px"><input class="input" placeholder="Search LSPs…"></div>
+              <div class="list-row" style="margin:0 0 6px;padding:9px 11px;cursor:pointer"><div class="avatar" style="width:28px;height:28px;font-size:10px">PA</div><div class="grow"><div style="font-size:12px;font-weight:500">Pacific Access LSP</div><div class="mono" style="font-size:9px;color:var(--black-300)">San Jose, CA</div></div><span class="chip" style="font-size:9px">Request</span></div>
+              <div class="list-row" style="margin:0;padding:9px 11px;cursor:pointer"><div class="avatar" style="width:28px;height:28px;font-size:10px">LL</div><div class="grow"><div style="font-size:12px;font-weight:500">LinguaLink</div><div class="mono" style="font-size:9px;color:var(--black-300)">Remote</div></div><span class="chip" style="font-size:9px">Request</span></div>
+              <div class="note info" style="margin-top:12px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>A request stays <b>pending</b> until the LSP approves it. Only <b>active</b> affiliations route requests to you.</div>
+            </div></div>
+          </div>
+          <div class="spec-foot"><b>States:</b> pending · active · rejected · invited. Interpreter requests (POST /affiliations → pending) or accepts an LSP invite (PATCH /affiliations/:id). LSP approves on the web side. An interpreter with no active affiliation receives no requests.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── A-FORGOT · /forgot-password · P1 ──────────────────────────────── -->
+  <div class="screen" id="a-forgot">
+    <div class="auth-stage">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card">
+        <div class="auth-logo">LEO <span>connexio</span></div>
+        <div class="auth-sub">Reset your password</div>
+        <div class="note info" style="margin-bottom:16px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Enter your account email and we'll send a reset link. The link expires in 30 minutes.</div>
+        <label class="field-label">Email</label>
+        <input class="input" placeholder="you@organization.com" style="margin-bottom:16px">
+        <button class="btn primary" style="width:100%" onclick="show('a-reset')">Send reset link</button>
+        <div class="row" style="justify-content:center;margin-top:16px"><span class="link" onclick="show('a-login')">← Back to sign in</span></div>
+        <div class="card" style="background:var(--black-700);margin-top:18px"><div class="card-pad" style="padding:12px 14px;text-align:center">
+          <svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="var(--signal-live)" stroke-width="1.6" style="font-size:18px;margin-bottom:6px"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+          <div style="font-size:12px;font-weight:500">If that email exists, a link is on its way</div>
+          <div class="mono" style="font-size:9px;color:var(--black-300);margin-top:4px">Always shown — never reveals whether an account exists</div>
+        </div></div>
+        <div class="spec-foot"><b>POST /auth/forgot-password</b> always returns 200 (no account enumeration). Token single-use, 30-min TTL → /reset-password.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── A-RESET · /reset-password · P1 ────────────────────────────────── -->
+  <div class="screen" id="a-reset">
+    <div class="auth-stage">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card">
+        <div class="auth-logo">LEO <span>connexio</span></div>
+        <div class="auth-sub">Choose a new password</div>
+        <label class="field-label">New password</label>
+        <input class="input" type="password" value="••••••••••••••" style="margin-bottom:8px">
+        <div class="row" style="gap:4px;margin-bottom:4px">
+          <span style="flex:1;height:4px;border-radius:2px;background:var(--signal-live)"></span>
+          <span style="flex:1;height:4px;border-radius:2px;background:var(--signal-live)"></span>
+          <span style="flex:1;height:4px;border-radius:2px;background:var(--signal-live)"></span>
+          <span style="flex:1;height:4px;border-radius:2px;background:var(--black-600)"></span>
+        </div>
+        <div class="mono" style="font-size:9px;color:var(--signal-live);margin-bottom:14px">Strong · 14 chars · meets policy</div>
+        <label class="field-label">Confirm new password</label>
+        <input class="input" type="password" value="••••••••••••••" style="margin-bottom:6px">
+        <div class="mono" style="font-size:9px;color:var(--black-300);margin-bottom:16px">Min 12 chars · 1 uppercase · 1 number · 1 symbol</div>
+        <button class="btn primary" style="width:100%" onclick="show('a-login')">Set password &amp; sign in</button>
+        <div class="note warn" style="margin-top:14px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>All other sessions will be signed out. Privileged roles re-enroll/confirm MFA on next sign-in.</div>
+        <div class="spec-foot"><b>POST /auth/reset-password</b> with the emailed token + new password. Invalidates refresh tokens; 410 if token expired/used.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── A-MFA-ENROLL · /mfa/enroll · P1 ───────────────────────────────── -->
+  <div class="screen" id="a-mfa-enroll">
+    <div class="auth-stage" style="align-items:flex-start;padding-top:30px">
+      <div class="auth-grid-bg"></div>
+      <div class="auth-card wide" style="width:480px">
+        <div class="auth-logo">LEO <span>connexio</span></div>
+        <div class="auth-sub">Set up two-factor authentication</div>
+        <div class="note warn" style="margin-bottom:18px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>Your role (<b>lsp_admin</b>) requires MFA. Finish enrollment to continue.</div>
+        <div class="row" style="gap:18px;align-items:flex-start;margin-bottom:16px">
+          <div style="width:140px;height:140px;border-radius:var(--r-md);background:#fff;flex-shrink:0;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr);padding:10px;gap:2px">
+            <!-- faux QR -->
+            <span style="background:#000;grid-column:1/3;grid-row:1/3"></span><span style="background:#000;grid-column:6/8;grid-row:1/3"></span><span style="background:#000;grid-column:1/3;grid-row:6/8"></span>
+            <span style="background:#000;grid-column:4;grid-row:2"></span><span style="background:#000;grid-column:5;grid-row:4"></span><span style="background:#000;grid-column:3;grid-row:5"></span><span style="background:#000;grid-column:6;grid-row:6"></span><span style="background:#000;grid-column:4;grid-row:6"></span><span style="background:#000;grid-column:7;grid-row:4"></span>
+          </div>
+          <div class="grow">
+            <div class="field-label">1 · Scan with your authenticator</div>
+            <div class="mono" style="font-size:10px;color:var(--black-300);margin-bottom:10px">Google Authenticator, 1Password, Authy…</div>
+            <div class="field-label">Or enter this key manually</div>
+            <div class="card" style="background:var(--black-700)"><div class="card-pad" style="padding:8px 10px"><span class="mono" style="font-size:12px;letter-spacing:0.1em;color:var(--signal-white)">JBSW Y3DP EHPK 3PXP</span></div></div>
+          </div>
+        </div>
+        <div class="field-label">2 · Enter the 6-digit code to confirm</div>
+        <div class="otp-row">
+          <input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1"><input class="otp-cell" maxlength="1">
+        </div>
+        <div class="card" style="background:var(--black-700);margin:14px 0"><div class="card-pad" style="padding:12px 14px">
+          <div class="row between" style="margin-bottom:8px"><div class="field-label" style="margin:0">3 · Save your backup codes</div><span class="link">Download</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" class="mono">
+            <span style="font-size:11px;color:var(--black-100)">8F2K-9QXM</span><span style="font-size:11px;color:var(--black-100)">P4LM-7TWZ</span>
+            <span style="font-size:11px;color:var(--black-100)">3RJD-1VBN</span><span style="font-size:11px;color:var(--black-100)">XK90-22HA</span>
+          </div>
+          <div class="mono" style="font-size:9px;color:var(--signal-warn);margin-top:8px">Each code works once. Store them somewhere safe.</div>
+        </div></div>
+        <button class="btn primary" style="width:100%" onclick="show('i-idle')">Confirm &amp; finish enrollment</button>
+        <div class="spec-foot"><b>POST /auth/mfa/enroll</b> on first login / invitation accept for platform_admin · lsp_admin · sub_admin. Returns provisioning URI + backup codes; verify TOTP to activate.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── I-IDLE · /idle · P2 (ported from leo-ui, desktop) ─────────────── -->
+  <div class="screen" id="i-idle">
+    <div class="ws no-rail">
+      <div class="ws-content" style="background:var(--black-900)">
+        <div class="ws-header" style="background:var(--black-800);gap:10px">
+          <div class="ws-title" style="font-size:15px">LEO</div>
+          <div class="ws-route">/idle · Interpreter</div>
+          <span class="nav-sep"></span>
+          <span class="mono" style="font-size:11px;color:var(--black-200)">Acme Language Services</span>
+          <div class="ws-header-spacer"></div>
+          <span class="chip live"><span class="dot"></span>Active ▾</span>
+          <div class="avatar" style="width:28px;height:28px;font-size:10px">MT</div>
+        </div>
+        <!-- status annotation strip -->
+        <div style="background:var(--black-800);border-bottom:1px solid var(--black-600);padding:6px 16px;display:flex;gap:7px;align-items:center;flex-shrink:0;overflow-x:auto">
+          <span class="mono" style="font-size:10px;color:var(--black-300);white-space:nowrap">Interpreter statuses:</span>
+          <span class="chip" style="font-size:9px">Active</span><span class="chip" style="font-size:9px">15 Min Break</span><span class="chip" style="font-size:9px">30 Min Break</span><span class="chip" style="font-size:9px">Urgent Break</span><span class="chip" style="font-size:9px">Tech Issue</span><span class="chip" style="font-size:9px">Conferenced</span><span class="chip" style="font-size:9px">Booked</span><span class="chip error" style="font-size:9px">Sign Off</span>
+          <span class="mono" style="font-size:9px;color:var(--black-300);margin-left:auto;white-space:nowrap">WSS: presence.update · request.broadcast</span>
+        </div>
+        <div style="flex:1;display:grid;grid-template-columns:288px 1fr 248px;overflow:hidden">
+          <!-- queue -->
+          <div style="border-right:1px solid var(--black-600);display:flex;flex-direction:column;overflow:hidden">
+            <div class="row between" style="padding:11px 14px;border-bottom:1px solid var(--black-600)"><span style="font-family:var(--font-display);font-size:12px;font-weight:600">Incoming Requests</span><span class="board-col-count">3</span></div>
+            <div style="overflow-y:auto;padding:10px">
+              <div class="disp-card urgent"><div class="row between"><span class="disp-lang">Spanish</span><span class="chip" style="font-size:9px">VIDEO</span></div><div class="disp-meta">General Medical · CCHI preferred · 2:34 wait</div><div class="row" style="gap:6px"><button class="btn accept sm grow">Accept</button><button class="btn ghost sm">Decline</button></div></div>
+              <div class="disp-card"><div class="row between"><span class="disp-lang">Mandarin</span><span class="chip" style="font-size:9px">OPI</span></div><div class="disp-meta">On-demand · no cert req · 0:47 wait</div><div class="row" style="gap:6px"><button class="btn accept sm grow">Accept</button><button class="btn ghost sm">Decline</button></div></div>
+              <div class="disp-card"><div class="row between"><span class="disp-lang">ASL</span><span class="chip" style="font-size:9px">VIDEO</span></div><div class="disp-meta">Deaf/HoH · RID required · 1:12 wait</div><div class="note info" style="margin:6px 0;padding:5px 7px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:11px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Signed language — telephone rejected per spec</div><div class="row" style="gap:6px"><button class="btn accept sm grow">Accept</button><button class="btn ghost sm">Decline</button></div></div>
+            </div>
+          </div>
+          <!-- camera + status -->
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;position:relative;padding:20px">
+            <div class="mono" style="position:absolute;top:12px;left:14px;font-size:10px;color:var(--black-400)">/idle · GET /interpreters/me/status</div>
+            <div style="text-align:center">
+              <div class="mono" style="font-size:10px;color:var(--black-300);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em">Camera preview</div>
+              <div class="vtile" style="width:340px;height:230px"><div class="vtile-person" style="width:56px;height:56px;font-size:18px">MT</div><span class="vtile-label">Self preview (not transmitted)</span></div>
+            </div>
+            <div class="seg" style="padding:3px">
+              <button class="seg-opt active"><span class="dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--signal-live);margin-right:5px"></span>Active</button>
+              <button class="seg-opt"><span class="dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--signal-warn);margin-right:5px"></span>15 Min Break</button>
+              <button class="seg-opt"><span class="dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--black-300);margin-right:5px"></span>30 Min Break</button>
+            </div>
+            <div class="mono" style="font-size:11px;color:var(--black-300);text-align:center">Waiting for session requests.<br><span style="color:var(--black-400)">PATCH /interpreters/me/status</span></div>
+          </div>
+          <!-- tasks + earnings (light summary, full reporting is web) -->
+          <div style="border-left:1px solid var(--black-600);display:flex;flex-direction:column;overflow:hidden">
+            <div class="row between" style="padding:11px 14px;border-bottom:1px solid var(--black-600)"><span style="font-family:var(--font-display);font-size:12px;font-weight:600">My Tasks</span></div>
+            <div style="overflow-y:auto;padding:10px 12px">
+              <div class="mono" style="font-size:10px;color:var(--black-300);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.07em">Scheduled today</div>
+              <div class="list-row" style="margin-bottom:6px;padding:9px 11px"><div class="grow"><div class="mono" style="font-size:10px;color:var(--black-300)">14:30</div><div style="font-size:12px;font-weight:500">Spanish</div><div style="font-size:10px;color:var(--black-300)">Northview Clinic</div></div><span class="state-pill st-scheduled">scheduled</span></div>
+              <div class="list-row" style="padding:9px 11px"><div class="grow"><div class="mono" style="font-size:10px;color:var(--black-300)">16:00</div><div style="font-size:12px;font-weight:500">ASL</div><div style="font-size:10px;color:var(--black-300)">Metro Health</div></div><span class="state-pill st-scheduled">scheduled</span></div>
+              <div style="border-top:1px solid var(--black-700);margin:12px 0;padding-top:12px"><div class="mono" style="font-size:10px;color:var(--black-300);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px">Today</div><div style="font-family:var(--font-display);font-size:22px;font-weight:700">$148<span style="font-size:12px;font-weight:400;color:var(--black-200)">.50</span></div><div class="mono" style="font-size:10px;color:var(--black-300)">3 sessions · 1h 52m · full report on web</div></div>
+              <button class="btn danger" style="width:100%;margin-top:8px">Sign Off</button>
+            </div>
+          </div>
+        </div>
+        <div class="ws-body" style="flex:0;padding:12px 18px"><div class="spec-foot" style="margin:0;border:none;padding:0"><b>Resting state.</b> Camera self-preview, presence selector (8 statuses), incoming broadcast queue, scheduled tasks. On-demand matching needs <b>Active</b>. <b>API:</b> PATCH /interpreters/me/status.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── I-SESSION · /session/:id base · P2 (ported, billing popup) ────── -->
+  <div class="screen" id="i-session">
+    <div class="ws no-rail">
+      <div class="ws-content">
+        <div class="ws-header" style="background:var(--black-800)">
+          <div class="ws-title" style="font-size:15px">LEO</div>
+          <span class="mono" style="font-size:11px;color:var(--black-200)">#0042</span>
+          <span class="session-state-pill st-in_session" style="font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:20px">● in_session</span>
+          <span class="live-clock mono" data-secs="514" style="font-size:18px;font-weight:500;letter-spacing:0.08em">08:34</span>
+          <span class="mono" style="font-size:10px;color:var(--black-200)">Spanish · VRI</span>
+          <div class="ws-header-spacer"></div>
+          <span class="ws-route">/session/0042 · WSS session.state</span>
+        </div>
+        <div class="ws-body" style="padding:0;display:grid;grid-template-columns:1fr 232px">
+          <div style="position:relative;background:#050508;padding:8px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px">
+            <div class="vtile"><div class="vtile-person">JR</div><span class="vtile-role">Customer</span><span class="vtile-label">J. Rivera</span></div>
+            <div class="vtile"><div class="speaking-ring"></div><div class="vtile-person">MT</div><span class="vtile-role">You</span><span class="vtile-label">M. Torres · interpreter</span></div>
+            <div class="vtile" style="border-style:dashed;color:var(--black-400);font-size:11px;text-align:center;font-family:var(--font-mono)">Conference interpreter<br>not connected</div>
+            <div class="vtile" style="color:var(--black-400);font-size:11px;text-align:center;font-family:var(--font-mono)">OPI participant<br>not on call</div>
+            <div class="session-controls" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10">
+              <div class="ctrl-btn" title="Mute"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg></div>
+              <div class="ctrl-btn" title="Camera"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 7l-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+              <div class="ctrl-btn" title="Dial"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 16.9v2a2 2 0 0 1-2.2 2 19 19 0 0 1-8.3-3 19 19 0 0 1-6-6 19 19 0 0 1-3-8.4A2 2 0 0 1 4.1 3h2a2 2 0 0 1 2 1.7l.5 2.7a2 2 0 0 1-.6 1.8L7 10.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.8-.5l2.7.5a2 2 0 0 1 1.7 2Z"/></svg></div>
+              <div class="ctrl-btn" title="Conference"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div>
+              <div class="ctrl-btn end" title="End"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4l14 14M19 4 5 18"/></svg></div>
+            </div>
+            <div class="mono" style="position:absolute;bottom:10px;right:12px;font-size:10px;color:var(--black-400);background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:3px">No recording — HIPAA §164</div>
+          </div>
+          <!-- right side panel -->
+          <div style="border-left:1px solid var(--black-600);background:var(--black-800);display:flex;flex-direction:column;overflow:hidden">
+            <div style="display:flex;border-bottom:1px solid var(--black-600)">
+              <button class="seg-opt active" style="flex:1;border-radius:0;border-bottom:2px solid var(--signal-white);padding:9px 0">Billing info</button>
+              <button class="seg-opt" style="flex:1;border-radius:0;border-bottom:2px solid transparent;padding:9px 0">Interpreters</button>
+            </div>
+            <div style="padding:6px 12px;background:rgba(74,74,90,0.25);border-bottom:1px solid var(--black-600)"><span class="mono" style="font-size:9px;color:var(--black-300)">GET /orgs/:id/billing-fields · max 6 · rendered at start</span></div>
+            <div class="row between" style="padding:8px 12px;border-bottom:1px solid var(--black-600)"><span class="mono" style="font-size:10px;color:var(--black-200)">Metro Health</span><span class="mono" style="font-size:9px;color:var(--signal-warn)">1 required unfilled</span></div>
+            <div style="flex:1;overflow-y:auto;padding:10px 12px">
+              <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--black-700)">
+                <div class="row" style="gap:5px;margin-bottom:5px"><span class="mono" style="font-size:10px;color:var(--black-100)">Department</span><span class="chip" style="font-size:8px;padding:1px 5px;background:rgba(239,68,68,0.1);color:var(--signal-error);border-color:rgba(239,68,68,0.2)">Required</span></div>
+                <input class="input" value="Emergency Medicine" style="padding:7px 9px;font-size:12px">
+              </div>
+              <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--black-700)">
+                <div class="row" style="gap:5px;margin-bottom:5px"><span class="mono" style="font-size:10px;color:var(--black-100)">Cost code</span><span class="chip" style="font-size:8px;padding:1px 5px;background:rgba(239,68,68,0.1);color:var(--signal-error);border-color:rgba(239,68,68,0.2)">Required</span></div>
+                <input class="input" placeholder="e.g. EMRG-2024" style="padding:7px 9px;font-size:12px;border-color:rgba(239,68,68,0.35)">
+                <div class="mono" style="font-size:9px;color:var(--signal-error);margin-top:4px">Required before ending session</div>
+              </div>
+              <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--black-700)">
+                <div class="row between" style="margin-bottom:5px"><span class="mono" style="font-size:10px;color:var(--black-100)">Patient name</span><span class="chip warn" style="font-size:8px;padding:1px 5px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="font-size:9px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>PHI</span></div>
+                <div id="phi-pname-locked"><div class="mono" style="font-size:14px;letter-spacing:0.12em;color:var(--black-300);padding:2px 0">●●●●●●●●●●●</div>
+                  <button class="bf-unlock-btn" onclick="togglePhi('phi-pname')" style="margin-top:6px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:11px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Tap to unlock</button></div>
+                <div id="phi-pname-unlocked" style="display:none">
+                  <div class="mono" style="font-size:9px;color:var(--signal-warn);margin-bottom:4px">⚠ PHI visible · BAA active · audit logged</div>
+                  <input class="input" value="Jordan Rivera" style="padding:7px 9px;font-size:12px;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.04)">
+                </div>
+              </div>
+              <div style="margin-bottom:12px">
+                <div class="row" style="gap:5px;margin-bottom:5px"><span class="mono" style="font-size:10px;color:var(--black-100)">Session notes</span><span class="chip" style="font-size:8px;padding:1px 5px;background:var(--black-600);color:var(--black-300)">Optional</span></div>
+                <input class="input" placeholder="Internal notes…" style="padding:7px 9px;font-size:12px">
+              </div>
+              <div class="note info" style="font-size:9px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:12px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Schema-driven: <b>GET /orgs/:id/billing-fields</b> → [{label,type,required,phi}]. Saved on <b>PATCH /sessions/:id/billing-context</b>, auto-saves on end.</div>
+            </div>
+            <div style="padding:8px 12px;border-top:1px solid var(--black-600)"><button class="btn ghost sm" style="width:100%">Save context</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S-SWITCH · switch-tenant · P1 (integrated into workstation chrome) ── -->
+  <div class="screen" id="s-switch">
+    <div class="ws no-rail">
+      <div class="ws-content" style="position:relative;overflow:hidden">
+        <!-- real workstation header -->
+        <div class="ws-header" style="background:var(--black-800)">
+          <div class="ws-title" style="font-size:15px">LEO</div>
+          <span class="chip live"><span class="dot"></span>Acme Language Services · LSP Admin</span>
+          <div class="ws-header-spacer"></div>
+          <div class="ctrl-btn" style="width:32px;height:32px;border-radius:var(--r-md)" title="Notifications"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:15px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+          <div class="avatar" style="width:32px;height:32px;font-size:11px;border-color:var(--signal-white);box-shadow:0 0 0 2px var(--black-700)">SK</div>
+        </div>
+        <!-- representative workstation body behind the menu -->
+        <div class="ws-body" style="pointer-events:none">
+          <div class="section-label">Dispatch · live board</div>
+          <div class="row" style="gap:12px;align-items:flex-start">
+            <div class="card grow"><div class="card-pad"><div class="section-label" style="margin:0 0 8px">Unassigned</div><div class="disp-card" style="margin:0"><div class="row between"><span class="disp-lang">Spanish · Video</span><span class="state-pill st-requested">requested</span></div><div class="disp-meta">Acme Health · waiting 0:22</div></div></div></div>
+            <div class="card grow"><div class="card-pad"><div class="section-label" style="margin:0 0 8px">Connected</div><div class="disp-card" style="margin:0"><div class="row between"><span class="disp-lang">ASL · #0044</span><span class="state-pill st-in_session">in_session</span></div><div class="disp-meta">A. Rivera · 05:20</div></div></div></div>
+          </div>
+        </div>
+        <!-- dim scrim (menu open) -->
+        <div style="position:absolute;inset:0;background:rgba(5,5,8,0.45);z-index:20"></div>
+        <!-- tenant dropdown anchored under avatar -->
+        <div class="card" style="position:absolute;top:50px;right:18px;width:304px;z-index:30;box-shadow:0 16px 40px rgba(0,0,0,0.5);overflow:hidden">
+          <div class="mono" style="padding:10px 14px;border-bottom:1px solid var(--black-600);font-size:10px;color:var(--black-300);text-transform:uppercase;letter-spacing:0.08em">Your workspaces</div>
+          <!-- active -->
+          <div class="row" style="gap:10px;padding:11px 14px;border-bottom:1px solid var(--black-600);background:rgba(248,248,250,0.04)">
+            <div class="avatar" style="width:30px;height:30px;font-size:10px;border-radius:var(--r-sm);background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2)">AL</div>
+            <div class="grow"><div style="font-size:12px;font-weight:500">Acme Language Services</div><div class="mono" style="font-size:10px;color:var(--black-300)">LSP Admin</div></div>
+            <span class="chip live" style="font-size:9px"><span class="dot"></span>Active</span>
+          </div>
+          <!-- non-privileged switch -->
+          <div class="row" style="gap:10px;padding:11px 14px;border-bottom:1px solid var(--black-600)">
+            <div class="avatar" style="width:30px;height:30px;font-size:10px;border-radius:var(--r-sm)">NL</div>
+            <div class="grow"><div style="font-size:12px;font-weight:500">Northlight Interpreting</div><div class="mono" style="font-size:10px;color:var(--black-300)">Interpreter · no MFA</div></div>
+            <button class="btn ghost sm">Switch</button>
+          </div>
+          <!-- privileged: inline MFA re-verify -->
+          <div style="border-bottom:1px solid var(--black-600)">
+            <div class="row" style="gap:10px;padding:11px 14px">
+              <div class="avatar" style="width:30px;height:30px;font-size:10px;border-radius:var(--r-sm);background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.15);color:var(--signal-error)">LP</div>
+              <div class="grow"><div style="font-size:12px;font-weight:500">Leo Platform</div><div class="mono" style="font-size:10px;color:rgba(239,68,68,0.75)">Platform Admin</div></div>
+              <span class="chip warn" style="font-size:9px"><span class="dot"></span>MFA</span>
+            </div>
+            <div style="padding:0 14px 12px">
+              <div class="note warn" style="margin-bottom:10px;padding:8px 10px"><svg class="leo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="font-size:13px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>Switching into a privileged role needs MFA re-verification.</div>
+              <div class="otp-row" style="margin:0 0 10px;gap:6px">
+                <input class="otp-cell filled" value="7" maxlength="1" style="width:36px;height:44px;font-size:18px"><input class="otp-cell filled" value="2" maxlength="1" style="width:36px;height:44px;font-size:18px"><input class="otp-cell" maxlength="1" style="width:36px;height:44px;font-size:18px"><input class="otp-cell" maxlength="1" style="width:36px;height:44px;font-size:18px"><input class="otp-cell" maxlength="1" style="width:36px;height:44px;font-size:18px"><input class="otp-cell" maxlength="1" style="width:36px;height:44px;font-size:18px"></div>
+              <button class="btn primary sm" style="width:100%">Verify &amp; switch</button>
+              <div class="mono" style="font-size:9px;color:var(--black-300);margin-top:6px;text-align:center">POST /auth/switch-tenant · mfa_token required</div>
+            </div>
+          </div>
+          <div style="padding:10px 14px"><button class="btn ghost sm danger" style="width:100%">Sign out</button></div>
+        </div>
+
+        <div class="ws-body" style="flex:0;padding:12px 22px;position:relative;z-index:40"><div class="spec-foot" style="margin:0;border:none;padding:0"><b>Integrated chrome:</b> the active-tenant label sits in the header; clicking the avatar opens this workspace menu over the live app. Non-privileged roles switch instantly; <b>lsp_admin / sub_admin / platform_admin</b> re-verify MFA inline. <b>API:</b> POST /auth/switch-tenant.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .shell -->
+
+<script>
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick') === `show('${id}')`) b.classList.add('active');
+  });
+}
+
+/* live clocks: any .live-clock counts up from its data-secs */
+setInterval(() => {
+  document.querySelectorAll('.live-clock').forEach(c => {
+    let s = parseInt(c.dataset.secs || '0', 10) + 1;
+    c.dataset.secs = s;
+    c.textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  });
+  document.querySelectorAll('.wait-clock').forEach(c => {
+    let s = parseInt(c.dataset.secs || '0', 10) + 1;
+    c.dataset.secs = s;
+    c.textContent = String(Math.floor(s/60)) + ':' + String(s%60).padStart(2,'0');
+  });
+}, 1000);
+
+/* In-session PHI unlock (mock — real flow gates on BAA + consent + audit) */
+function togglePhi(id) {
+  const locked = document.getElementById(id + '-locked');
+  const unlocked = document.getElementById(id + '-unlocked');
+  if (locked) locked.style.display = 'none';
+  if (unlocked) { unlocked.style.display = 'block'; unlocked.querySelector('input')?.focus(); }
+}
+
+/* OTP cells: auto-advance + backspace */
+document.querySelectorAll('.otp-cell').forEach((el, i, all) => {
+  el.addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g, '').slice(-1);
+    el.classList.toggle('filled', !!e.target.value);
+    if (e.target.value && all[i + 1]) all[i + 1].focus();
+  });
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !el.value && all[i - 1]) { all[i - 1].value = ''; all[i - 1].classList.remove('filled'); all[i - 1].focus(); }
+  });
+});
+
+/* rail nav active toggle (visual only) */
+document.querySelectorAll('.ws-rail-item').forEach(it => {
+  it.addEventListener('click', () => {
+    const sib = it.parentElement.querySelectorAll('.ws-rail-item');
+    sib.forEach(s => s.classList.remove('active'));
+    it.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+# leo-workstation — Client invariants (`INV-CLIENT-*`)
+
+> Stable, load-bearing rules for the **Flutter ops client**. Platform-wide `INV-*`
+> (auth contract, RLS, money, PHI server-side) are canonical in
+> [`../leo-api/.pineapple/invariants.md`](../../leo-api/.pineapple/invariants.md) — linked here, never copied.
+> Citation conventions: see [`docs/platform-references.md`](../docs/platform-references.md).
+
+These are extracted from the code patterns and target architecture
+([`docs/architecture-overview.md`](../docs/architecture-overview.md)) and the
+client split decisions (`BD1`, `BD7`). Gate IDs (`D6`/`D7`/`D13`/`L3`) resolve via
+platform-references.
+
+---
+
+## Architecture & layering
+
+### INV-CLIENT-ARCH-1 — Strict MVVM dependency direction
+Every feature is a vertical slice: **View → ViewModel (Riverpod `Notifier`) → Repository → wire**. The View never touches `dio`, secure storage, or a repository directly; the Repository never imports Flutter. (arch §1)
+
+### INV-CLIENT-ARCH-2 — No cross-slice data coupling
+A feature slice never imports another feature's `data/` layer. Cross-feature reads go through the other feature's notifier provider (`ref.read`). (arch §2, §11)
+
+### INV-CLIENT-STATE-1 — Immutable state, navigation is a pure function of state
+View state is immutable (`freezed`). `go_router`'s `redirect` is keyed on auth state via `refreshListenable`; there is no imperative navigation on login/logout. (arch §3, §5)
+
+### INV-CLIENT-STATE-2 — `AuthState` is the auth→router contract
+`auth` owns the `AuthState` union and `router` consumes it; the union signature is frozen as a shared contract. Arms and their fields: `unauthenticated` · `loading` · `error(message)` · `mfaRequired(firstLogin, mfaToken)` · `pickMembership(memberships)` · `authenticated(role, tenantId?, onboardingRequired)`. Consumers must not branch on undeclared arms/fields; adding/changing an arm is a contract change to both specs. (promoted 2026-06-29 from auth ⋂ router)
+
+---
+
+## Client boundary (BD7)
+
+### INV-CLIENT-ROUTE-1 — No back-office in Flutter
+No admin CRUD, reports, rate-card, or billing-export routes exist in this app. **LSP signup + LSP onboarding** live in **`leo-web`**. **Personal (interpreter) + customer signup, email verification, and onboarding are in-app** (decided 2026-06-29; see [state.md](state.md) and [features/onboarding.md](features/onboarding.md)). LSP Admin reaches web surfaces via an external link, never an in-app route. (client-map, BD7 line 223)
+
+### INV-CLIENT-CONTRACT-1 — Thin, untrusted client
+All business rules and billing live in `leo-api`. The client never computes a charge and never starts the billing meter; it reflects state pushed over WSS. (arch §6)
+
+### INV-CLIENT-ROUTE-2 — Canonical role→home map + membership picker route
+Exactly one role→home mapping, referenced by `auth`, `router`, and `onboarding` (no per-spec restatement): `interpreter → /idle` (incl. tenant-less), `customer_user → /call`, `customer_admin → /call`, `sub_admin → /dispatch`, `lsp_admin → /dispatch`, `platform_admin → /web-handoff` (no workstation home). The multi-membership picker is the route **`/select-workspace`** (widget `tenant_picker_screen`), entered from `AuthState.pickMembership`. (promoted 2026-06-29 from auth ⋂ router ⋂ onboarding)
+
+---
+
+## Security
+
+### INV-CLIENT-AUTH-1 — Token storage split
+The refresh token lives in `flutter_secure_storage` (Keychain/Keystore/libsecret/DPAPI). The access token is held **in memory only**, short-lived. (D6/D7; mirrors platform INV-AUTH-1/2)
+
+### INV-CLIENT-AUTH-2 — One Bearer path, canonical role slug
+Every authenticated request carries the access JWT via the single `dio` interceptor — no per-call bespoke auth. Role handling uses the `platform_admin` slug; `superadmin` never appears in code or docs. (mirrors INV-AUTH-1, INV-RBAC-2)
+
+### INV-CLIENT-AUTH-3 — Tenant-less client contract
+`tenant_id` is **optional** in the access-token claims; code gates `tenant_id != null` before using it. A 0-membership interpreter holds a tenant-less session and routes to `/idle`. (honored by auth, router, onboarding; mirrors platform INV-AUTH-4 / INV-TENANT-1)
+
+### INV-CLIENT-AUTH-4 — Single in-memory access-token holder seam
+`core-shell` defines `currentAccessTokenProvider` (in-memory, default `null`) and the `dio` interceptor **reads** it; `auth` is the **sole writer** — it sets the holder on every mint/refresh/switch-tenant and clears it on logout. No other feature reads or writes the raw access token; it is never persisted (`INV-CLIENT-AUTH-1`). (promoted 2026-06-29 from core-shell ⋂ auth)
+
+### INV-CLIENT-NET-1 — Certificate pinning
+API calls verify a pinned server cert (SHA-256) with rotation support; a pin mismatch refuses the connection. (D6/D13)
+
+### INV-CLIENT-PHI-1 — No PHI at rest
+No patient data is persisted on device. Session caches are ephemeral and cleared on sign-off and on backgrounding. (mirrors platform INV-PHI-1; ps §16)
+
+### INV-CLIENT-MEDIA-1 — Media tokens only, media never via Leo
+The client exchanges encrypted A/V **directly** with Vonage (video) / Twilio (telephony) using short-lived tokens minted by `leo-api`. Media never transits the client's backend path. (mirrors platform INV-MEDIA-1; arch §6)
+
+---
+
+## Accessibility & device gating
+
+### INV-CLIENT-A11Y-1 — Deaf-first, never audio-only
+Semantics labels on every interactive element; alerts are visual/vibration/push, never audio-only; signed-language sessions are video-only. App-wide, persisted night mode for all roles. Hard product gate (L3, WCAG 2.1 AA). (mirrors platform INV-A11Y-1/2; ps §15)
+
+### INV-CLIENT-UI-1 — Cupertino-first
+The app is Cupertino-first (`CupertinoApp` + `CupertinoThemeData`, light/dark/night). New UI uses Cupertino widgets. (ps §15)
+
+### INV-CLIENT-DEVICE-1 — DeviceClass gates routes
+A `DeviceClass` derivation hides routes a device isn't entitled to: customer smartphone paths are blocked until `v0.1.0`; interpreter **Accept** is not reachable on mobile. (client-map, BD7)
+
+### INV-CLIENT-I18N-1 — No hardcoded user-facing strings
+User-facing copy goes through `intl`/`flutter_localizations`; no string literals in widgets. (release-checklists)
+
+---
+
+*Companion: target architecture [`docs/architecture-overview.md`](../docs/architecture-overview.md) · platform invariants `../leo-api/.pineapple/invariants.md`.*

@@ -1,0 +1,42 @@
+# Pineapple project config — leo-workstation (Flutter ops client).
+# Adopted onto an existing repo via /pineapple:ongoing (2026-06-29).
+#
+# Adoption model: MAP-IN-PLACE. Human-canonical docs live in docs/; Pineapple
+# workflow artifacts live in .pineapple/. Platform truth is NOT copied into this
+# repo — it is linked via docs/platform-references.md to the sibling ../leo-api.
+
+adoption: map-in-place
+
+artifacts:
+  product_spec: docs/product-spec.md                 # client-scoped what/why
+  product_spec_as_built: .pineapple/product-spec.md  # reverse-engineered as-is
+  architecture: docs/architecture-overview.md        # target MVVM/Riverpod
+  architecture_as_built: .pineapple/architecture-overview.md
+  invariants: .pineapple/invariants-client.md        # INV-CLIENT-* (local)
+  invariants_platform: ../leo-api/.pineapple/invariants.md  # INV-* (read-only)
+  phases_dir: .pineapple/phases/
+  phases_current: .pineapple/phases/INDEX.md
+  features_dir: .pineapple/features/
+  code_map: .pineapple/code-map.md
+  client_map: docs/client-map.md
+  release_plan: docs/release-plan.md                  # implementation driver
+  release_checklists: docs/release-checklists.md
+  platform_refs: docs/platform-references.md
+  repo_map: docs/repo-map.md
+  state: .pineapple/state.md
+
+tracker: github-issues
+
+tracker_config:
+  backend: gh
+  canonical_repo: leo-api          # tracker issues live in the backend repo
+
+# Branch naming for workers. {issue} = issue number; {slug} = kebab from title.
+branch_format: "pin-{issue}/{slug}"
+
+notes:
+  - "Platform INV-* rules live in ../leo-api/.pineapple/invariants.md; the client copies only INV-CLIENT-* locally."
+  - "Platform docs: link via docs/platform-references.md — never copy into this repo."
+  - "As-built state in .pineapple/state.md; target architecture in docs/architecture-overview.md."
+  - "Implementation order: docs/release-plan.md -> .pineapple/features/*.md."
+  - "Version tags align with ../leo-api/docs/release-plan.md (strict-superset per version)."

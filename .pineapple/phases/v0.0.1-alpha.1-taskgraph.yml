@@ -1,0 +1,116 @@
+apiVersion: pineapple/v1
+kind: TaskGraph
+metadata:
+  project: leo-workstation
+  phase: v0.0.1-alpha.1
+  status: awaiting-approval   # orchestrate changes to: approved | running | completed
+  created: 2026-06-29
+
+waves:
+  - id: W1
+    name: "Foundation"
+    gate: manual
+  - id: W2
+    name: "Shell chrome + auth core"
+    gate: manual            # review the integration contract before fan-out
+  - id: W3
+    name: "Auth screens + router"
+    gate: auto
+
+tasks:
+  - id: P1-T-01
+    title: "core-shell Foundation: bootstrap, config, dio + Bearer seam + cert-pin, token storage, DeviceClass, theme"
+    wave: W1
+    feature_spec: .pineapple/features/core-shell.md
+    area: core
+    surface: frontend
+    model: high
+    depends_on: []
+    verification: auto
+    human_admin: false
+    acceptance_criteria:
+      - "main() wraps the app in ProviderScope; LeoApp builds CupertinoApp.router; flutter analyze clean; app boots."
+      - "appConfigProvider exposes apiBaseUrl/realtimeWsUrl/webAdminBaseUrl/useMocks from --dart-define; useMocks defaults true."
+      - "dioProvider baseUrl from config; interceptor injects Authorization: Bearer <token> from currentAccessTokenProvider when non-null, omits when null."
+      - "badCertificateCallback returns true only on SHA-256 pin match (rotation list); any dev bypass is gated to debug/useMocks and never enabled in release (INV-CLIENT-NET-1)."
+      - "currentAccessTokenProvider defined here (in-memory, default null); core-shell never writes it (INV-CLIENT-AUTH-4)."
+      - "tokenStorageProvider reads/writes/clears the refresh token in flutter_secure_storage only; never logged (INV-CLIENT-AUTH-1, -PHI-1)."
+      - "deviceClassProvider derives {desktop,tablet,smartphone} from MediaQuery (documented breakpoints); updates on resize (INV-CLIENT-DEVICE-1)."
+      - "app_theme provides light/dark/night CupertinoThemeData from the design tokens; dark default; brightness persisted and restored (INV-CLIENT-UI-1)."
+    notes: "Owns the phase integration_contract (base URLs, token convention, wire casing, cert pin) — must merge before any fan-out. Add the pubspec dependency stack here (riverpod, go_router, dio, flutter_secure_storage, freezed, json_serializable, url_launcher, intl; dev build_runner, riverpod_generator); T-01 approval is the new-deps sign-off."
+
+  - id: P1-T-02
+    title: "Shell chrome: WorkstationScaffold (header + rail slots + tenant-chip/avatar mount + lsp_admin admin-link)"
+    wave: W2
+    feature_spec: .pineapple/features/core-shell.md
+    area: core/shell
+    surface: frontend
+    model: standard
+    depends_on: [P1-T-01]
+    verification: auto
+    human_admin: false
+    acceptance_criteria:
+      - "WorkstationScaffold renders the header (tenant-chip slot + avatar mount) + rail slots; per-role rail contents are injected, not owned here."
+      - "Rail-footer 'Admin dashboard' link renders only for role lsp_admin and only when webAdminBaseUrl is set; opens it externally via url_launcher (INV-CLIENT-ROUTE-1)."
+      - "Semantics on chrome controls (INV-CLIENT-A11Y-1); user-facing copy via intl (INV-CLIENT-I18N-1)."
+    notes: "Scaffold takes a role input + slot API; the live tenant-menu/admin-link wiring is filled by auth (T-04). webAdminBaseUrl also feeds router's /web-handoff."
+
+  - id: P1-T-03
+    title: "auth core: AuthRepository (+mock), AuthState union, AuthNotifier state machine, session restore, token-holder writes"
+    wave: W2
+    feature_spec: .pineapple/features/auth.md
+    area: features/auth
+    surface: frontend
+    model: high
+    depends_on: [P1-T-01]
+    verification: auto
+    human_admin: false
+    acceptance_criteria:
+      - "AuthState union exactly per INV-CLIENT-STATE-2: unauthenticated, loading, error(message), mfaRequired(firstLogin, mfaToken), pickMembership(memberships), authenticated(role, tenantId?, onboardingRequired)."
+      - "Single-membership login -> authenticated + role home; multi-membership -> pickMembership; 0-membership interpreter -> tenant-less authenticated (tenantId null) (INV-CLIENT-AUTH-3)."
+      - "Privileged role -> mfaRequired on login and switch-tenant; first login routes through enroll; non-privileged never challenged."
+      - "switchTenant re-mints the active context; non-held tenant -> 404 handled gracefully."
+      - "AuthNotifier is the sole writer of currentAccessTokenProvider (set on mint/refresh/switch; cleared on logout) (INV-CLIENT-AUTH-4)."
+      - "AuthRepository maps snake_case -> camelCase AuthSession with coercions (exp seconds, tenant_id optional); MockAuthRepository backs useMocks=true."
+      - "build() restores session from secure storage on cold start (or routes to /login if absent/expired)."
+    notes: "Owns the AuthState contract consumed by router (T-05). Decodes JWT claims for routing/UX only; server remains source of truth."
+
+  - id: P1-T-04
+    title: "auth screens: login, mfa, mfa_enroll, tenant_picker (/select-workspace), forgot, reset, invite_accept + in-app workspace switcher"
+    wave: W3
+    feature_spec: .pineapple/features/auth.md
+    area: features/auth
+    surface: frontend
+    model: standard
+    depends_on: [P1-T-03, P1-T-02]
+    verification: manual
+    human_admin: false
+    acceptance_criteria:
+      - "Cupertino (dark) screens render: /login, /mfa, /mfa/enroll, /select-workspace, /forgot-password, /reset-password, /invite/accept."
+      - "Login picker: the entire membership row is the tap target. In-app switcher: avatar opens the menu over the live chrome; privileged switch expands inline 6-cell auto-advancing OTP + 'Verify & switch'."
+      - "/forgot-password always shows the same 'if that email exists' result (no account enumeration)."
+      - "Errors map to copy in the ViewModel (401 -> 'Invalid email or password'); semantics on interactive elements; copy via intl."
+    notes: "Verification is auto (widget tests) + manual smoke. Mounts at /select-workspace per INV-CLIENT-ROUTE-2; switcher mounts in T-02 chrome."
+
+  - id: P1-T-05
+    title: "router: routerProvider, pure redirect (table + loop-safety test), refresh bridge, route tree + placeholder homes + device gating"
+    wave: W3
+    feature_spec: .pineapple/features/router.md
+    area: core/router
+    surface: frontend
+    model: high
+    depends_on: [P1-T-03, P1-T-02]
+    verification: auto
+    human_admin: false
+    acceptance_criteria:
+      - "routerProvider -> GoRouter whose redirect is pure over (AuthState, DeviceClass, location), re-run via authRefreshListenableProvider (owned here)."
+      - "Redirect implements the decision table: role->home (INV-CLIENT-ROUTE-2, incl. customer_admin->/call and tenant-less->/idle), authenticated(onboardingRequired:true)->/onboarding/*, device-disallowed->blocked-surface, platform_admin->/web-handoff (opens webAdminBaseUrl)."
+      - "No redirect loop across any (state x location) pair — proven by a redirect.dart unit test (router AC-8)."
+      - "Placeholder role-home pages mounted in WorkstationScaffold; customer routes hidden on smartphone (INV-CLIENT-DEVICE-1); no admin routes (INV-CLIENT-ROUTE-1)."
+    notes: "Depends on AuthState (T-03), the scaffold (T-02), and DeviceClass/webAdminBaseUrl (T-01, transitive). Registers hooks for onboarding routes (P2)."
+
+coordinator:
+  max_concurrent: 2
+  stuck_threshold_seconds: 5400
+  worktree_strategy: per-task
+  completion_strategy: review-gate
