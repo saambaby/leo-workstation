@@ -2,20 +2,21 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/device/device_class.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/notifiers/auth_notifier.dart';
 
-/// Root app. Foundation (P1-T-01) boots a placeholder home; P1-T-05 (router)
-/// swaps `home:` for `routerConfig:` (CupertinoApp.router).
+/// Root app — CupertinoApp.router wired to auth redirect guard (P1-T-05).
 class LeoApp extends ConsumerWidget {
   const LeoApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(authNotifierProvider);
+    final router = ref.watch(routerProvider);
     final mode = ref.watch(themeModeProvider);
-    return CupertinoApp(
+
+    return CupertinoApp.router(
       title: 'Leo Workstation',
       theme: themeFor(mode),
       debugShowCheckedModeBanner: false,
@@ -25,48 +26,7 @@ class LeoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
       ],
       supportedLocales: const [Locale('en')],
-      home: const _FoundationHome(),
-    );
-  }
-}
-
-class _FoundationHome extends ConsumerWidget {
-  const _FoundationHome();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final shortest = MediaQuery.of(context).size.shortestSide;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final notifier = ref.read(screenShortestSideProvider.notifier);
-      if (notifier.state != shortest) notifier.state = shortest;
-    });
-
-    final deviceClass = ref.watch(deviceClassProvider);
-    final mode = ref.watch(themeModeProvider);
-
-    return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Leo Workstation'),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('App shell foundation'),
-            const SizedBox(height: 8),
-            Text('device: ${deviceClass.name} · theme: ${mode.name}'),
-            const SizedBox(height: 16),
-            CupertinoButton.filled(
-              onPressed: () {
-                final next = LeoThemeMode
-                    .values[(mode.index + 1) % LeoThemeMode.values.length];
-                ref.read(themeModeProvider.notifier).set(next);
-              },
-              child: const Text('Cycle theme'),
-            ),
-          ],
-        ),
-      ),
+      routerConfig: router,
     );
   }
 }
