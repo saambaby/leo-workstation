@@ -1,0 +1,16 @@
+{
+  "phase": "v0.0.1-alpha.1",
+  "overall_status": "running",
+  "current_wave": 1,
+  "parent_issue": 1,
+  "started_at": "2026-06-29",
+  "mode": "coordinator-side-serial",
+  "notes": "GITHUB_TOKEN invalid in env; all git/gh run with `env -u GITHUB_TOKEN`. Coordinator implements tasks (no spawned workers).",
+  "tasks": {
+    "P1-T-01": {"status": "pending", "role": "high", "depends_on": [], "tracker_issue": 2, "branch": "pin-2/core-shell-foundation", "agent": null, "started_at": null, "completed_at": null, "commit": null, "attempt": 0, "error": null},
+    "P1-T-02": {"status": "pending", "role": "standard", "depends_on": ["P1-T-01"], "tracker_issue": 3, "branch": "pin-3/shell-chrome", "agent": null, "started_at": null, "completed_at": null, "commit": null, "attempt": 0, "error": null},
+    "P1-T-03": {"status": "pending", "role": "high", "depends_on": ["P1-T-01"], "tracker_issue": 4, "branch": "pin-4/auth-core", "agent": null, "started_at": null, "completed_at": null, "commit": null, "attempt": 0, "error": null},
+    "P1-T-04": {"status": "pending", "role": "standard", "depends_on": ["P1-T-03", "P1-T-02"], "tracker_issue": 5, "branch": "pin-5/auth-screens", "agent": null, "started_at": null, "completed_at": null, "commit": null, "attempt": 0, "error": null},
+    "P1-T-05": {"status": "pending", "role": "high", "depends_on": ["P1-T-03", "P1-T-02"], "tracker_issue": 6, "branch": "pin-6/router", "agent": null, "started_at": null, "completed_at": null, "commit": null, "attempt": 0, "error": null}
+  }
+}

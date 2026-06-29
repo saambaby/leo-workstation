@@ -25,11 +25,10 @@ artifacts:
   repo_map: docs/repo-map.md
   state: .pineapple/state.md
 
-tracker: github-issues
-
-tracker_config:
-  backend: gh
-  canonical_repo: leo-workstation  # issues live alongside code + PRs in this repo (2026-06-29)
+tracker:
+  backend: gh                       # tracker.py schema: tracker.backend
+# Tracker issues live in this repo (saambaby/leo-workstation) — gh targets the cwd remote;
+# canonical_repo is not read by tracker.py and was removed (2026-06-29).
 
 # Branch naming for workers. {issue} = issue number; {slug} = kebab from title.
 branch_format: "pin-{issue}/{slug}"

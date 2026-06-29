@@ -3,7 +3,7 @@ kind: TaskGraph
 metadata:
   project: leo-workstation
   phase: v0.0.1-alpha.1
-  status: approved            # human-approved 2026-06-29; orchestrate -> running | completed
+  status: running             # human-approved 2026-06-29; dispatch started
   created: 2026-06-29
 
 waves:
@@ -19,6 +19,7 @@ waves:
 
 tasks:
   - id: P1-T-01
+    issue: 2
     title: "core-shell Foundation: bootstrap, config, dio + Bearer seam + cert-pin, token storage, DeviceClass, theme"
     wave: W1
     feature_spec: .pineapple/features/core-shell.md
@@ -40,6 +41,7 @@ tasks:
     notes: "Owns the phase integration_contract (base URLs, token convention, wire casing, cert pin) — must merge before any fan-out. Add the pubspec dependency stack here (riverpod, go_router, dio, flutter_secure_storage, freezed, json_serializable, url_launcher, intl; dev build_runner, riverpod_generator); T-01 approval is the new-deps sign-off."
 
   - id: P1-T-02
+    issue: 3
     title: "Shell chrome: WorkstationScaffold (header + rail slots + tenant-chip/avatar mount + lsp_admin admin-link)"
     wave: W2
     feature_spec: .pineapple/features/core-shell.md
@@ -56,6 +58,7 @@ tasks:
     notes: "Scaffold takes a role input + slot API; the live tenant-menu/admin-link wiring is filled by auth (T-04). webAdminBaseUrl also feeds router's /web-handoff."
 
   - id: P1-T-03
+    issue: 4
     title: "auth core: AuthRepository (+mock), AuthState union, AuthNotifier state machine, session restore, token-holder writes"
     wave: W2
     feature_spec: .pineapple/features/auth.md
@@ -76,6 +79,7 @@ tasks:
     notes: "Owns the AuthState contract consumed by router (T-05). Decodes JWT claims for routing/UX only; server remains source of truth."
 
   - id: P1-T-04
+    issue: 5
     title: "auth screens: login, mfa, mfa_enroll, tenant_picker (/select-workspace), forgot, reset, invite_accept + in-app workspace switcher"
     wave: W3
     feature_spec: .pineapple/features/auth.md
@@ -93,6 +97,7 @@ tasks:
     notes: "Verification is auto (widget tests) + manual smoke. Mounts at /select-workspace per INV-CLIENT-ROUTE-2; switcher mounts in T-02 chrome."
 
   - id: P1-T-05
+    issue: 6
     title: "router: routerProvider, pure redirect (table + loop-safety test), refresh bridge, route tree + placeholder homes + device gating"
     wave: W3
     feature_spec: .pineapple/features/router.md
