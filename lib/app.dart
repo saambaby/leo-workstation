@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/device/device_class.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/presentation/notifiers/auth_notifier.dart';
 
 /// Root app. Foundation (P1-T-01) boots a placeholder home; P1-T-05 (router)
 /// swaps `home:` for `routerConfig:` (CupertinoApp.router).
@@ -12,6 +13,7 @@ class LeoApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(authNotifierProvider);
     final mode = ref.watch(themeModeProvider);
     return CupertinoApp(
       title: 'Leo Workstation',
@@ -28,15 +30,12 @@ class LeoApp extends ConsumerWidget {
   }
 }
 
-/// Temporary landing for the Foundation phase: reflects DeviceClass + lets the
-/// theme be exercised. Replaced by the router's role shells in P1-T-05.
 class _FoundationHome extends ConsumerWidget {
   const _FoundationHome();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shortest = MediaQuery.of(context).size.shortestSide;
-    // Feed MediaQuery into the DeviceClass provider once the frame is laid out.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = ref.read(screenShortestSideProvider.notifier);
       if (notifier.state != shortest) notifier.state = shortest;
