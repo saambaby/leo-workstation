@@ -24,7 +24,13 @@ A feature slice never imports another feature's `data/` layer. Cross-feature rea
 View state is immutable (`freezed`). `go_router`'s `redirect` is keyed on auth state via `refreshListenable`; there is no imperative navigation on login/logout. (arch §3, §5)
 
 ### INV-CLIENT-STATE-2 — `AuthState` is the auth→router contract
-`auth` owns the `AuthState` union and `router` consumes it; the union signature is frozen as a shared contract. Arms and their fields: `unauthenticated` · `loading` · `error(message)` · `mfaRequired(firstLogin, mfaToken)` · `pickMembership(memberships)` · `authenticated(role, tenantId?, onboardingRequired)`. Consumers must not branch on undeclared arms/fields; adding/changing an arm is a contract change to both specs. (promoted 2026-06-29 from auth ⋂ router)
+`auth` owns the `AuthState` union and `router` consumes it; the union **arm** signature is frozen as a shared contract. Arms: `unauthenticated(forgotPasswordSending?, resendCodeSending?)` · `loading(reason?)` · `error(message)` · `mfaRequired(firstLogin, mfaToken)` · `pickMembership(memberships)` · `authenticated(role, tenantId?, onboardingRequired, memberships?, membershipsLoading?, switchingTenant?, expandedPrivilegedTenantId?)`. Consumers must not branch on undeclared arms; adding/changing an **arm** is a contract change to both specs. Optional metadata fields on existing arms are UI-only and invisible to router redirect. (promoted 2026-06-29 from auth ⋂ router; fields extended 2026-06-30)
+
+### INV-CLIENT-STATE-3 — Centralized async state, derived UI providers
+Async and business state (loading, errors, lists fetched for UI, in-flight operations) is owned by the feature `Notifier` (`presentation/notifiers/`), not private fields on `State` / `ConsumerState`. Screens and widgets watch a derived `presentation/providers/<feature>_ui_provider.dart` for display helpers (`isLoading`, `errorMessage`, etc.) instead of pattern-matching the domain union on every build. Views never call repositories. Ephemeral UI-only state (`TextEditingController`, focus nodes, overlay open/close) may remain local. Reference: `features/auth/` (`AuthNotifier`, `authUiProvider`, `AuthFormShell`). (promoted 2026-06-30)
+
+### INV-CLIENT-TEST-1 — No Flutter tests unless requested
+Do not add or expand unit/widget/integration tests in this repo unless the user explicitly asks. Verification for agent work is `flutter analyze` (+ `build_runner` when codegen changes). Existing tests may be kept passing but must not be extended by default. (promoted 2026-06-30)
 
 ---
 

@@ -22,7 +22,9 @@ Dart 3 · Flutter (Cupertino) · Riverpod · go_router · dio · Vonage (P2)
 ## Conventions
 
 - `lib/features/<name>/{data,domain,presentation}` — MVVM slices
-- `flutter analyze` · `flutter test` · `dart run build_runner build --delete-conflicting-outputs`
+- `flutter analyze` · `dart run build_runner build --delete-conflicting-outputs`
+- **Tests:** do not add Flutter tests unless explicitly requested (`INV-CLIENT-TEST-1`)
+- **State:** async in notifiers + derived `<feature>_ui_provider`; see arch §1 checklist
 
 ## Pineapple
 
@@ -30,5 +32,6 @@ Close sessions with `/pineapple:context-update`. Tracker issues live in backend 
 
 ## Autonomy
 
-- **Proceed:** scaffold per `docs/release-plan.md`, run analyze/test, fix lint in edited files.
+- **Proceed:** scaffold per `docs/release-plan.md`, run `flutter analyze`, fix lint in edited files.
 - **Check in first:** product decisions, API contract changes, new dependencies, push/merge.
+- **Do not add Flutter tests** unless the user asks (`INV-CLIENT-TEST-1`).
