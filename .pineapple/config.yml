@@ -26,7 +26,10 @@ artifacts:
   state: .pineapple/state.md
 
 tracker:
-  backend: gh                       # tracker.py schema: tracker.backend
+  backend: gh
+# tracker.py schema: tracker.backend. NOTE: tracker.py's minimal YAML reader does not
+# strip inline `#` comments from values — keep this value on its own line with no
+# trailing comment, or it silently mis-reads as the Linear backend.
 # Tracker issues live in this repo (saambaby/leo-workstation) — gh targets the cwd remote;
 # canonical_repo is not read by tracker.py and was removed (2026-06-29).
 

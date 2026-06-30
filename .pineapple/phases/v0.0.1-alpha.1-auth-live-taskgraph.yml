@@ -16,6 +16,7 @@ waves:
 
 tasks:
   - id: AL-T-01
+    issue: 13
     title: "Live auth contract: repository/state-machine rewrite + router alignment + deletions"
     wave: W1
     feature_spec: .pineapple/features/auth.md
@@ -37,6 +38,7 @@ tasks:
     notes: "Foundation: owns the phase integration contract (narrowed AuthState union + live wire shapes: login totp_code resubmit, no /auth/mfa, consent on invite). Must merge before AL-T-02. Spans features/auth + core/router because it edits the shared AuthState/redirect contract -> routes coordinator-side on main, not a worker worktree (repo is coordinator-side-serial). Verify: build_runner (freezed regen) + flutter analyze clean + redirect_test passes. No new tests (INV-CLIENT-TEST-1); the one existing test touched is repaired, not extended."
 
   - id: AL-T-02
+    issue: 14
     title: "MFA-enrollment QR + invite consent UI + qr_flutter dependency"
     wave: W2
     feature_spec: .pineapple/features/auth.md
