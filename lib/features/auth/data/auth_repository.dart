@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/leo_roles.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/dio_provider.dart';
+import '../../onboarding/data/mock_onboarding_store.dart';
+import '../../onboarding/domain/onboarding_models.dart';
 import '../domain/auth_models.dart';
 
 abstract class AuthRepository {
@@ -34,7 +36,7 @@ abstract class AuthRepository {
 
   Future<void> forgotPassword({required String email});
 
-  Future<AuthSession> resetPassword({
+  Future<void> resetPassword({
     required String token,
     required String password,
   });
@@ -149,15 +151,14 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession> resetPassword({
+  Future<void> resetPassword({
     required String token,
     required String password,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    await _dio.post<void>(
       '/auth/reset-password',
-      data: {'token': token, 'password': password},
+      data: {'token': token, 'new_password': password},
     );
-    return _sessionFromResponse(response.data!);
   }
 
   @override
@@ -259,6 +260,39 @@ class MockAuthRepository implements AuthRepository {
     if (email.startsWith('tenantless@')) {
       return LoginResult.session(
         _mockSession(role: LeoRoles.interpreter),
+      );
+    }
+
+    final signup = MockOnboardingStore.instance.lookup(email);
+    if (signup != null) {
+      if (!signup.verified) {
+        throw DioException(
+          requestOptions: RequestOptions(path: '/auth/login'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/login'),
+            statusCode: 401,
+          ),
+        );
+      }
+      final sub = 'signup-${email.toLowerCase().hashCode}';
+      final needsOnboarding =
+          !MockOnboardingStore.instance.isOnboardingComplete(email);
+      if (signup.path == SignupPath.personal) {
+        return LoginResult.session(
+          _mockSession(
+            role: LeoRoles.interpreter,
+            sub: sub,
+            onboardingRequired: needsOnboarding,
+          ),
+        );
+      }
+      return LoginResult.session(
+        _mockSession(
+          role: LeoRoles.customerAdmin,
+          tenantId: '33333333-3333-3333-3333-333333333333',
+          sub: sub,
+          onboardingRequired: needsOnboarding,
+        ),
       );
     }
 
@@ -370,7 +404,7 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession> resetPassword({
+  Future<void> resetPassword({
     required String token,
     required String password,
   }) async {
@@ -384,7 +418,24 @@ class MockAuthRepository implements AuthRepository {
         ),
       );
     }
-    return _mockSession(role: LeoRoles.interpreter);
+    if (token != '123456') {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/auth/reset-password'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/auth/reset-password'),
+          statusCode: 400,
+        ),
+      );
+    }
+    if (password.length < 8) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/auth/reset-password'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/auth/reset-password'),
+          statusCode: 400,
+        ),
+      );
+    }
   }
 
   @override
@@ -403,11 +454,13 @@ class MockAuthRepository implements AuthRepository {
     required String role,
     String? tenantId,
     bool onboardingRequired = false,
+    String sub = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   }) {
     final accessToken = _mockJwt(
       role: role,
       tenantId: tenantId,
       onboardingRequired: onboardingRequired,
+      sub: sub,
     );
     return AuthSession.fromTokens(
       accessToken: accessToken,
@@ -419,12 +472,13 @@ class MockAuthRepository implements AuthRepository {
     required String role,
     String? tenantId,
     bool onboardingRequired = false,
+    String sub = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   }) {
     final header = base64Url.encode(utf8.encode('{"alg":"none"}'));
     final payload = base64Url.encode(
       utf8.encode(
         jsonEncode({
-          'sub': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          'sub': sub,
           'role': role,
           'tenant_id': ?tenantId,
           'exp': DateTime.now()

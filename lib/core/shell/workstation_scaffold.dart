@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/leo_roles.dart';
 import '../config/app_config.dart';
+import '../platform/external_url.dart';
 import '../theme/app_theme.dart';
 
 /// Shared workstation chrome (P1-T-02): left rail slots + header tenant-chip /
@@ -148,12 +148,7 @@ class _AdminDashboardLink extends StatelessWidget {
 
   final String url;
 
-  Future<void> _open() async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
+  Future<void> _open() => launchExternalUrl(url);
 
   @override
   Widget build(BuildContext context) {

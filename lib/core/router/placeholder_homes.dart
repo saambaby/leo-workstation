@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../features/auth/presentation/screens/role_shell_screen.dart';
+import '../../features/onboarding/l10n/onboarding_strings.dart';
 
 class IdleHomeScreen extends ConsumerWidget {
   const IdleHomeScreen({super.key});
@@ -25,11 +26,26 @@ class IdleHomeScreen extends ConsumerWidget {
           onTap: () => context.go('/idle/requests'),
         ),
       ],
-      child: const Center(
-        child: Text(
-          'Interpreter idle — placeholder (P2)',
-          style: TextStyle(color: LeoColors.black100),
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'Interpreter idle — placeholder (P2)',
+            style: TextStyle(color: LeoColors.black100),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              OnboardingStrings.affiliationIdleNote,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: LeoColors.black200,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

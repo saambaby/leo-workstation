@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:leo_workstation/core/auth/leo_roles.dart';
 import 'package:leo_workstation/core/device/device_class.dart';
 import 'package:leo_workstation/core/router/redirect.dart';
@@ -13,6 +12,17 @@ void main() {
           const AuthState.unauthenticated(),
           DeviceClass.desktop,
           '/login',
+        ),
+        isNull,
+      );
+    });
+
+    test('unauthenticated on signup route stays', () {
+      expect(
+        authRedirect(
+          const AuthState.unauthenticated(),
+          DeviceClass.desktop,
+          '/signup',
         ),
         isNull,
       );
@@ -92,7 +102,11 @@ void main() {
     const locations = [
       '/',
       '/login',
+      '/signup',
+      '/signup/details',
+      '/verify-email',
       '/forgot-password',
+      '/forgot-password/verify',
       '/reset-password',
       '/invite/accept',
       '/mfa',

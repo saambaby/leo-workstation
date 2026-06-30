@@ -19,8 +19,12 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$AuthState {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() unauthenticated,
-    required TResult Function() loading,
+    required TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+    )
+    unauthenticated,
+    required TResult Function(AuthLoadingReason reason) loading,
     required TResult Function(String message) error,
     required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
     required TResult Function(List<Membership> memberships) pickMembership,
@@ -28,27 +32,49 @@ mixin _$AuthState {
       String role,
       String? tenantId,
       bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
     )
     authenticated,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthenticated,
-    TResult? Function()? loading,
+    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
     TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult? Function(List<Membership> memberships)? pickMembership,
-    TResult? Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult? Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthenticated,
-    TResult Function()? loading,
+    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
     TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult Function(List<Membership> memberships)? pickMembership,
-    TResult Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
@@ -108,6 +134,8 @@ abstract class _$$AuthUnauthenticatedImplCopyWith<$Res> {
     _$AuthUnauthenticatedImpl value,
     $Res Function(_$AuthUnauthenticatedImpl) then,
   ) = __$$AuthUnauthenticatedImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({bool forgotPasswordSending, bool resendCodeSending});
 }
 
 /// @nodoc
@@ -121,33 +149,82 @@ class __$$AuthUnauthenticatedImplCopyWithImpl<$Res>
 
   /// Create a copy of AuthState
   /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? forgotPasswordSending = null,
+    Object? resendCodeSending = null,
+  }) {
+    return _then(
+      _$AuthUnauthenticatedImpl(
+        forgotPasswordSending: null == forgotPasswordSending
+            ? _value.forgotPasswordSending
+            : forgotPasswordSending // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        resendCodeSending: null == resendCodeSending
+            ? _value.resendCodeSending
+            : resendCodeSending // ignore: cast_nullable_to_non_nullable
+                  as bool,
+      ),
+    );
+  }
 }
 
 /// @nodoc
 
 class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
-  const _$AuthUnauthenticatedImpl();
+  const _$AuthUnauthenticatedImpl({
+    this.forgotPasswordSending = false,
+    this.resendCodeSending = false,
+  });
+
+  @override
+  @JsonKey()
+  final bool forgotPasswordSending;
+  @override
+  @JsonKey()
+  final bool resendCodeSending;
 
   @override
   String toString() {
-    return 'AuthState.unauthenticated()';
+    return 'AuthState.unauthenticated(forgotPasswordSending: $forgotPasswordSending, resendCodeSending: $resendCodeSending)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$AuthUnauthenticatedImpl);
+            other is _$AuthUnauthenticatedImpl &&
+            (identical(other.forgotPasswordSending, forgotPasswordSending) ||
+                other.forgotPasswordSending == forgotPasswordSending) &&
+            (identical(other.resendCodeSending, resendCodeSending) ||
+                other.resendCodeSending == resendCodeSending));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode =>
+      Object.hash(runtimeType, forgotPasswordSending, resendCodeSending);
+
+  /// Create a copy of AuthState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AuthUnauthenticatedImplCopyWith<_$AuthUnauthenticatedImpl> get copyWith =>
+      __$$AuthUnauthenticatedImplCopyWithImpl<_$AuthUnauthenticatedImpl>(
+        this,
+        _$identity,
+      );
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() unauthenticated,
-    required TResult Function() loading,
+    required TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+    )
+    unauthenticated,
+    required TResult Function(AuthLoadingReason reason) loading,
     required TResult Function(String message) error,
     required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
     required TResult Function(List<Membership> memberships) pickMembership,
@@ -155,40 +232,62 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
       String role,
       String? tenantId,
       bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
     )
     authenticated,
   }) {
-    return unauthenticated();
+    return unauthenticated(forgotPasswordSending, resendCodeSending);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthenticated,
-    TResult? Function()? loading,
+    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
     TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult? Function(List<Membership> memberships)? pickMembership,
-    TResult? Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult? Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
   }) {
-    return unauthenticated?.call();
+    return unauthenticated?.call(forgotPasswordSending, resendCodeSending);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthenticated,
-    TResult Function()? loading,
+    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
     TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult Function(List<Membership> memberships)? pickMembership,
-    TResult Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
     required TResult orElse(),
   }) {
     if (unauthenticated != null) {
-      return unauthenticated();
+      return unauthenticated(forgotPasswordSending, resendCodeSending);
     }
     return orElse();
   }
@@ -238,7 +337,19 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
 }
 
 abstract class AuthUnauthenticated implements AuthState {
-  const factory AuthUnauthenticated() = _$AuthUnauthenticatedImpl;
+  const factory AuthUnauthenticated({
+    final bool forgotPasswordSending,
+    final bool resendCodeSending,
+  }) = _$AuthUnauthenticatedImpl;
+
+  bool get forgotPasswordSending;
+  bool get resendCodeSending;
+
+  /// Create a copy of AuthState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AuthUnauthenticatedImplCopyWith<_$AuthUnauthenticatedImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -247,6 +358,8 @@ abstract class _$$AuthLoadingImplCopyWith<$Res> {
     _$AuthLoadingImpl value,
     $Res Function(_$AuthLoadingImpl) then,
   ) = __$$AuthLoadingImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({AuthLoadingReason reason});
 }
 
 /// @nodoc
@@ -260,32 +373,62 @@ class __$$AuthLoadingImplCopyWithImpl<$Res>
 
   /// Create a copy of AuthState
   /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? reason = null}) {
+    return _then(
+      _$AuthLoadingImpl(
+        reason: null == reason
+            ? _value.reason
+            : reason // ignore: cast_nullable_to_non_nullable
+                  as AuthLoadingReason,
+      ),
+    );
+  }
 }
 
 /// @nodoc
 
 class _$AuthLoadingImpl implements AuthLoading {
-  const _$AuthLoadingImpl();
+  const _$AuthLoadingImpl({this.reason = AuthLoadingReason.session});
+
+  @override
+  @JsonKey()
+  final AuthLoadingReason reason;
 
   @override
   String toString() {
-    return 'AuthState.loading()';
+    return 'AuthState.loading(reason: $reason)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$AuthLoadingImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$AuthLoadingImpl &&
+            (identical(other.reason, reason) || other.reason == reason));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, reason);
+
+  /// Create a copy of AuthState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AuthLoadingImplCopyWith<_$AuthLoadingImpl> get copyWith =>
+      __$$AuthLoadingImplCopyWithImpl<_$AuthLoadingImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() unauthenticated,
-    required TResult Function() loading,
+    required TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+    )
+    unauthenticated,
+    required TResult Function(AuthLoadingReason reason) loading,
     required TResult Function(String message) error,
     required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
     required TResult Function(List<Membership> memberships) pickMembership,
@@ -293,40 +436,62 @@ class _$AuthLoadingImpl implements AuthLoading {
       String role,
       String? tenantId,
       bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
     )
     authenticated,
   }) {
-    return loading();
+    return loading(reason);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthenticated,
-    TResult? Function()? loading,
+    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
     TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult? Function(List<Membership> memberships)? pickMembership,
-    TResult? Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult? Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
   }) {
-    return loading?.call();
+    return loading?.call(reason);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthenticated,
-    TResult Function()? loading,
+    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
     TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult Function(List<Membership> memberships)? pickMembership,
-    TResult Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
     required TResult orElse(),
   }) {
     if (loading != null) {
-      return loading();
+      return loading(reason);
     }
     return orElse();
   }
@@ -376,7 +541,16 @@ class _$AuthLoadingImpl implements AuthLoading {
 }
 
 abstract class AuthLoading implements AuthState {
-  const factory AuthLoading() = _$AuthLoadingImpl;
+  const factory AuthLoading({final AuthLoadingReason reason}) =
+      _$AuthLoadingImpl;
+
+  AuthLoadingReason get reason;
+
+  /// Create a copy of AuthState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AuthLoadingImplCopyWith<_$AuthLoadingImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -449,8 +623,12 @@ class _$AuthErrorImpl implements AuthError {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() unauthenticated,
-    required TResult Function() loading,
+    required TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+    )
+    unauthenticated,
+    required TResult Function(AuthLoadingReason reason) loading,
     required TResult Function(String message) error,
     required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
     required TResult Function(List<Membership> memberships) pickMembership,
@@ -458,6 +636,10 @@ class _$AuthErrorImpl implements AuthError {
       String role,
       String? tenantId,
       bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
     )
     authenticated,
   }) {
@@ -467,12 +649,21 @@ class _$AuthErrorImpl implements AuthError {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthenticated,
-    TResult? Function()? loading,
+    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
     TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult? Function(List<Membership> memberships)? pickMembership,
-    TResult? Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult? Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
   }) {
     return error?.call(message);
@@ -481,12 +672,21 @@ class _$AuthErrorImpl implements AuthError {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthenticated,
-    TResult Function()? loading,
+    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
     TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult Function(List<Membership> memberships)? pickMembership,
-    TResult Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
     required TResult orElse(),
   }) {
@@ -637,8 +837,12 @@ class _$AuthMfaRequiredImpl implements AuthMfaRequired {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() unauthenticated,
-    required TResult Function() loading,
+    required TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+    )
+    unauthenticated,
+    required TResult Function(AuthLoadingReason reason) loading,
     required TResult Function(String message) error,
     required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
     required TResult Function(List<Membership> memberships) pickMembership,
@@ -646,6 +850,10 @@ class _$AuthMfaRequiredImpl implements AuthMfaRequired {
       String role,
       String? tenantId,
       bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
     )
     authenticated,
   }) {
@@ -655,12 +863,21 @@ class _$AuthMfaRequiredImpl implements AuthMfaRequired {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthenticated,
-    TResult? Function()? loading,
+    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
     TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult? Function(List<Membership> memberships)? pickMembership,
-    TResult? Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult? Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
   }) {
     return mfaRequired?.call(firstLogin, mfaToken);
@@ -669,12 +886,21 @@ class _$AuthMfaRequiredImpl implements AuthMfaRequired {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthenticated,
-    TResult Function()? loading,
+    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
     TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult Function(List<Membership> memberships)? pickMembership,
-    TResult Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
     required TResult orElse(),
   }) {
@@ -829,8 +1055,12 @@ class _$AuthPickMembershipImpl implements AuthPickMembership {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() unauthenticated,
-    required TResult Function() loading,
+    required TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+    )
+    unauthenticated,
+    required TResult Function(AuthLoadingReason reason) loading,
     required TResult Function(String message) error,
     required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
     required TResult Function(List<Membership> memberships) pickMembership,
@@ -838,6 +1068,10 @@ class _$AuthPickMembershipImpl implements AuthPickMembership {
       String role,
       String? tenantId,
       bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
     )
     authenticated,
   }) {
@@ -847,12 +1081,21 @@ class _$AuthPickMembershipImpl implements AuthPickMembership {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthenticated,
-    TResult? Function()? loading,
+    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
     TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult? Function(List<Membership> memberships)? pickMembership,
-    TResult? Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult? Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
   }) {
     return pickMembership?.call(memberships);
@@ -861,12 +1104,21 @@ class _$AuthPickMembershipImpl implements AuthPickMembership {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthenticated,
-    TResult Function()? loading,
+    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
     TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult Function(List<Membership> memberships)? pickMembership,
-    TResult Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
     required TResult orElse(),
   }) {
@@ -940,7 +1192,15 @@ abstract class _$$AuthAuthenticatedImplCopyWith<$Res> {
     $Res Function(_$AuthAuthenticatedImpl) then,
   ) = __$$AuthAuthenticatedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String role, String? tenantId, bool onboardingRequired});
+  $Res call({
+    String role,
+    String? tenantId,
+    bool onboardingRequired,
+    List<Membership> memberships,
+    bool membershipsLoading,
+    bool switchingTenant,
+    String? expandedPrivilegedTenantId,
+  });
 }
 
 /// @nodoc
@@ -960,6 +1220,10 @@ class __$$AuthAuthenticatedImplCopyWithImpl<$Res>
     Object? role = null,
     Object? tenantId = freezed,
     Object? onboardingRequired = null,
+    Object? memberships = null,
+    Object? membershipsLoading = null,
+    Object? switchingTenant = null,
+    Object? expandedPrivilegedTenantId = freezed,
   }) {
     return _then(
       _$AuthAuthenticatedImpl(
@@ -975,6 +1239,22 @@ class __$$AuthAuthenticatedImplCopyWithImpl<$Res>
             ? _value.onboardingRequired
             : onboardingRequired // ignore: cast_nullable_to_non_nullable
                   as bool,
+        memberships: null == memberships
+            ? _value._memberships
+            : memberships // ignore: cast_nullable_to_non_nullable
+                  as List<Membership>,
+        membershipsLoading: null == membershipsLoading
+            ? _value.membershipsLoading
+            : membershipsLoading // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        switchingTenant: null == switchingTenant
+            ? _value.switchingTenant
+            : switchingTenant // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        expandedPrivilegedTenantId: freezed == expandedPrivilegedTenantId
+            ? _value.expandedPrivilegedTenantId
+            : expandedPrivilegedTenantId // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -987,7 +1267,11 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
     required this.role,
     this.tenantId,
     this.onboardingRequired = false,
-  });
+    final List<Membership> memberships = const [],
+    this.membershipsLoading = false,
+    this.switchingTenant = false,
+    this.expandedPrivilegedTenantId,
+  }) : _memberships = memberships;
 
   @override
   final String role;
@@ -996,10 +1280,27 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
   @override
   @JsonKey()
   final bool onboardingRequired;
+  final List<Membership> _memberships;
+  @override
+  @JsonKey()
+  List<Membership> get memberships {
+    if (_memberships is EqualUnmodifiableListView) return _memberships;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_memberships);
+  }
+
+  @override
+  @JsonKey()
+  final bool membershipsLoading;
+  @override
+  @JsonKey()
+  final bool switchingTenant;
+  @override
+  final String? expandedPrivilegedTenantId;
 
   @override
   String toString() {
-    return 'AuthState.authenticated(role: $role, tenantId: $tenantId, onboardingRequired: $onboardingRequired)';
+    return 'AuthState.authenticated(role: $role, tenantId: $tenantId, onboardingRequired: $onboardingRequired, memberships: $memberships, membershipsLoading: $membershipsLoading, switchingTenant: $switchingTenant, expandedPrivilegedTenantId: $expandedPrivilegedTenantId)';
   }
 
   @override
@@ -1011,12 +1312,34 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
             (identical(other.tenantId, tenantId) ||
                 other.tenantId == tenantId) &&
             (identical(other.onboardingRequired, onboardingRequired) ||
-                other.onboardingRequired == onboardingRequired));
+                other.onboardingRequired == onboardingRequired) &&
+            const DeepCollectionEquality().equals(
+              other._memberships,
+              _memberships,
+            ) &&
+            (identical(other.membershipsLoading, membershipsLoading) ||
+                other.membershipsLoading == membershipsLoading) &&
+            (identical(other.switchingTenant, switchingTenant) ||
+                other.switchingTenant == switchingTenant) &&
+            (identical(
+                  other.expandedPrivilegedTenantId,
+                  expandedPrivilegedTenantId,
+                ) ||
+                other.expandedPrivilegedTenantId ==
+                    expandedPrivilegedTenantId));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, role, tenantId, onboardingRequired);
+  int get hashCode => Object.hash(
+    runtimeType,
+    role,
+    tenantId,
+    onboardingRequired,
+    const DeepCollectionEquality().hash(_memberships),
+    membershipsLoading,
+    switchingTenant,
+    expandedPrivilegedTenantId,
+  );
 
   /// Create a copy of AuthState
   /// with the given fields replaced by the non-null parameter values.
@@ -1032,8 +1355,12 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function() unauthenticated,
-    required TResult Function() loading,
+    required TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+    )
+    unauthenticated,
+    required TResult Function(AuthLoadingReason reason) loading,
     required TResult Function(String message) error,
     required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
     required TResult Function(List<Membership> memberships) pickMembership,
@@ -1041,40 +1368,86 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
       String role,
       String? tenantId,
       bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
     )
     authenticated,
   }) {
-    return authenticated(role, tenantId, onboardingRequired);
+    return authenticated(
+      role,
+      tenantId,
+      onboardingRequired,
+      memberships,
+      membershipsLoading,
+      switchingTenant,
+      expandedPrivilegedTenantId,
+    );
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? unauthenticated,
-    TResult? Function()? loading,
+    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
     TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult? Function(List<Membership> memberships)? pickMembership,
-    TResult? Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult? Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
   }) {
-    return authenticated?.call(role, tenantId, onboardingRequired);
+    return authenticated?.call(
+      role,
+      tenantId,
+      onboardingRequired,
+      memberships,
+      membershipsLoading,
+      switchingTenant,
+      expandedPrivilegedTenantId,
+    );
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? unauthenticated,
-    TResult Function()? loading,
+    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    unauthenticated,
+    TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
     TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
     TResult Function(List<Membership> memberships)? pickMembership,
-    TResult Function(String role, String? tenantId, bool onboardingRequired)?
+    TResult Function(
+      String role,
+      String? tenantId,
+      bool onboardingRequired,
+      List<Membership> memberships,
+      bool membershipsLoading,
+      bool switchingTenant,
+      String? expandedPrivilegedTenantId,
+    )?
     authenticated,
     required TResult orElse(),
   }) {
     if (authenticated != null) {
-      return authenticated(role, tenantId, onboardingRequired);
+      return authenticated(
+        role,
+        tenantId,
+        onboardingRequired,
+        memberships,
+        membershipsLoading,
+        switchingTenant,
+        expandedPrivilegedTenantId,
+      );
     }
     return orElse();
   }
@@ -1128,11 +1501,19 @@ abstract class AuthAuthenticated implements AuthState {
     required final String role,
     final String? tenantId,
     final bool onboardingRequired,
+    final List<Membership> memberships,
+    final bool membershipsLoading,
+    final bool switchingTenant,
+    final String? expandedPrivilegedTenantId,
   }) = _$AuthAuthenticatedImpl;
 
   String get role;
   String? get tenantId;
   bool get onboardingRequired;
+  List<Membership> get memberships;
+  bool get membershipsLoading;
+  bool get switchingTenant;
+  String? get expandedPrivilegedTenantId;
 
   /// Create a copy of AuthState
   /// with the given fields replaced by the non-null parameter values.

@@ -6,7 +6,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/auth_models.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
-import '../state/auth_state.dart';
+import '../providers/auth_ui_provider.dart';
+import '../widgets/auth_form_shell.dart';
 import '../widgets/auth_screen_layout.dart';
 
 class TenantPickerScreen extends ConsumerWidget {
@@ -14,27 +15,20 @@ class TenantPickerScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authNotifierProvider);
-    final memberships = auth is AuthPickMembership ? auth.memberships : <Membership>[];
-    final loading = auth is AuthLoading;
-    final error = auth is AuthError ? auth.message : null;
+    final ui = ref.watch(authUiProvider);
 
-    return AuthScreenLayout(
-      title: AuthStrings.selectWorkspace,
-      subtitle: AuthStrings.selectWorkspaceSubtitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (error != null) ...[
-            AuthErrorBanner(message: error),
-            const SizedBox(height: 16),
-          ],
-          if (loading)
-            const Center(child: CupertinoActivityIndicator())
-          else
-            ...memberships.map((m) => _MembershipRow(membership: m)),
-        ],
-      ),
+    return AuthFormShell(
+      subtitle: AuthStrings.selectWorkspaceSub,
+      error: ui.errorMessage,
+      width: AuthCardWidth.wide,
+      child: ui.isLoading
+          ? const Center(child: CupertinoActivityIndicator())
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: ui.pickMemberships
+                  .map((m) => _MembershipRow(membership: m))
+                  .toList(),
+            ),
     );
   }
 }
@@ -44,33 +38,27 @@ class _MembershipRow extends ConsumerWidget {
 
   final Membership membership;
 
-  String get _roleLabel => switch (membership.role) {
-        LeoRoles.lspAdmin => 'LSP Admin',
-        LeoRoles.subAdmin => 'Sub Admin',
-        LeoRoles.interpreter => 'Interpreter',
-        LeoRoles.customerUser => 'Customer',
-        LeoRoles.customerAdmin => 'Customer Admin',
-        LeoRoles.platformAdmin => 'Platform Admin',
-        _ => membership.role,
-      };
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final roleLabel = roleDisplayLabel(
+      membership.role,
+      style: RoleLabelStyle.slug,
+    );
+
     return Semantics(
       button: true,
-      label: '${membership.tenantName}, $_roleLabel',
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: () => ref
+      label: '${membership.tenantName}, $roleLabel',
+      child: GestureDetector(
+        onTap: () => ref
             .read(authNotifierProvider.notifier)
             .selectMembership(membership),
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: LeoColors.black700,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: LeoColors.black500),
+            color: LeoColors.black800,
+            borderRadius: BorderRadius.circular(LeoRadii.md),
+            border: Border.all(color: LeoColors.black600),
           ),
           child: Row(
             children: [
@@ -80,27 +68,17 @@ class _MembershipRow extends ConsumerWidget {
                   children: [
                     Text(
                       membership.tenantName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: LeoColors.signalWhite,
-                      ),
+                      style: LeoTypography.listRowTitle,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _roleLabel,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: LeoColors.black200,
-                      ),
-                    ),
+                    const SizedBox(height: 2),
+                    Text(roleLabel, style: LeoTypography.listRowMeta),
                   ],
                 ),
               ),
               const Icon(
                 CupertinoIcons.chevron_right,
-                size: 16,
-                color: LeoColors.black200,
+                size: 14,
+                color: LeoColors.black300,
               ),
             ],
           ),

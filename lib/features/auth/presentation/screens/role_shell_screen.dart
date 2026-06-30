@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/auth/leo_roles.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/platform/external_url.dart';
 import '../../../../core/shell/workstation_scaffold.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
@@ -136,8 +136,8 @@ class TenantChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = tenantId == null
-        ? 'Tenant-less · ${_roleLabel(role)}'
-        : 'Active workspace · ${_roleLabel(role)}';
+        ? 'Tenant-less · ${roleDisplayLabel(role)}'
+        : 'Active workspace · ${roleDisplayLabel(role)}';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -152,15 +152,6 @@ class TenantChip extends StatelessWidget {
       ),
     );
   }
-
-  String _roleLabel(String role) => switch (role) {
-        LeoRoles.lspAdmin => 'LSP Admin',
-        LeoRoles.subAdmin => 'Sub Admin',
-        LeoRoles.interpreter => 'Interpreter',
-        LeoRoles.customerUser => 'Customer',
-        LeoRoles.customerAdmin => 'Customer Admin',
-        _ => role,
-      };
 }
 
 class WebHandoffScreen extends ConsumerWidget {
@@ -199,15 +190,7 @@ class WebHandoffScreen extends ConsumerWidget {
                     button: true,
                     label: AuthStrings.openWebDashboard,
                     child: CupertinoButton.filled(
-                      onPressed: () async {
-                        final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
+                      onPressed: () => launchExternalUrl(url),
                       child: const Text(AuthStrings.openWebDashboard),
                     ),
                   ),

@@ -5,7 +5,11 @@ import '../../features/auth/presentation/state/auth_state.dart';
 /// Public routes reachable while signed out.
 const publicRoutes = {
   '/login',
+  '/signup',
+  '/signup/details',
+  '/verify-email',
   '/forgot-password',
+  '/forgot-password/verify',
   '/reset-password',
   '/invite/accept',
 };
@@ -13,7 +17,11 @@ const publicRoutes = {
 /// Auth-transition + public auth screens (error state may stay here).
 const authFlowRoutes = {
   '/login',
+  '/signup',
+  '/signup/details',
+  '/verify-email',
   '/forgot-password',
+  '/forgot-password/verify',
   '/reset-password',
   '/invite/accept',
   '/mfa',

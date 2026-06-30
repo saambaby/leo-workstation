@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/leo_roles.dart';
 import '../../../../core/network/dio_provider.dart';
+import '../../../../core/storage/onboarding_completion_storage.dart';
 import '../../../../core/storage/token_storage.dart';
+import '../../../onboarding/data/mock_onboarding_store.dart';
 import '../../data/auth_repository.dart';
 import '../../domain/auth_models.dart';
 import '../state/auth_state.dart';
@@ -23,7 +25,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Cold-start: restore from secure storage or route to unauthenticated.
   Future<void> restoreSession() async {
-    state = const AuthState.loading();
+    state = const AuthState.loading(reason: AuthLoadingReason.session);
     try {
       final refresh = await ref.read(tokenStorageProvider).readRefreshToken();
       if (refresh == null || refresh.isEmpty) {
@@ -40,7 +42,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> login({required String email, required String password}) async {
-    state = const AuthState.loading();
+    state = const AuthState.loading(reason: AuthLoadingReason.login);
     try {
       final result = await _repo.login(email: email, password: password);
       await _handleLoginResult(result);
@@ -53,7 +55,7 @@ class AuthNotifier extends Notifier<AuthState> {
     final current = state;
     if (current is! AuthMfaRequired) return;
 
-    state = const AuthState.loading();
+    state = const AuthState.loading(reason: AuthLoadingReason.mfa);
     try {
       final session = await _repo.submitMfa(
         mfaToken: current.mfaToken,
@@ -66,7 +68,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> selectMembership(Membership membership) async {
-    state = const AuthState.loading();
+    state = const AuthState.loading(reason: AuthLoadingReason.login);
     try {
       if (roleRequiresMfa(membership.role)) {
         state = const AuthState.mfaRequired(
@@ -89,35 +91,92 @@ class AuthNotifier extends Notifier<AuthState> {
     required String tenantId,
     String? mfaCode,
   }) async {
-    state = const AuthState.loading();
+    final current = state;
+    if (current is! AuthAuthenticated) return;
+
+    state = current.copyWith(
+      switchingTenant: true,
+      expandedPrivilegedTenantId: null,
+    );
     try {
       final result = await _repo.switchTenant(
         tenantId: tenantId,
         mfaToken: mfaCode,
       );
       await _handleLoginResult(result);
+      final after = state;
+      if (after is AuthAuthenticated) {
+        state = after.copyWith(switchingTenant: false);
+      }
     } catch (e) {
+      final after = state;
+      if (after is AuthAuthenticated) {
+        state = after.copyWith(switchingTenant: false);
+      }
       state = AuthState.error(message: _mapError(e));
     }
   }
 
-  Future<void> forgotPassword({required String email}) async {
-    await _repo.forgotPassword(email: email);
+  Future<void> loadMemberships() async {
+    final current = state;
+    if (current is! AuthAuthenticated) return;
+    if (current.membershipsLoading) return;
+
+    state = current.copyWith(membershipsLoading: true);
+    try {
+      final list = await _repo.listMemberships();
+      final after = state;
+      if (after is AuthAuthenticated) {
+        state = after.copyWith(memberships: list, membershipsLoading: false);
+      }
+    } catch (_) {
+      final after = state;
+      if (after is AuthAuthenticated) {
+        state = after.copyWith(membershipsLoading: false);
+      }
+    }
   }
 
-  Future<void> resetPassword({
+  void setExpandedPrivilegedTenant(String? tenantId) {
+    final current = state;
+    if (current is! AuthAuthenticated) return;
+
+    final expanded = current.expandedPrivilegedTenantId;
+    state = current.copyWith(
+      expandedPrivilegedTenantId: expanded == tenantId ? null : tenantId,
+    );
+  }
+
+  Future<void> forgotPassword({required String email}) async {
+    state = const AuthState.unauthenticated(forgotPasswordSending: true);
+    try {
+      await _repo.forgotPassword(email: email);
+    } finally {
+      state = const AuthState.unauthenticated(forgotPasswordSending: false);
+    }
+  }
+
+  Future<void> resendResetCode({required String email}) async {
+    state = const AuthState.unauthenticated(resendCodeSending: true);
+    try {
+      await _repo.forgotPassword(email: email);
+    } finally {
+      state = const AuthState.unauthenticated(resendCodeSending: false);
+    }
+  }
+
+  Future<bool> resetPassword({
     required String token,
     required String password,
   }) async {
-    state = const AuthState.loading();
+    state = const AuthState.loading(reason: AuthLoadingReason.passwordReset);
     try {
-      final session = await _repo.resetPassword(
-        token: token,
-        password: password,
-      );
-      await _applySession(session);
+      await _repo.resetPassword(token: token, password: password);
+      state = const AuthState.unauthenticated();
+      return true;
     } catch (e) {
-      state = AuthState.error(message: _mapError(e));
+      state = AuthState.error(message: _mapResetError(e));
+      return false;
     }
   }
 
@@ -125,7 +184,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required String token,
     required String password,
   }) async {
-    state = const AuthState.loading();
+    state = const AuthState.loading(reason: AuthLoadingReason.inviteAccept);
     try {
       final session = await _repo.acceptInvite(
         token: token,
@@ -135,6 +194,19 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       state = AuthState.error(message: _mapError(e));
     }
+  }
+
+  Future<void> completeOnboarding() async {
+    final current = state;
+    if (current is! AuthAuthenticated) return;
+
+    final token = ref.read(currentAccessTokenProvider);
+    final sub = token != null
+        ? Claims.decodeAccessToken(token)?.sub ?? current.role
+        : current.role;
+    await ref.read(onboardingCompletionStorageProvider).markComplete(sub);
+    MockOnboardingStore.instance.markOnboardingCompleteBySub(sub);
+    state = current.copyWith(onboardingRequired: false);
   }
 
   Future<void> logout() async {
@@ -168,10 +240,15 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _applySession(AuthSession session) async {
     ref.read(currentAccessTokenProvider.notifier).state = session.accessToken;
     await ref.read(tokenStorageProvider).saveRefreshToken(session.refreshToken);
+    final locallyComplete = await ref
+        .read(onboardingCompletionStorageProvider)
+        .isComplete(session.claims.sub);
+    final onboardingRequired =
+        session.claims.onboardingRequired && !locallyComplete;
     state = AuthState.authenticated(
       role: session.claims.role,
       tenantId: session.claims.tenantId,
-      onboardingRequired: session.claims.onboardingRequired,
+      onboardingRequired: onboardingRequired,
     );
   }
 
@@ -180,6 +257,16 @@ class AuthNotifier extends Notifier<AuthState> {
       final status = error.response?.statusCode;
       if (status == 401) return 'Invalid email or password';
       if (status == 404) return 'Workspace not found or no longer available';
+    }
+    return 'Something went wrong. Please try again.';
+  }
+
+  String _mapResetError(Object error) {
+    if (error is DioException) {
+      final status = error.response?.statusCode;
+      if (status == 400 || status == 410) {
+        return 'Invalid or expired reset code. Request a new one.';
+      }
     }
     return 'Something went wrong. Please try again.';
   }

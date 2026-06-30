@@ -17,7 +17,7 @@ class LeoApp extends ConsumerWidget {
     final mode = ref.watch(themeModeProvider);
 
     return CupertinoApp.router(
-      title: 'Leo Workstation',
+      title: 'leo workstation',
       theme: themeFor(mode),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [

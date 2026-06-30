@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/leo_roles.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../data/auth_repository.dart';
 import '../../domain/auth_models.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
+import '../providers/auth_ui_provider.dart';
 import '../state/auth_state.dart';
 import 'otp_input_row.dart';
 
@@ -23,6 +23,14 @@ class WorkspaceAvatarButton extends ConsumerStatefulWidget {
 class _WorkspaceAvatarButtonState extends ConsumerState<WorkspaceAvatarButton> {
   var _menuOpen = false;
 
+  void _toggleMenu() {
+    final opening = !_menuOpen;
+    setState(() => _menuOpen = opening);
+    if (opening) {
+      ref.read(authNotifierProvider.notifier).loadMemberships();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -34,7 +42,7 @@ class _WorkspaceAvatarButtonState extends ConsumerState<WorkspaceAvatarButton> {
           child: CupertinoButton(
             padding: EdgeInsets.zero,
             minimumSize: Size.zero,
-            onPressed: () => setState(() => _menuOpen = !_menuOpen),
+            onPressed: _toggleMenu,
             child: Container(
               width: 40,
               height: 40,
@@ -67,50 +75,33 @@ class _WorkspaceAvatarButtonState extends ConsumerState<WorkspaceAvatarButton> {
   }
 }
 
-class _WorkspaceMenu extends ConsumerStatefulWidget {
+class _WorkspaceMenu extends ConsumerWidget {
   const _WorkspaceMenu({required this.onClose});
 
   final VoidCallback onClose;
 
-  @override
-  ConsumerState<_WorkspaceMenu> createState() => _WorkspaceMenuState();
-}
-
-class _WorkspaceMenuState extends ConsumerState<_WorkspaceMenu> {
-  String? _expandedTenantId;
-  var _loading = false;
-  List<Membership> _memberships = const [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMemberships();
-  }
-
-  Future<void> _loadMemberships() async {
-    final list = await ref.read(authRepositoryProvider).listMemberships();
-    if (mounted) setState(() => _memberships = list);
-  }
-
-  Future<void> _switchTo(Membership m, {String? mfaCode}) async {
-    setState(() => _loading = true);
+  Future<void> _switchTo(
+    WidgetRef ref,
+    Membership m, {
+    String? mfaCode,
+  }) async {
     await ref.read(authNotifierProvider.notifier).switchTenant(
           tenantId: m.tenantId,
           mfaCode: mfaCode,
         );
-    if (mounted) {
-      setState(() => _loading = false);
-      final auth = ref.read(authNotifierProvider);
-      if (auth is AuthAuthenticated || auth is AuthMfaRequired) {
-        widget.onClose();
-      }
+    final auth = ref.read(authNotifierProvider);
+    if (auth is AuthAuthenticated || auth is AuthMfaRequired) {
+      onClose();
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final auth = ref.watch(authNotifierProvider);
-    final currentTenant = auth is AuthAuthenticated ? auth.tenantId : null;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ui = ref.watch(authUiProvider);
+    final loading = ui.switchingTenant;
+    final memberships = ui.memberships;
+    final currentTenant = ui.currentTenantId;
+    final expandedTenantId = ui.expandedPrivilegedTenantId;
 
     return Container(
       width: 320,
@@ -141,118 +132,126 @@ class _WorkspaceMenuState extends ConsumerState<_WorkspaceMenu> {
               ),
             ),
           ),
-          ..._memberships.map((m) {
-            final isCurrent = m.tenantId == currentTenant;
-            final expanded = _expandedTenantId == m.tenantId;
-            final privileged = roleRequiresMfa(m.role);
+          if (ui.membershipsLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CupertinoActivityIndicator()),
+            )
+          else
+            ...memberships.map((m) {
+              final isCurrent = m.tenantId == currentTenant;
+              final expanded = expandedTenantId == m.tenantId;
+              final privileged = roleRequiresMfa(m.role);
 
-            return Column(
-              children: [
-                Semantics(
-                  button: !privileged,
-                  label: m.tenantName,
-                  child: CupertinoButton(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    onPressed: _loading
-                        ? null
-                        : () {
-                            if (privileged) {
-                              setState(
-                                () => _expandedTenantId =
-                                    expanded ? null : m.tenantId,
-                              );
-                            } else {
-                              _switchTo(m);
-                            }
-                          },
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                m.tenantName,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: isCurrent
-                                      ? LeoColors.signalLive
-                                      : LeoColors.signalWhite,
+              return Column(
+                children: [
+                  Semantics(
+                    button: !privileged,
+                    label: m.tenantName,
+                    child: CupertinoButton(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      onPressed: loading
+                          ? null
+                          : () {
+                              if (privileged) {
+                                ref
+                                    .read(authNotifierProvider.notifier)
+                                    .setExpandedPrivilegedTenant(m.tenantId);
+                              } else {
+                                _switchTo(ref, m);
+                              }
+                            },
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  m.tenantName,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: isCurrent
+                                        ? LeoColors.signalLive
+                                        : LeoColors.signalWhite,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                _roleLabel(m.role),
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: LeoColors.black300,
+                                Text(
+                                  roleDisplayLabel(m.role),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: LeoColors.black300,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (!privileged)
-                          CupertinoButton(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
+                              ],
                             ),
-                            minimumSize: Size.zero,
-                            onPressed: _loading ? null : () => _switchTo(m),
+                          ),
+                          if (!privileged)
+                            CupertinoButton(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              minimumSize: Size.zero,
+                              onPressed:
+                                  loading ? null : () => _switchTo(ref, m),
+                              child: const Text(
+                                AuthStrings.switchWorkspace,
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (expanded) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                      child: Column(
+                        children: [
+                          const Text(
+                            AuthStrings.privilegedSwitchNote,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: LeoColors.signalWarn,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          OtpInputRow(
+                            enabled: !loading,
+                            autoSubmitOnComplete: true,
+                            onCompleted: (code) =>
+                                _switchTo(ref, m, mfaCode: code),
+                          ),
+                          const SizedBox(height: 8),
+                          CupertinoButton.filled(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            onPressed: loading
+                                ? null
+                                : () => _switchTo(ref, m, mfaCode: '000000'),
                             child: const Text(
-                              AuthStrings.switchWorkspace,
-                              style: TextStyle(fontSize: 12),
+                              AuthStrings.verifyAndSwitch,
+                              style: TextStyle(fontSize: 13),
                             ),
                           ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                if (expanded) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-                    child: Column(
-                      children: [
-                        const Text(
-                          AuthStrings.privilegedSwitchNote,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: LeoColors.signalWarn,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        OtpInputRow(
-                          enabled: !_loading,
-                          onCompleted: (code) => _switchTo(m, mfaCode: code),
-                        ),
-                        const SizedBox(height: 8),
-                        CupertinoButton.filled(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          onPressed: _loading
-                              ? null
-                              : () => _switchTo(m, mfaCode: '000000'),
-                          child: const Text(
-                            AuthStrings.verifyAndSwitch,
-                            style: TextStyle(fontSize: 13),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
+                  Container(height: 1, color: LeoColors.black600),
                 ],
-                Container(height: 1, color: LeoColors.black600),
-              ],
-            );
-          }),
+              );
+            }),
           Semantics(
             button: true,
             label: AuthStrings.signOut,
             child: CupertinoButton(
               onPressed: () {
-                widget.onClose();
+                onClose();
                 ref.read(authNotifierProvider.notifier).logout();
               },
               child: const Text(
@@ -265,12 +264,4 @@ class _WorkspaceMenuState extends ConsumerState<_WorkspaceMenu> {
       ),
     );
   }
-
-  String _roleLabel(String role) => switch (role) {
-        LeoRoles.lspAdmin => 'LSP Admin',
-        LeoRoles.subAdmin => 'Sub Admin',
-        LeoRoles.interpreter => 'Interpreter',
-        LeoRoles.platformAdmin => 'Platform Admin',
-        _ => role,
-      };
 }
