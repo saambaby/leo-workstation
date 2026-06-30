@@ -1,7 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../domain/auth_models.dart';
-
 part 'auth_state.freezed.dart';
 
 /// Distinguishes loading operations without changing router redirect behavior.
@@ -34,19 +32,14 @@ sealed class AuthState with _$AuthState {
 
   const factory AuthState.mfaRequired({
     required bool firstLogin,
-    required String mfaToken,
+    String? enrollmentToken,
+    String? otpauthUrl,
+    String? secret,
   }) = AuthMfaRequired;
-
-  const factory AuthState.pickMembership(List<Membership> memberships) =
-      AuthPickMembership;
 
   const factory AuthState.authenticated({
     required String role,
     String? tenantId,
     @Default(false) bool onboardingRequired,
-    @Default([]) List<Membership> memberships,
-    @Default(false) bool membershipsLoading,
-    @Default(false) bool switchingTenant,
-    String? expandedPrivilegedTenantId,
   }) = AuthAuthenticated;
 }

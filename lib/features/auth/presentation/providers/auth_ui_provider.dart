@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/auth_models.dart';
 import '../notifiers/auth_notifier.dart';
 import '../state/auth_state.dart';
 
@@ -12,29 +11,30 @@ class AuthUiState {
     this.errorMessage,
     this.forgotPasswordSending = false,
     this.resendCodeSending = false,
-    this.memberships = const [],
-    this.membershipsLoading = false,
-    this.switchingTenant = false,
-    this.expandedPrivilegedTenantId,
     this.currentTenantId,
-    this.pickMemberships = const [],
+    this.otpauthUrl,
+    this.mfaSecret,
   });
 
   final bool isLoading;
   final String? errorMessage;
   final bool forgotPasswordSending;
   final bool resendCodeSending;
-  final List<Membership> memberships;
-  final bool membershipsLoading;
-  final bool switchingTenant;
-  final String? expandedPrivilegedTenantId;
   final String? currentTenantId;
-  final List<Membership> pickMemberships;
+
+  /// Set only on a first-time privileged login — render as a scannable QR.
+  final String? otpauthUrl;
+
+  /// Manual-entry fallback for the same enrollment secret.
+  final String? mfaSecret;
 
   factory AuthUiState.from(AuthState auth) {
     return switch (auth) {
       AuthLoading() => const AuthUiState(isLoading: true),
-      AuthError(:final message) => AuthUiState(isLoading: false, errorMessage: message),
+      AuthError(:final message) => AuthUiState(
+        isLoading: false,
+        errorMessage: message,
+      ),
       AuthUnauthenticated(
         :final forgotPasswordSending,
         :final resendCodeSending,
@@ -44,26 +44,15 @@ class AuthUiState {
           forgotPasswordSending: forgotPasswordSending,
           resendCodeSending: resendCodeSending,
         ),
-      AuthPickMembership(:final memberships) => AuthUiState(
-          isLoading: false,
-          pickMemberships: memberships,
-        ),
-      AuthAuthenticated(
-        :final tenantId,
-        :final memberships,
-        :final membershipsLoading,
-        :final switchingTenant,
-        :final expandedPrivilegedTenantId,
-      ) =>
-        AuthUiState(
-          isLoading: membershipsLoading || switchingTenant,
-          currentTenantId: tenantId,
-          memberships: memberships,
-          membershipsLoading: membershipsLoading,
-          switchingTenant: switchingTenant,
-          expandedPrivilegedTenantId: expandedPrivilegedTenantId,
-        ),
-      AuthMfaRequired() => const AuthUiState(isLoading: false),
+      AuthAuthenticated(:final tenantId) => AuthUiState(
+        isLoading: false,
+        currentTenantId: tenantId,
+      ),
+      AuthMfaRequired(:final otpauthUrl, :final secret) => AuthUiState(
+        isLoading: false,
+        otpauthUrl: otpauthUrl,
+        mfaSecret: secret,
+      ),
     };
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leo_workstation/features/auth/domain/auth_models.dart';
 import 'package:leo_workstation/features/auth/presentation/providers/auth_ui_provider.dart';
 import 'package:leo_workstation/features/auth/presentation/state/auth_state.dart';
 
@@ -25,30 +24,24 @@ void main() {
       expect(ui.forgotPasswordSending, isTrue);
     });
 
-    test('pickMembership exposes memberships list', () {
-      const memberships = [
-        Membership(
-          tenantId: 't1',
-          tenantName: 'Acme',
-          role: 'interpreter',
-        ),
-      ];
-      final ui = AuthUiState.from(const AuthState.pickMembership(memberships));
-      expect(ui.pickMemberships, memberships);
-      expect(ui.isLoading, isFalse);
-    });
-
-    test('authenticated workspace flags', () {
+    test('mfaRequired exposes enrollment payload', () {
       final ui = AuthUiState.from(
-        const AuthState.authenticated(
-          role: 'interpreter',
-          tenantId: 't1',
-          switchingTenant: true,
-          membershipsLoading: false,
+        const AuthState.mfaRequired(
+          firstLogin: true,
+          otpauthUrl: 'otpauth://totp/Leo:t?secret=ABC&issuer=Leo',
+          secret: 'ABC',
         ),
       );
-      expect(ui.isLoading, isTrue);
-      expect(ui.switchingTenant, isTrue);
+      expect(ui.isLoading, isFalse);
+      expect(ui.otpauthUrl, 'otpauth://totp/Leo:t?secret=ABC&issuer=Leo');
+      expect(ui.mfaSecret, 'ABC');
+    });
+
+    test('authenticated exposes current tenant', () {
+      final ui = AuthUiState.from(
+        const AuthState.authenticated(role: 'interpreter', tenantId: 't1'),
+      );
+      expect(ui.isLoading, isFalse);
       expect(ui.currentTenantId, 't1');
     });
   });

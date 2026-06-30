@@ -41,10 +41,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     }
 
     setState(() => _localError = null);
-    final ok = await ref.read(authNotifierProvider.notifier).resetPassword(
-          token: token,
-          password: _password.text,
-        );
+    final ok = await ref
+        .read(authNotifierProvider.notifier)
+        .resetPassword(token: token, password: _password.text);
     if (!mounted || !ok) return;
     context.go('/login?reset=success');
   }
@@ -153,6 +152,11 @@ class InviteAcceptScreen extends ConsumerStatefulWidget {
 class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
   final _name = TextEditingController();
   final _password = TextEditingController();
+  bool _tos = false;
+  bool _privacy = false;
+  bool _baaAck = false;
+
+  bool get _canSubmit => _tos && _privacy && _baaAck;
 
   @override
   void dispose() {
@@ -162,10 +166,18 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
   }
 
   Future<void> _submit() async {
-    await ref.read(authNotifierProvider.notifier).acceptInvite(
+    final accepted = await ref
+        .read(authNotifierProvider.notifier)
+        .acceptInvite(
           token: widget.token ?? '',
           password: _password.text,
+          tos: _tos,
+          privacy: _privacy,
+          baaAck: _baaAck,
         );
+    if (accepted && mounted) {
+      context.go('/login');
+    }
   }
 
   @override
@@ -193,7 +205,10 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
                     shape: BoxShape.circle,
                     border: Border.all(color: LeoColors.black400),
                   ),
-                  child: Text('AL', style: LeoTypography.logo.copyWith(fontSize: 13)),
+                  child: Text(
+                    'AL',
+                    style: LeoTypography.logo.copyWith(fontSize: 13),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -251,10 +266,26 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
               style: LeoTypography.mono9,
             ),
           ),
+          LeoCheckbox(
+            label: AuthStrings.inviteConsentTos,
+            value: _tos,
+            onChanged: (value) => setState(() => _tos = value),
+          ),
+          LeoCheckbox(
+            label: AuthStrings.inviteConsentPrivacy,
+            value: _privacy,
+            onChanged: (value) => setState(() => _privacy = value),
+          ),
+          LeoCheckbox(
+            label: AuthStrings.inviteConsentBaaAck,
+            value: _baaAck,
+            onChanged: (value) => setState(() => _baaAck = value),
+          ),
+          const SizedBox(height: 12),
           LeoButton(
             label: AuthStrings.acceptAndJoin,
             fullWidth: true,
-            enabled: !ui.isLoading,
+            enabled: !ui.isLoading && _canSubmit,
             onPressed: _submit,
           ),
         ],

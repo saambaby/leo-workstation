@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/auth/leo_roles.dart';
 import '../../../../core/network/dio_provider.dart';
 import '../../../../core/storage/onboarding_completion_storage.dart';
 import '../../../../core/storage/token_storage.dart';
@@ -10,8 +9,9 @@ import '../../data/auth_repository.dart';
 import '../../domain/auth_models.dart';
 import '../state/auth_state.dart';
 
-final authNotifierProvider =
-    NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);
 
 /// Auth ViewModel (P1-T-03): sole writer of [currentAccessTokenProvider].
 class AuthNotifier extends Notifier<AuthState> {
@@ -22,6 +22,18 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   AuthRepository get _repo => ref.read(authRepositoryProvider);
+
+  /// Held only across the MFA round-trip (login → enroll/required → resubmit
+  /// with a TOTP code) — the real backend has no separate verify token, so
+  /// the original credentials must be resent. Never persisted or logged;
+  /// cleared as soon as the round-trip resolves either way.
+  String? _pendingEmail;
+  String? _pendingPassword;
+
+  void _clearPendingCredentials() {
+    _pendingEmail = null;
+    _pendingPassword = null;
+  }
 
   /// Cold-start: restore from secure storage or route to unauthenticated.
   Future<void> restoreSession() async {
@@ -45,106 +57,51 @@ class AuthNotifier extends Notifier<AuthState> {
     state = const AuthState.loading(reason: AuthLoadingReason.login);
     try {
       final result = await _repo.login(email: email, password: password);
-      await _handleLoginResult(result);
+      await _handleLoginResult(result, email: email, password: password);
     } catch (e) {
+      _clearPendingCredentials();
       state = AuthState.error(message: _mapError(e));
     }
   }
 
+  /// First-time enrollment verifies via `/auth/mfa/enroll` (the enrollment
+  /// token, not the credentials). An already-enrolled challenge has no
+  /// separate verify endpoint — it resubmits the held credentials plus
+  /// [code] to `login` instead.
   Future<void> submitMfa({required String code}) async {
     final current = state;
     if (current is! AuthMfaRequired) return;
 
     state = const AuthState.loading(reason: AuthLoadingReason.mfa);
     try {
-      final session = await _repo.submitMfa(
-        mfaToken: current.mfaToken,
-        code: code,
-      );
-      await _applySession(session);
-    } catch (e) {
-      state = AuthState.error(message: _mapError(e));
-    }
-  }
+      if (current.firstLogin) {
+        final session = await _repo.completeMfaEnrollment(
+          enrollmentToken: current.enrollmentToken!,
+          totpCode: code,
+        );
+        _clearPendingCredentials();
+        await _applySession(session);
+        return;
+      }
 
-  Future<void> selectMembership(Membership membership) async {
-    state = const AuthState.loading(reason: AuthLoadingReason.login);
-    try {
-      if (roleRequiresMfa(membership.role)) {
-        state = const AuthState.mfaRequired(
-          firstLogin: false,
-          mfaToken: 'mock-membership-mfa',
+      final email = _pendingEmail;
+      final password = _pendingPassword;
+      if (email == null || password == null) {
+        state = const AuthState.error(
+          message: 'Session expired. Please log in again.',
         );
         return;
       }
-      final session = await _repo.selectMembership(
-        tenantId: membership.tenantId,
-        role: membership.role,
+      final result = await _repo.login(
+        email: email,
+        password: password,
+        totpCode: code,
       );
-      await _applySession(session);
+      await _handleLoginResult(result, email: email, password: password);
     } catch (e) {
+      _clearPendingCredentials();
       state = AuthState.error(message: _mapError(e));
     }
-  }
-
-  Future<void> switchTenant({
-    required String tenantId,
-    String? mfaCode,
-  }) async {
-    final current = state;
-    if (current is! AuthAuthenticated) return;
-
-    state = current.copyWith(
-      switchingTenant: true,
-      expandedPrivilegedTenantId: null,
-    );
-    try {
-      final result = await _repo.switchTenant(
-        tenantId: tenantId,
-        mfaToken: mfaCode,
-      );
-      await _handleLoginResult(result);
-      final after = state;
-      if (after is AuthAuthenticated) {
-        state = after.copyWith(switchingTenant: false);
-      }
-    } catch (e) {
-      final after = state;
-      if (after is AuthAuthenticated) {
-        state = after.copyWith(switchingTenant: false);
-      }
-      state = AuthState.error(message: _mapError(e));
-    }
-  }
-
-  Future<void> loadMemberships() async {
-    final current = state;
-    if (current is! AuthAuthenticated) return;
-    if (current.membershipsLoading) return;
-
-    state = current.copyWith(membershipsLoading: true);
-    try {
-      final list = await _repo.listMemberships();
-      final after = state;
-      if (after is AuthAuthenticated) {
-        state = after.copyWith(memberships: list, membershipsLoading: false);
-      }
-    } catch (_) {
-      final after = state;
-      if (after is AuthAuthenticated) {
-        state = after.copyWith(membershipsLoading: false);
-      }
-    }
-  }
-
-  void setExpandedPrivilegedTenant(String? tenantId) {
-    final current = state;
-    if (current is! AuthAuthenticated) return;
-
-    final expanded = current.expandedPrivilegedTenantId;
-    state = current.copyWith(
-      expandedPrivilegedTenantId: expanded == tenantId ? null : tenantId,
-    );
   }
 
   Future<void> forgotPassword({required String email}) async {
@@ -180,19 +137,30 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> acceptInvite({
+  /// Creates the membership but does not mint tokens (real-backend
+  /// contract) — on success the caller logs in normally. Returns whether it
+  /// succeeded so the screen can navigate to `/login`.
+  Future<bool> acceptInvite({
     required String token,
     required String password,
+    required bool tos,
+    required bool privacy,
+    required bool baaAck,
   }) async {
     state = const AuthState.loading(reason: AuthLoadingReason.inviteAccept);
     try {
-      final session = await _repo.acceptInvite(
+      await _repo.acceptInvite(
         token: token,
         password: password,
+        tos: tos,
+        privacy: privacy,
+        baaAck: baaAck,
       );
-      await _applySession(session);
+      state = const AuthState.unauthenticated();
+      return true;
     } catch (e) {
       state = AuthState.error(message: _mapError(e));
+      return false;
     }
   }
 
@@ -223,17 +191,29 @@ class AuthNotifier extends Notifier<AuthState> {
     state = const AuthState.unauthenticated();
   }
 
-  Future<void> _handleLoginResult(LoginResult result) async {
+  Future<void> _handleLoginResult(
+    LoginResult result, {
+    required String email,
+    required String password,
+  }) async {
     switch (result) {
       case LoginSession(:final session):
+        _clearPendingCredentials();
         await _applySession(session);
-      case LoginMfaRequired(:final firstLogin, :final mfaToken):
+      case LoginMfaRequired(
+        :final firstLogin,
+        :final enrollmentToken,
+        :final otpauthUrl,
+        :final secret,
+      ):
+        _pendingEmail = email;
+        _pendingPassword = password;
         state = AuthState.mfaRequired(
           firstLogin: firstLogin,
-          mfaToken: mfaToken,
+          enrollmentToken: enrollmentToken,
+          otpauthUrl: otpauthUrl,
+          secret: secret,
         );
-      case LoginPickMembership(:final memberships):
-        state = AuthState.pickMembership(memberships);
     }
   }
 

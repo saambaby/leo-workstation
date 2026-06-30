@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'auth_models.freezed.dart';
-part 'auth_models.g.dart';
 
 /// Decoded access-token claims — routing/UX only; server is source of truth.
 class Claims {
@@ -31,8 +30,9 @@ class Claims {
     if (parts.length < 2) return null;
     try {
       final normalized = base64Url.normalize(parts[1]);
-      final payload = jsonDecode(utf8.decode(base64Url.decode(normalized)))
-          as Map<String, dynamic>;
+      final payload =
+          jsonDecode(utf8.decode(base64Url.decode(normalized)))
+              as Map<String, dynamic>;
       return Claims.fromJson(payload);
     } catch (_) {
       return null;
@@ -84,26 +84,20 @@ class AuthSession with _$AuthSession {
   }
 }
 
-@freezed
-class Membership with _$Membership {
-  const factory Membership({
-    required String tenantId,
-    required String tenantName,
-    required String role,
-  }) = _Membership;
-
-  factory Membership.fromJson(Map<String, dynamic> json) =>
-      _$MembershipFromJson(json);
-}
-
 /// Wire-level login outcome before the ViewModel maps to [AuthState].
+///
+/// `mfaRequired` covers both real-backend cases: first-time privileged login
+/// (`firstLogin: true`, carries the enrollment payload to render a QR) and an
+/// already-enrolled challenge (`firstLogin: false`, no payload). There is no
+/// separate MFA-verify endpoint or opaque token — the caller resubmits the
+/// original login (or switch-tenant) call with a TOTP code instead.
 @freezed
 sealed class LoginResult with _$LoginResult {
   const factory LoginResult.session(AuthSession session) = LoginSession;
   const factory LoginResult.mfaRequired({
     required bool firstLogin,
-    required String mfaToken,
+    String? enrollmentToken,
+    String? otpauthUrl,
+    String? secret,
   }) = LoginMfaRequired;
-  const factory LoginResult.pickMembership(List<Membership> memberships) =
-      LoginPickMembership;
 }

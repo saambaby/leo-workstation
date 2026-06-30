@@ -9,7 +9,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
 import '../state/auth_state.dart';
-import '../widgets/workspace_switcher.dart';
 
 /// Wraps role-home content in [WorkstationScaffold] with workspace chrome.
 class RoleShellScreen extends ConsumerWidget {
@@ -39,13 +38,52 @@ class RoleShellScreen extends ConsumerWidget {
       railLogo: _RailLogo(persona: persona),
       railItems: railItems,
       tenantChip: TenantChip(tenantId: tenantId, role: role),
-      avatar: WorkspaceAvatarButton(role: role),
+      avatar: _SignOutAvatarButton(role: role),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _PageHeader(title: title, routeLabel: routeLabel),
           Expanded(child: child),
         ],
+      ),
+    );
+  }
+}
+
+/// Tapping signs out — single-membership sessions have no workspace to
+/// switch to (D2: multi-tenant switching deferred pending a backend
+/// memberships-list endpoint).
+class _SignOutAvatarButton extends ConsumerWidget {
+  const _SignOutAvatarButton({required this.role});
+
+  final String role;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Semantics(
+      button: true,
+      label: AuthStrings.signOut,
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        minimumSize: Size.zero,
+        onPressed: () => ref.read(authNotifierProvider.notifier).logout(),
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: LeoColors.black600,
+            shape: BoxShape.circle,
+            border: Border.all(color: LeoColors.black400),
+          ),
+          child: Text(
+            role.isEmpty ? '?' : role.substring(0, 1).toUpperCase(),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: LeoColors.black100,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -266,9 +304,7 @@ class OnboardingPlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: LeoColors.black900,
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Onboarding'),
-      ),
+      navigationBar: const CupertinoNavigationBar(middle: Text('Onboarding')),
       child: Center(
         child: Text(
           'Onboarding placeholder ($path)',

@@ -42,25 +42,11 @@ void main() {
     test('mfaRequired first login goes to enroll', () {
       expect(
         authRedirect(
-          const AuthState.mfaRequired(
-            firstLogin: true,
-            mfaToken: 't',
-          ),
+          const AuthState.mfaRequired(firstLogin: true),
           DeviceClass.desktop,
           '/login',
         ),
         '/mfa/enroll',
-      );
-    });
-
-    test('pickMembership traps on select-workspace', () {
-      expect(
-        authRedirect(
-          const AuthState.pickMembership([]),
-          DeviceClass.desktop,
-          '/select-workspace',
-        ),
-        isNull,
       );
     });
 
@@ -111,7 +97,6 @@ void main() {
       '/invite/accept',
       '/mfa',
       '/mfa/enroll',
-      '/select-workspace',
       '/web-handoff',
       '/blocked-surface',
       '/idle',
@@ -131,9 +116,8 @@ void main() {
       const AuthState.unauthenticated(),
       const AuthState.loading(),
       const AuthState.error(message: 'err'),
-      const AuthState.mfaRequired(firstLogin: false, mfaToken: 't'),
-      const AuthState.mfaRequired(firstLogin: true, mfaToken: 't'),
-      const AuthState.pickMembership([]),
+      const AuthState.mfaRequired(firstLogin: false),
+      const AuthState.mfaRequired(firstLogin: true),
       const AuthState.authenticated(role: LeoRoles.interpreter),
       const AuthState.authenticated(
         role: LeoRoles.interpreter,
@@ -147,13 +131,10 @@ void main() {
     for (final auth in states) {
       for (final device in devices) {
         for (final loc in locations) {
-          test(
-            'no loop: ${auth.runtimeType} × ${device.name} × $loc',
-            () {
-              final settled = resolveRedirectChain(auth, device, loc);
-              expect(authRedirect(auth, device, settled), isNull);
-            },
-          );
+          test('no loop: ${auth.runtimeType} × ${device.name} × $loc', () {
+            final settled = resolveRedirectChain(auth, device, loc);
+            expect(authRedirect(auth, device, settled), isNull);
+          });
         }
       }
     }

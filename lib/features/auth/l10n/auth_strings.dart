@@ -34,8 +34,7 @@ abstract final class AuthStrings {
   static const mfaEnrollRoleWarnSuffix =
       ') requires MFA. Finish enrollment to continue.';
   static const mfaEnrollStep1 = '1 · Scan with your authenticator';
-  static const mfaEnrollStep1Hint =
-      'Google Authenticator, 1Password, Authy…';
+  static const mfaEnrollStep1Hint = 'Google Authenticator, 1Password, Authy…';
   static const mfaEnrollManualKey = 'Or enter this key manually';
   static const mfaEnrollStep2 = '2 · Enter the 6-digit code to confirm';
   static const mfaEnrollStep3 = '3 · Save your backup codes';
@@ -49,7 +48,8 @@ abstract final class AuthStrings {
       "Enter your account email and we'll send a 6-digit reset code. The code expires in 30 minutes.";
   static const sendResetCode = 'Send reset code';
   static const backToSignIn = '← Back to sign in';
-  static const forgotSuccessTitle = 'If that email exists, a code is on its way';
+  static const forgotSuccessTitle =
+      'If that email exists, a code is on its way';
 
   // Forgot password — verify code
   static const forgotVerifySub = 'Enter your reset code';
@@ -88,14 +88,11 @@ abstract final class AuthStrings {
   static const inviteRoleLabel = 'invited you as ';
   static const inviteRoleName = 'Sub-Admin / Dispatcher';
   static const inviteRoleChip = 'sub_admin';
+  static const inviteConsentTos = 'I agree to the Terms of Service';
+  static const inviteConsentPrivacy = 'I agree to the Privacy Policy';
+  static const inviteConsentBaaAck =
+      'I acknowledge the Business Associate Agreement';
 
-  // Workspace picker
-  static const selectWorkspace = 'Choose your workspace';
-  static const yourWorkspaces = 'Your workspaces';
-  static const switchWorkspace = 'Switch';
-  static const verifyAndSwitch = 'Verify & switch';
-  static const privilegedSwitchNote =
-      'Switching into a privileged role requires MFA re-verification.';
   static const signOut = 'Sign out';
   static const webHandoffTitle = 'Continue in Leo Web';
   static const webHandoffSubtitle =

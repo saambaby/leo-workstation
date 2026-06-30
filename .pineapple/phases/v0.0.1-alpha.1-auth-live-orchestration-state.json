@@ -7,7 +7,7 @@
   "mode": "coordinator-side-serial",
   "notes": "GITHUB_TOKEN invalid in env; all git/gh run with `env -u GITHUB_TOKEN` (keyring account saambaby). AL-T-01 is a Foundation/cross-area task (features/auth + core/router) and is implemented coordinator-side on a branch off main, no isolated worktree. AL-T-02 dispatches to a worker worktree once AL-T-01 merges.",
   "tasks": {
-    "AL-T-01": {"status": "pending", "role": "high", "depends_on": [], "tracker_issue": 13, "branch": "pin-13/live-auth-contract", "agent": null, "started_at": null, "completed_at": null, "commit": null, "attempt": 0, "error": null},
+    "AL-T-01": {"status": "in_flight", "role": "high", "depends_on": [], "tracker_issue": 13, "branch": "pin-13/live-auth-contract", "agent": "coordinator", "started_at": "2026-06-30", "completed_at": null, "commit": null, "attempt": 1, "error": null},
     "AL-T-02": {"status": "pending", "role": "standard", "depends_on": ["AL-T-01"], "tracker_issue": 14, "branch": "pin-14/mfa-qr-consent-ui", "agent": null, "started_at": null, "completed_at": null, "commit": null, "attempt": 0, "error": null}
   }
 }
