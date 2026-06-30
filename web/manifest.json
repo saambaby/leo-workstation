@@ -1,11 +1,11 @@
 {
-    "name": "Leo Workstation",
-    "short_name": "Leo Workstation",
+    "name": "leo workstation",
+    "short_name": "leo workstation",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Leo Workstation — interpreting platform client.",
+    "description": "leo workstation — interpreting platform client.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
