@@ -299,23 +299,18 @@ Target `lib/` tree and cross-feature rules: [`architecture-overview.md`](./archi
 
 ---
 
-## Mock strategy
+## Mock strategy — retired 2026-07-01
 
-Until the client integrates each `../leo-api` endpoint:
+There is no mock/live toggle. The client always talks to the real `leo-api` at
+`API_BASE_URL` — there is no `USE_MOCKS` flag, no `AppConfig.useMocks`, and no
+`Mock*Repository` implementations (removed from `auth` and `onboarding`; see
+[`features/auth.md`](../.pineapple/features/auth.md)). A running `leo-api` is
+required for any client dev/demo work, including local UI iteration.
 
-```dart
-// core/config/app_config.dart
-const useMocks = bool.fromEnvironment('USE_MOCKS', defaultValue: true);
-```
-
-| Feature | Mock enables |
-|---|---|
-| auth | UI dev without backend (incl. multi-membership picker fixtures) |
-| session + idle | Vonage UI with fake tokens |
-| dispatch | Queue UI with fixture sessions |
-| call | Customer flow without `POST /sessions` |
-
-Switch off mocks per integration milestone.
+This reverses the original mock-first plan (mocks per feature, switched off per
+integration milestone) — auth and onboarding were the only features that had ever
+implemented mocks; no other feature (`session`, `dispatch`, `call`) had reached that
+point, so nothing else needed reverting.
 
 ---
 

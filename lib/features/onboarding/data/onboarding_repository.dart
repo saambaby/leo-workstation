@@ -1,10 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/config/app_config.dart';
 import '../../../core/network/dio_provider.dart';
 import '../domain/onboarding_models.dart';
-import 'mock_onboarding_store.dart';
 
 abstract class OnboardingRepository {
   Future<SignupResult> signupPersonal({
@@ -36,13 +34,9 @@ abstract class OnboardingRepository {
   Future<void> sendInvitation(TeamInviteInput input);
 }
 
-final onboardingRepositoryProvider = Provider<OnboardingRepository>((ref) {
-  final config = ref.watch(appConfigProvider);
-  if (config.useMocks) {
-    return MockOnboardingRepository();
-  }
-  return ApiOnboardingRepository(ref.watch(dioProvider));
-});
+final onboardingRepositoryProvider = Provider<OnboardingRepository>(
+  (ref) => ApiOnboardingRepository(ref.watch(dioProvider)),
+);
 
 class ApiOnboardingRepository implements OnboardingRepository {
   ApiOnboardingRepository(this._dio);
@@ -177,153 +171,5 @@ class ApiOnboardingRepository implements OnboardingRepository {
       organizationId: data['organization_id'] as String?,
       status: data['status'] as String?,
     );
-  }
-}
-
-class MockOnboardingRepository implements OnboardingRepository {
-  final _store = MockOnboardingStore.instance;
-
-  static const _mockLanguages = [
-    CatalogLanguage(id: '1', code: 'es', name: 'Spanish', isSigned: false),
-    CatalogLanguage(id: '2', code: 'en', name: 'English', isSigned: false),
-    CatalogLanguage(id: '3', code: 'ase', name: 'ASL', isSigned: true),
-    CatalogLanguage(id: '4', code: 'zh', name: 'Mandarin', isSigned: false),
-  ];
-
-  static const _mockCerts = [
-    CatalogCertification(id: 'c1', name: 'Medical', issuer: 'CCHI'),
-    CatalogCertification(id: 'c2', name: 'Interpreting', issuer: 'RID'),
-  ];
-
-  @override
-  Future<SignupResult> signupPersonal({
-    required String email,
-    required String password,
-    required bool tos,
-    required bool privacy,
-  }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (!tos || !privacy) {
-      throw DioException(
-        requestOptions: RequestOptions(path: '/auth/signup'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/auth/signup'),
-          statusCode: 400,
-        ),
-      );
-    }
-    if (_store.lookup(email) != null) {
-      throw DioException(
-        requestOptions: RequestOptions(path: '/auth/signup'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/auth/signup'),
-          statusCode: 409,
-        ),
-      );
-    }
-    _store.registerSignup(email: email, path: SignupPath.personal);
-    return const SignupResult(
-      userId: 'mock-user-personal',
-      emailVerificationRequired: true,
-      organizationId: null,
-      status: null,
-    );
-  }
-
-  @override
-  Future<SignupResult> signupCustomer({
-    required String email,
-    required String password,
-    required String orgName,
-    required String timezone,
-    required bool tos,
-    required bool privacy,
-  }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (!tos || !privacy) {
-      throw DioException(
-        requestOptions: RequestOptions(path: '/auth/signup'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/auth/signup'),
-          statusCode: 400,
-        ),
-      );
-    }
-    if (_store.lookup(email) != null) {
-      throw DioException(
-        requestOptions: RequestOptions(path: '/auth/signup'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/auth/signup'),
-          statusCode: 409,
-        ),
-      );
-    }
-    _store.registerSignup(
-      email: email,
-      path: SignupPath.customer,
-      orgName: orgName,
-      timezone: timezone,
-    );
-    return const SignupResult(
-      userId: 'mock-user-customer',
-      emailVerificationRequired: true,
-      organizationId: '33333333-3333-3333-3333-333333333333',
-      status: 'active',
-    );
-  }
-
-  @override
-  Future<void> verifyEmail({required String token, String? email}) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    if (token != '123456') {
-      throw DioException(
-        requestOptions: RequestOptions(path: '/auth/verify-email'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/auth/verify-email'),
-          statusCode: 400,
-        ),
-      );
-    }
-    if (email != null) {
-      _store.markVerified(email);
-    } else {
-      _store.markVerifiedByToken();
-    }
-  }
-
-  @override
-  Future<List<CatalogLanguage>> fetchLanguages() async {
-    await Future<void>.delayed(const Duration(milliseconds: 150));
-    return _mockLanguages;
-  }
-
-  @override
-  Future<List<CatalogCertification>> fetchCertifications() async {
-    await Future<void>.delayed(const Duration(milliseconds: 150));
-    return _mockCerts;
-  }
-
-  @override
-  Future<void> saveInterpreterProfile(InterpreterProfileInput input) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-  }
-
-  @override
-  Future<void> updateCustomerOrg(CustomerOrgInput input) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-  }
-
-  @override
-  Future<void> sendInvitation(TeamInviteInput input) async {
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    if (!input.email.contains('@')) {
-      throw DioException(
-        requestOptions: RequestOptions(path: '/invitations'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/invitations'),
-          statusCode: 400,
-        ),
-      );
-    }
   }
 }

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/dio_provider.dart';
 import '../../../../core/storage/onboarding_completion_storage.dart';
 import '../../../../core/storage/token_storage.dart';
-import '../../../onboarding/data/mock_onboarding_store.dart';
 import '../../data/auth_repository.dart';
 import '../../domain/auth_models.dart';
 import '../state/auth_state.dart';
@@ -173,7 +172,6 @@ class AuthNotifier extends Notifier<AuthState> {
         ? Claims.decodeAccessToken(token)?.sub ?? current.role
         : current.role;
     await ref.read(onboardingCompletionStorageProvider).markComplete(sub);
-    MockOnboardingStore.instance.markOnboardingCompleteBySub(sub);
     state = current.copyWith(onboardingRequired: false);
   }
 
