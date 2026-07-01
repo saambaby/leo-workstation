@@ -8,6 +8,6 @@
   "notes": "GITHUB_TOKEN invalid in env; all git/gh run with `env -u GITHUB_TOKEN` (keyring account saambaby). AL-T-01 merged via squash on main by the human reviewer (PR #15, commit 3fc83c0); note the squash commit also bundled 4 pre-existing local-only commits (platform rebrand, centralized-state/onboarding refactor, pineapple docs, tracker-issue setup) that had never been pushed to origin/main before the branch was cut -- content verified identical to the reviewed branch tip (abc486b), no data lost, just commit-history attribution is broader than the title suggests. AL-T-02 dispatches to a worker worktree now that AL-T-01 has merged.",
   "tasks": {
     "AL-T-01": {"status": "merged", "role": "high", "depends_on": [], "tracker_issue": 13, "branch": "pin-13/live-auth-contract", "agent": "coordinator", "started_at": "2026-06-30", "completed_at": "2026-07-01", "commit": "3fc83c0", "attempt": 1, "error": null},
-    "AL-T-02": {"status": "pending", "role": "standard", "depends_on": ["AL-T-01"], "tracker_issue": 14, "branch": "pin-14/mfa-qr-consent-ui", "agent": null, "started_at": null, "completed_at": null, "commit": null, "attempt": 0, "error": null}
+    "AL-T-02": {"status": "in_review", "role": "standard", "depends_on": ["AL-T-01"], "tracker_issue": 14, "branch": "pin-14/mfa-qr-consent-ui", "agent": "worker", "started_at": "2026-07-01", "completed_at": "2026-07-01", "commit": "c68ffe88cb4ab75946a830d930cfa5606bc91ce4", "attempt": 1, "error": null, "pr": 17}
   }
 }
