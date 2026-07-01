@@ -1,6 +1,6 @@
 # leo-workstation — As-built state
 
-_Last updated: 2026-06-30._
+_Last updated: 2026-07-01._
 
 > What is **actually built** in this repo right now, vs. what the docs target.
 > Target architecture: [`docs/architecture-overview.md`](../docs/architecture-overview.md).
@@ -28,14 +28,15 @@ P2 features (`idle`, `session`, `dispatch`, `realtime`) are **not built** yet.
 **P1 / `v0.0.1-alpha.1` — remaining:** realtime WSS channel, onboarding screens, cert pinning.
 Carve: [`phases/v0.0.1-alpha.1.md`](phases/v0.0.1-alpha.1.md).
 
-**Auth slice needs rework before it's real-backend-ready:** the `lib/features/auth/`
-floor row above (tenant picker, workspace switcher, mock MFA) was built against an
-assumed contract. `features/auth.md` was corrected 2026-06-30 against the live
-backend (D1–D7) — implementation has not happened yet. Not yet done: delete
-`tenant_picker_screen.dart` + `workspace_switcher.dart` + `/select-workspace` route;
-rebuild `auth_repository.dart`/`auth_notifier.dart` MFA flow around resubmitting
-`/auth/login` with `totp_code`; remove backup-codes UI; add consent checkboxes to
-`InviteAcceptScreen`; add a QR-rendering pub dependency (D7, package not yet chosen).
+**Auth slice live-contract rework (`v0.0.1-alpha.1-auth-live` phase) — in progress.**
+`features/auth.md` was corrected 2026-06-30 against the live backend (D1–D7).
+**AL-T-01** (contract core: repository/state-machine rewrite, router alignment,
+`tenant_picker_screen.dart`/`workspace_switcher.dart`/`/select-workspace` deletion)
+merged to `main` 2026-07-01 (PR #15, commit `3fc83c0`). **AL-T-02** (real MFA-enrollment
+QR via `qr_flutter`, backup-codes UI deletion, invite-consent verification) is out for
+review on branch `pin-14/mfa-qr-consent-ui` — [PR #17](https://github.com/saambaby/leo-workstation/pull/17),
+not yet merged. `INV-CLIENT-ROUTE-2`'s `/select-workspace` clause still needs the
+doc amendment (tracked as an open item below).
 
 ## Platform dependency (sibling `../leo-api`)
 
@@ -57,8 +58,7 @@ rebuild `auth_repository.dart`/`auth_notifier.dart` MFA flow around resubmitting
 
 ## Open items
 
-- **Implement the 2026-06-30 auth contract correction** (D1–D7 in `features/auth.md`) — not yet dispatched as tasks. Next action: run `/pineapple:taskgraph` (or hand-dispatch) for the auth rework.
-- Confirm QR package choice before implementing D7 (`qr_flutter` proposed, not locked).
+- **AL-T-02 review** — PR #17 (`pin-14/mfa-qr-consent-ui`) open against `main`; awaiting reviewer merge. `qr_flutter ^4.1.0` added and locked (D7). `flutter analyze`/`flutter test` (685 passing) both clean; manual device/simulator QR-scan smoke test not performed by the worker (no simulator available in that environment) — flagged in the PR body for the reviewer.
 - Memberships-list endpoint — flag to `leo-api` if/when multi-tenant switching (D2) is reprioritized; not yet filed.
 - `INV-CLIENT-ROUTE-2` needs amending to drop the `/select-workspace` clause — deferred to Phase 2 persist, not yet done.
 - Feature-spec loop: `realtime` pending — see [`features/INDEX.md`](features/INDEX.md).

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
@@ -37,12 +38,9 @@ class MfaScreen extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                LeoLink(label: AuthStrings.useBackupCode, onPressed: () {}),
-                LeoLink(label: AuthStrings.resend, onPressed: () {}),
-              ],
+            child: Align(
+              alignment: Alignment.center,
+              child: LeoLink(label: AuthStrings.resend, onPressed: () {}),
             ),
           ),
         ],
@@ -54,17 +52,10 @@ class MfaScreen extends ConsumerWidget {
 class MfaEnrollScreen extends ConsumerWidget {
   const MfaEnrollScreen({super.key});
 
-  static const _manualKey = 'JBSW Y3DP EHPK 3PXP';
-  static const _backupCodes = [
-    '8F2K-9QXM',
-    'P4LM-7TWZ',
-    '3RJD-1VBN',
-    'XK90-22HA',
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ui = ref.watch(authUiProvider);
+    final manualKey = ui.mfaSecret ?? '';
 
     return AuthFormShell(
       subtitle: AuthStrings.mfaEnrollSub,
@@ -99,7 +90,7 @@ class MfaEnrollScreen extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _QrPlaceholder(),
+                _MfaQrCode(otpauthUrl: ui.otpauthUrl),
                 const SizedBox(width: 18),
                 Expanded(
                   child: Column(
@@ -126,7 +117,10 @@ class MfaEnrollScreen extends ConsumerWidget {
                           horizontal: 10,
                           vertical: 8,
                         ),
-                        child: Text(_manualKey, style: LeoTypography.mono12),
+                        child: Semantics(
+                          label: AuthStrings.mfaEnrollManualKeySemanticLabel,
+                          child: Text(manualKey, style: LeoTypography.mono12),
+                        ),
                       ),
                     ],
                   ),
@@ -144,85 +138,42 @@ class MfaEnrollScreen extends ConsumerWidget {
             onSubmit: (code) =>
                 ref.read(authNotifierProvider.notifier).submitMfa(code: code),
           ),
-          LeoCard(
-            backgroundColor: LeoColors.black700,
-            margin: const EdgeInsets.symmetric(vertical: 14),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AuthStrings.mfaEnrollStep3,
-                      style: LeoTypography.fieldLabel,
-                    ),
-                    LeoLink(
-                      label: AuthStrings.mfaEnrollDownload,
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 6,
-                  crossAxisSpacing: 6,
-                  childAspectRatio: 3.5,
-                  children: _backupCodes
-                      .map(
-                        (code) => Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(code, style: LeoTypography.mono11),
-                        ),
-                      )
-                      .toList(),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AuthStrings.mfaEnrollBackupWarn,
-                  style: LeoTypography.mono9.copyWith(
-                    color: LeoColors.signalWarn,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _QrPlaceholder extends StatelessWidget {
-  const _QrPlaceholder();
+/// Renders the server's `otpauth_url` as a real, scannable QR code. Falls
+/// back to a loading indicator if the enrollment payload hasn't arrived yet
+/// (it should always be present by the time this screen is reachable).
+class _MfaQrCode extends StatelessWidget {
+  const _MfaQrCode({required this.otpauthUrl});
+
+  final String? otpauthUrl;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 140,
-      height: 140,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: CupertinoColors.white,
-        borderRadius: BorderRadius.circular(LeoRadii.md),
-      ),
-      child: GridView.count(
-        crossAxisCount: 7,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 2,
-        crossAxisSpacing: 2,
-        children: List.generate(49, (i) {
-          const filled = {0, 1, 7, 8, 42, 43, 47, 48, 23, 31, 17, 40, 38, 27};
-          return DecoratedBox(
-            decoration: BoxDecoration(
-              color: filled.contains(i) ? CupertinoColors.black : null,
-            ),
-          );
-        }),
+    final data = otpauthUrl;
+    return Semantics(
+      label: AuthStrings.mfaEnrollQrSemanticLabel,
+      image: true,
+      child: Container(
+        width: 140,
+        height: 140,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: CupertinoColors.white,
+          borderRadius: BorderRadius.circular(LeoRadii.md),
+        ),
+        child: (data == null || data.isEmpty)
+            ? const Center(child: CupertinoActivityIndicator())
+            : QrImageView(
+                data: data,
+                version: QrVersions.auto,
+                backgroundColor: CupertinoColors.white,
+                padding: EdgeInsets.zero,
+              ),
       ),
     );
   }

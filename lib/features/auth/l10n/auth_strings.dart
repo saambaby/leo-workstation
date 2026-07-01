@@ -22,7 +22,6 @@ abstract final class AuthStrings {
   static const mfaInfoNote =
       'Enter the 6-digit code from your authenticator app.';
   static const verifyAndContinue = 'Verify & continue';
-  static const useBackupCode = 'Use a backup code';
   static const resend = 'Resend';
   static const mfaPrivilegedWarning =
       'Privileged roles (interpreter, dispatcher, admin) are prompted for ';
@@ -37,11 +36,11 @@ abstract final class AuthStrings {
   static const mfaEnrollStep1Hint = 'Google Authenticator, 1Password, Authy…';
   static const mfaEnrollManualKey = 'Or enter this key manually';
   static const mfaEnrollStep2 = '2 · Enter the 6-digit code to confirm';
-  static const mfaEnrollStep3 = '3 · Save your backup codes';
-  static const mfaEnrollDownload = 'Download';
-  static const mfaEnrollBackupWarn =
-      'Each code works once. Store them somewhere safe.';
   static const confirmEnrollment = 'Confirm & finish enrollment';
+  static const mfaEnrollQrSemanticLabel =
+      'Scannable QR code for authenticator app enrollment';
+  static const mfaEnrollManualKeySemanticLabel =
+      'Manual entry key for authenticator app enrollment';
 
   // Forgot password
   static const forgotInfoNote =
