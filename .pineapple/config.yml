@@ -42,3 +42,18 @@ notes:
   - "As-built state in .pineapple/state.md; target architecture in docs/architecture-overview.md."
   - "Implementation order: docs/release-plan.md -> .pineapple/features/*.md."
   - "Version tags align with ../leo-api/docs/release-plan.md (strict-superset per version)."
+
+coordinator_policy:
+  # FM-PROCESS-2 (.pineapple/failure-modes.md): this environment requires human
+  # approval for every merge, regardless of reviewer/CI outcome. The orchestrate
+  # skill's autonomous "merge on double-pass" step is NOT allowed here — always
+  # open the PR and wait for the human, even after a fresh reviewer passes.
+  merge_requires_human_approval: true
+  # The coordinator never pushes directly to `main` for ANY change, including
+  # trivial .pineapple/ bookkeeping (orchestration-state.json, state.md) — every
+  # coordinator-authored change goes through a branch + PR like a worker's would.
+  coordinator_never_pushes_main_directly: true
+  # FM-PROCESS-1: before cutting any task branch, verify local `main` matches
+  # `origin/main` (fetch + compare); push local `main` first if it's ahead, or a
+  # PR's diff will silently include whatever local-only commits sit underneath.
+  verify_main_synced_before_branching: true

@@ -20,6 +20,15 @@ _Pineapple catalogue patterns (shared):_
 | 3 | Code shipped but unreachable | Reachability check · reviewer |
 | 4 | Spec ambiguity → over-restrictive affordance | Affordance-vs-input-surface clause · spec user flow |
 
+## Orchestration & process (coordinator's own git/merge behavior, not shipped code)
+
+| ID | Pattern | Guard | Lives in |
+|---|---|---|---|
+| FM-PROCESS-1 | **Local/origin `main` divergence silently widens PR scope** — coordinator commits land on local `main` but are never pushed; branching a task off that ahead-of-origin `main` and opening a PR makes GitHub diff against the real (older) `origin/main`, bundling unrelated prior commits into the reviewed/merged PR without anyone noticing | Before cutting any task branch: verify local `main` == `origin/main` (fetch + compare); push local `main` first if it's ahead. Reviewer diffs the actual remote PR (`gh pr diff <N>`), never local `git diff main...branch`, since local `main` can silently differ from `origin/main` | orchestrate Phase A precondition · reviewer check · [`config.yml`](config.yml) |
+| FM-PROCESS-2 | **Coordinator autonomy exceeds environment trust boundary** — the coordinator pushes bookkeeping directly to `main`, or attempts to self-merge a PR right after only a self-spawned review, because the orchestrate skill's prose describes that as the normal autonomous flow | This project requires human approval for every merge and never allows the coordinator to push directly to `main` — not even for `.pineapple/` bookkeeping. Every coordinator-authored change, however trivial, goes through a branch + PR like a worker's would | [`config.yml`](config.yml) · orchestrate dispatch loop (per-project override) |
+
+_See [`phases/v0.0.1-alpha.1-auth-live-coe.md`](phases/v0.0.1-alpha.1-auth-live-coe.md) for the incidents that produced these._
+
 ---
 
 ## Ratchet log
@@ -27,3 +36,4 @@ _Pineapple catalogue patterns (shared):_
 | Date | Phase / session | Bugs → new guards |
 |---|---|---|
 | 2026-06-30 | P1 shell + P2 onboarding acceptance walk | FM-CLIENT-1 … FM-CLIENT-6 installed (see [`phases/v0.0.1-alpha.1-coe.md`](phases/v0.0.1-alpha.1-coe.md)) |
+| 2026-07-01 | `v0.0.1-alpha.1-auth-live` acceptance walk (PRs #15–#18) | FM-PROCESS-1, FM-PROCESS-2 installed (see [`phases/v0.0.1-alpha.1-auth-live-coe.md`](phases/v0.0.1-alpha.1-auth-live-coe.md)) |
