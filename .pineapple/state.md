@@ -15,7 +15,7 @@ _Last updated: 2026-07-01._
 | Area | As-built |
 |---|---|
 | `lib/core/` | Config, Dio + auth interceptor, `go_router` + redirect guard, Cupertino theme, `DeviceClass`, `WorkstationScaffold`, `DesktopWorkstationShell` (macOS window frame), `leo_roles` (+ `roleDisplayLabel`), `external_url` |
-| `lib/features/auth/` | Full P1 auth vertical slice: repository (mock + live), `AuthNotifier`, `AuthState` (with sub-flow metadata fields), `authUiProvider`, screens (login, MFA, enroll, tenant picker, forgot/reset, invite), design system widgets, `AuthFormShell`, `MfaCodeForm`, workspace switcher |
+| `lib/features/auth/` | Full P1 auth vertical slice, **rebuilt 2026-07-01 against the live backend contract**: repository (mock + live), `AuthNotifier`, `AuthState`, `authUiProvider`, screens (login, MFA challenge, real-QR MFA enroll, forgot/reset, invite w/ consent), design system widgets, `AuthFormShell`, `MfaCodeForm`. No pre-login membership picker or in-app workspace switcher (cut — no backend support, see `features/auth.md` D1/D2). |
 | `lib/features/onboarding/` | Signup type/details, verify email, personal + customer onboarding wizards (mock-first) |
 | `pubspec.yaml` | `flutter_riverpod`, `go_router`, `dio`, `freezed`, `json_serializable`, `flutter_secure_storage`, `url_launcher`, `intl`, `crypto` |
 | Tests | Minimal (`redirect_test`, a few core tests). **Policy: no new Flutter tests unless explicitly requested** (`INV-CLIENT-TEST-1`). |
@@ -28,15 +28,14 @@ P2 features (`idle`, `session`, `dispatch`, `realtime`) are **not built** yet.
 **P1 / `v0.0.1-alpha.1` — remaining:** realtime WSS channel, onboarding screens, cert pinning.
 Carve: [`phases/v0.0.1-alpha.1.md`](phases/v0.0.1-alpha.1.md).
 
-**Auth slice live-contract rework (`v0.0.1-alpha.1-auth-live` phase) — in progress.**
-`features/auth.md` was corrected 2026-06-30 against the live backend (D1–D7).
-**AL-T-01** (contract core: repository/state-machine rewrite, router alignment,
-`tenant_picker_screen.dart`/`workspace_switcher.dart`/`/select-workspace` deletion)
-merged to `main` 2026-07-01 (PR #15, commit `3fc83c0`). **AL-T-02** (real MFA-enrollment
-QR via `qr_flutter`, backup-codes UI deletion, invite-consent verification) is out for
-review on branch `pin-14/mfa-qr-consent-ui` — [PR #17](https://github.com/saambaby/leo-workstation/pull/17),
-not yet merged. `INV-CLIENT-ROUTE-2`'s `/select-workspace` clause still needs the
-doc amendment (tracked as an open item below).
+**Auth slice live-contract rework (`v0.0.1-alpha.1-auth-live` phase) — complete.**
+`features/auth.md` was corrected 2026-06-30 against the live backend (D1–D7). Both
+tasks merged to `main` 2026-07-01: **AL-T-01** (contract core: repository/state-machine
+rewrite, router alignment, `tenant_picker_screen.dart`/`workspace_switcher.dart`/
+`/select-workspace` deletion, PR #15, commit `3fc83c0`) and **AL-T-02** (real
+MFA-enrollment QR via `qr_flutter`, backup-codes UI deletion, invite-consent
+verification, PR #17, commit `1238a84`). `flutter analyze` clean, 685 tests passing
+on `main`. `INV-CLIENT-STATE-2`/`INV-CLIENT-ROUTE-2` amendments landed with AL-T-01.
 
 ## Platform dependency (sibling `../leo-api`)
 
@@ -58,9 +57,10 @@ doc amendment (tracked as an open item below).
 
 ## Open items
 
-- **AL-T-02 review** — PR #17 (`pin-14/mfa-qr-consent-ui`) open against `main`; awaiting reviewer merge. `qr_flutter ^4.1.0` added and locked (D7). `flutter analyze`/`flutter test` (685 passing) both clean; manual device/simulator QR-scan smoke test not performed by the worker (no simulator available in that environment) — flagged in the PR body for the reviewer.
+- **Manual QR-scan smoke test** — AL-T-02's real MFA-enrollment QR (`qr_flutter`) was never scanned with an actual authenticator app (no simulator/device available to the worker or coordinator this session). Worth a real device check before this ships to users.
+- **Known MFA-retry UX gap (pre-existing, not introduced by the auth-live rework)** — a failed MFA submit transitions to `AuthState.error`, which loses the `AuthMfaRequired` arm `submitMfa`'s guard checks; a retry on the same screen silently no-ops until the user navigates back to `/login`. Flagged during AL-T-01 review, not fixed (out of that task's scope).
 - Memberships-list endpoint — flag to `leo-api` if/when multi-tenant switching (D2) is reprioritized; not yet filed.
-- `INV-CLIENT-ROUTE-2` needs amending to drop the `/select-workspace` clause — deferred to Phase 2 persist, not yet done.
+- Stale remote branches on GitHub (`pin-2`…`pin-6`, `pin-13`, `pin-14`, `pin-revert/orchestration-state-direct-push`) — merged/closed PRs didn't auto-delete them; left alone pending explicit cleanup authorization.
 - Feature-spec loop: `realtime` pending — see [`features/INDEX.md`](features/INDEX.md).
 - P1 remaining: WSS realtime, onboarding, cert pinning.
 - Onboarding backend deps — confirm timing; see [`features/onboarding.md`](features/onboarding.md).
