@@ -20,7 +20,8 @@ specs drafted ✅.
 | Phase | Tag | Status | Doc |
 |---|---|---|---|
 | P0 | — | ✅ done (scaffold) | [`phase-0-scaffold.md`](phase-0-scaffold.md) |
-| P1 | `v0.0.1-alpha.1` | 🎯 next — specs ✅ (core-shell, auth, router) | [`v0.0.1-alpha.1.md`](v0.0.1-alpha.1.md) · COE: [`v0.0.1-alpha.1-coe.md`](v0.0.1-alpha.1-coe.md) |
+| P1 | `v0.0.1-alpha.1` | ✅ shipped (core-shell, auth, router) | [`v0.0.1-alpha.1.md`](v0.0.1-alpha.1.md) · COE: [`v0.0.1-alpha.1-coe.md`](v0.0.1-alpha.1-coe.md) |
+| P1 (auth correction) | `v0.0.1-alpha.1-auth-live` | ✅ shipped — auth client rebuilt against the live backend contract (D1–D7) | Spec: [`../features/auth.md`](../features/auth.md) · Taskgraph: [`v0.0.1-alpha.1-auth-live-taskgraph.md`](v0.0.1-alpha.1-auth-live-taskgraph.md) · COE: [`v0.0.1-alpha.1-auth-live-coe.md`](v0.0.1-alpha.1-auth-live-coe.md) |
 | — | `v0.0.1-alpha.2/3` | n/a (no client release — backend-only) | release-plan |
 | — | `v0.0.1-alpha.4` | folded into P1 auth contract | release-plan / `features/auth.md` |
 | — | `v0.0.1-alpha.5` | minimal pre-P2 (`platform_admin`, affiliations if needed) | release-plan |
