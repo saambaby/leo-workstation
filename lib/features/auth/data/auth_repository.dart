@@ -6,42 +6,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/leo_roles.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/dio_provider.dart';
+import '../../onboarding/data/mock_onboarding_store.dart';
+import '../../onboarding/domain/onboarding_models.dart';
 import '../domain/auth_models.dart';
 
 abstract class AuthRepository {
-  Future<LoginResult> login({required String email, required String password});
+  /// Resubmit with [totpCode] to complete a privileged login already
+  /// MFA-challenged — the real backend has no separate verify endpoint.
+  Future<LoginResult> login({
+    required String email,
+    required String password,
+    String? totpCode,
+  });
 
-  Future<AuthSession> submitMfa({
-    required String mfaToken,
-    required String code,
+  Future<AuthSession> completeMfaEnrollment({
+    required String enrollmentToken,
+    required String totpCode,
   });
 
   Future<AuthSession> refreshSession({required String refreshToken});
 
-  Future<AuthSession> selectMembership({
-    required String tenantId,
-    required String role,
-  });
-
-  Future<LoginResult> switchTenant({
-    required String tenantId,
-    String? mfaToken,
-  });
-
   Future<void> logout({required String refreshToken});
-
-  Future<List<Membership>> listMemberships();
 
   Future<void> forgotPassword({required String email});
 
-  Future<AuthSession> resetPassword({
-    required String token,
-    required String password,
-  });
+  Future<void> resetPassword({required String token, required String password});
 
-  Future<AuthSession> acceptInvite({
+  /// Creates the membership; does not mint tokens — the caller logs in
+  /// afterward.
+  Future<void> acceptInvite({
     required String token,
     required String password,
+    required bool tos,
+    required bool privacy,
+    required bool baaAck,
   });
 }
 
@@ -63,22 +61,23 @@ class ApiAuthRepository implements AuthRepository {
   Future<LoginResult> login({
     required String email,
     required String password,
+    String? totpCode,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/auth/login',
-      data: {'email': email, 'password': password},
+      data: {'email': email, 'password': password, 'totp_code': ?totpCode},
     );
     return _mapLoginResponse(response.data!);
   }
 
   @override
-  Future<AuthSession> submitMfa({
-    required String mfaToken,
-    required String code,
+  Future<AuthSession> completeMfaEnrollment({
+    required String enrollmentToken,
+    required String totpCode,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/mfa',
-      data: {'mfa_token': mfaToken, 'code': code},
+      '/auth/mfa/enroll',
+      data: {'enrollment_token': enrollmentToken, 'totp_code': totpCode},
     );
     return _sessionFromResponse(response.data!);
   }
@@ -93,40 +92,6 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession> selectMembership({
-    required String tenantId,
-    required String role,
-  }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/switch-tenant',
-      data: {'tenant_id': tenantId},
-    );
-    return _sessionFromResponse(response.data!);
-  }
-
-  @override
-  Future<LoginResult> switchTenant({
-    required String tenantId,
-    String? mfaToken,
-  }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/switch-tenant',
-      data: {
-        'tenant_id': tenantId,
-        'mfa_token': ?mfaToken,
-      },
-    );
-    final data = response.data!;
-    if (data['mfa_required'] == true) {
-      return LoginResult.mfaRequired(
-        firstLogin: false,
-        mfaToken: data['mfa_token'] as String,
-      );
-    }
-    return LoginResult.session(_sessionFromResponse(data));
-  }
-
-  @override
   Future<void> logout({required String refreshToken}) async {
     await _dio.post<void>(
       '/auth/logout',
@@ -135,58 +100,50 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<List<Membership>> listMemberships() async {
-    final response = await _dio.get<List<dynamic>>('/auth/memberships');
-    return response.data!
-        .cast<Map<String, dynamic>>()
-        .map(Membership.fromJson)
-        .toList();
-  }
-
-  @override
   Future<void> forgotPassword({required String email}) async {
     await _dio.post<void>('/auth/forgot-password', data: {'email': email});
   }
 
   @override
-  Future<AuthSession> resetPassword({
+  Future<void> resetPassword({
     required String token,
     required String password,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    await _dio.post<void>(
       '/auth/reset-password',
-      data: {'token': token, 'password': password},
+      data: {'token': token, 'new_password': password},
     );
-    return _sessionFromResponse(response.data!);
   }
 
   @override
-  Future<AuthSession> acceptInvite({
+  Future<void> acceptInvite({
     required String token,
     required String password,
+    required bool tos,
+    required bool privacy,
+    required bool baaAck,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    await _dio.post<void>(
       '/invitations/accept',
-      data: {'token': token, 'password': password},
+      data: {
+        'token': token,
+        'password': password,
+        'consent': {'tos': tos, 'privacy': privacy, 'baa_ack': baaAck},
+      },
     );
-    return _sessionFromResponse(response.data!);
   }
 
   LoginResult _mapLoginResponse(Map<String, dynamic> data) {
-    if (data['mfa_required'] == true) {
+    if (data['mfa_enrollment_required'] == true) {
       return LoginResult.mfaRequired(
-        firstLogin: data['first_login'] as bool? ?? false,
-        mfaToken: data['mfa_token'] as String,
+        firstLogin: true,
+        enrollmentToken: data['enrollment_token'] as String,
+        otpauthUrl: data['otpauth_url'] as String,
+        secret: data['secret'] as String,
       );
     }
-    final memberships = data['memberships'];
-    if (memberships is List && memberships.length > 1) {
-      return LoginResult.pickMembership(
-        memberships
-            .cast<Map<String, dynamic>>()
-            .map(Membership.fromJson)
-            .toList(),
-      );
+    if (data['mfa_required'] == true) {
+      return const LoginResult.mfaRequired(firstLogin: false);
     }
     return LoginResult.session(_sessionFromResponse(data));
   }
@@ -203,28 +160,13 @@ class ApiAuthRepository implements AuthRepository {
 class MockAuthRepository implements AuthRepository {
   MockAuthRepository();
 
-  String? _pendingEmail;
-
-  static const _mockMemberships = [
-    Membership(
-      tenantId: '11111111-1111-1111-1111-111111111111',
-      tenantName: 'Acme Language Services',
-      role: LeoRoles.lspAdmin,
-    ),
-    Membership(
-      tenantId: '22222222-2222-2222-2222-222222222222',
-      tenantName: 'Northlight Interpreting',
-      role: LeoRoles.interpreter,
-    ),
-  ];
-
   @override
   Future<LoginResult> login({
     required String email,
     required String password,
+    String? totpCode,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
-    _pendingEmail = email;
 
     if (password.isEmpty || !email.contains('@')) {
       throw DioException(
@@ -236,15 +178,34 @@ class MockAuthRepository implements AuthRepository {
       );
     }
 
-    if (email.startsWith('multi@')) {
-      return LoginResult.pickMembership(_mockMemberships);
-    }
-
     if (email.startsWith('mfa@')) {
-      return LoginResult.mfaRequired(
-        firstLogin: email.contains('enroll'),
-        mfaToken: 'mock-mfa-token',
-      );
+      if (totpCode != null) {
+        if (totpCode.length != 6) {
+          throw DioException(
+            requestOptions: RequestOptions(path: '/auth/login'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/login'),
+              statusCode: 401,
+            ),
+          );
+        }
+        return LoginResult.session(
+          _mockSession(
+            role: LeoRoles.lspAdmin,
+            tenantId: '11111111-1111-1111-1111-111111111111',
+          ),
+        );
+      }
+      if (email.contains('enroll')) {
+        return const LoginResult.mfaRequired(
+          firstLogin: true,
+          enrollmentToken: 'mock-enrollment-token',
+          otpauthUrl:
+              'otpauth://totp/Leo:mfa@example.com?secret=MOCKSECRET&issuer=Leo',
+          secret: 'MOCKSECRET',
+        );
+      }
+      return const LoginResult.mfaRequired(firstLogin: false);
     }
 
     if (email.startsWith('admin@')) {
@@ -257,8 +218,39 @@ class MockAuthRepository implements AuthRepository {
     }
 
     if (email.startsWith('tenantless@')) {
+      return LoginResult.session(_mockSession(role: LeoRoles.interpreter));
+    }
+
+    final signup = MockOnboardingStore.instance.lookup(email);
+    if (signup != null) {
+      if (!signup.verified) {
+        throw DioException(
+          requestOptions: RequestOptions(path: '/auth/login'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/login'),
+            statusCode: 401,
+          ),
+        );
+      }
+      final sub = 'signup-${email.toLowerCase().hashCode}';
+      final needsOnboarding = !MockOnboardingStore.instance
+          .isOnboardingComplete(email);
+      if (signup.path == SignupPath.personal) {
+        return LoginResult.session(
+          _mockSession(
+            role: LeoRoles.interpreter,
+            sub: sub,
+            onboardingRequired: needsOnboarding,
+          ),
+        );
+      }
       return LoginResult.session(
-        _mockSession(role: LeoRoles.interpreter),
+        _mockSession(
+          role: LeoRoles.customerAdmin,
+          tenantId: '33333333-3333-3333-3333-333333333333',
+          sub: sub,
+          onboardingRequired: needsOnboarding,
+        ),
       );
     }
 
@@ -271,25 +263,22 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession> submitMfa({
-    required String mfaToken,
-    required String code,
+  Future<AuthSession> completeMfaEnrollment({
+    required String enrollmentToken,
+    required String totpCode,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
-    if (code.length != 6) {
+    if (totpCode.length != 6) {
       throw DioException(
-        requestOptions: RequestOptions(path: '/auth/mfa'),
+        requestOptions: RequestOptions(path: '/auth/mfa/enroll'),
         response: Response(
-          requestOptions: RequestOptions(path: '/auth/mfa'),
-          statusCode: 401,
+          requestOptions: RequestOptions(path: '/auth/mfa/enroll'),
+          statusCode: 400,
         ),
       );
     }
-    final role = _pendingEmail?.startsWith('admin@') == true
-        ? LeoRoles.lspAdmin
-        : LeoRoles.subAdmin;
     return _mockSession(
-      role: role,
+      role: LeoRoles.lspAdmin,
       tenantId: '11111111-1111-1111-1111-111111111111',
     );
   }
@@ -313,55 +302,8 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession> selectMembership({
-    required String tenantId,
-    required String role,
-  }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    if (roleRequiresMfa(role)) {
-      throw StateError('Privileged membership requires MFA via submitMfa');
-    }
-    return _mockSession(role: role, tenantId: tenantId);
-  }
-
-  @override
-  Future<LoginResult> switchTenant({
-    required String tenantId,
-    String? mfaToken,
-  }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    final membership = _mockMemberships.firstWhere(
-      (m) => m.tenantId == tenantId,
-      orElse: () => throw DioException(
-        requestOptions: RequestOptions(path: '/auth/switch-tenant'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/auth/switch-tenant'),
-          statusCode: 404,
-        ),
-      ),
-    );
-
-    if (roleRequiresMfa(membership.role) && mfaToken == null) {
-      return const LoginResult.mfaRequired(
-        firstLogin: false,
-        mfaToken: 'mock-switch-mfa-token',
-      );
-    }
-
-    return LoginResult.session(
-      _mockSession(role: membership.role, tenantId: tenantId),
-    );
-  }
-
-  @override
   Future<void> logout({required String refreshToken}) async {
     await Future<void>.delayed(const Duration(milliseconds: 100));
-  }
-
-  @override
-  Future<List<Membership>> listMemberships() async {
-    await Future<void>.delayed(const Duration(milliseconds: 100));
-    return _mockMemberships;
   }
 
   @override
@@ -370,7 +312,7 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession> resetPassword({
+  Future<void> resetPassword({
     required String token,
     required String password,
   }) async {
@@ -384,30 +326,57 @@ class MockAuthRepository implements AuthRepository {
         ),
       );
     }
-    return _mockSession(role: LeoRoles.interpreter);
+    if (token != '123456') {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/auth/reset-password'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/auth/reset-password'),
+          statusCode: 400,
+        ),
+      );
+    }
+    if (password.length < 8) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/auth/reset-password'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/auth/reset-password'),
+          statusCode: 400,
+        ),
+      );
+    }
   }
 
   @override
-  Future<AuthSession> acceptInvite({
+  Future<void> acceptInvite({
     required String token,
     required String password,
+    required bool tos,
+    required bool privacy,
+    required bool baaAck,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
-    return _mockSession(
-      role: LeoRoles.interpreter,
-      tenantId: '22222222-2222-2222-2222-222222222222',
-    );
+    if (!tos || !privacy || !baaAck) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/invitations/accept'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/invitations/accept'),
+          statusCode: 400,
+        ),
+      );
+    }
   }
 
   AuthSession _mockSession({
     required String role,
     String? tenantId,
     bool onboardingRequired = false,
+    String sub = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   }) {
     final accessToken = _mockJwt(
       role: role,
       tenantId: tenantId,
       onboardingRequired: onboardingRequired,
+      sub: sub,
     );
     return AuthSession.fromTokens(
       accessToken: accessToken,
@@ -419,15 +388,17 @@ class MockAuthRepository implements AuthRepository {
     required String role,
     String? tenantId,
     bool onboardingRequired = false,
+    String sub = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   }) {
     final header = base64Url.encode(utf8.encode('{"alg":"none"}'));
     final payload = base64Url.encode(
       utf8.encode(
         jsonEncode({
-          'sub': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          'sub': sub,
           'role': role,
           'tenant_id': ?tenantId,
-          'exp': DateTime.now()
+          'exp':
+              DateTime.now()
                   .add(const Duration(hours: 1))
                   .millisecondsSinceEpoch ~/
               1000,

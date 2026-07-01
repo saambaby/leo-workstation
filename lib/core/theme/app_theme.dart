@@ -26,34 +26,201 @@ class LeoColors {
   static const lightText = Color(0xFF0A0A0B);
 }
 
+/// Border radii from CSS `--r-*` tokens.
+class LeoRadii {
+  LeoRadii._();
+  static const sm = 4.0;
+  static const md = 8.0;
+  static const lg = 12.0;
+  static const xl = 16.0;
+  static const xl2 = 24.0;
+}
+
+/// Cached text styles mapped from the HTML design system.
+class LeoTypography {
+  LeoTypography._();
+
+  static TextStyle get _display => const TextStyle(fontFamily: 'Syne');
+  static TextStyle get _body => const TextStyle(fontFamily: 'DM Sans');
+  static TextStyle get _mono => const TextStyle(fontFamily: 'DM Mono');
+
+  static TextStyle get logo => _display.copyWith(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+        color: LeoColors.signalWhite,
+      );
+
+  static TextStyle get logoAccent => _display.copyWith(
+        fontSize: 20,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.8,
+        color: LeoColors.black300,
+      );
+
+  static TextStyle get authSub => _mono.copyWith(
+        fontSize: 11,
+        letterSpacing: 0.33,
+        color: LeoColors.black200,
+      );
+
+  static TextStyle get button => _display.copyWith(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.24,
+      );
+
+  static TextStyle get pageTitle => _display.copyWith(
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+        color: LeoColors.signalWhite,
+      );
+
+  static TextStyle get fieldLabel => _body.copyWith(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.22,
+        color: LeoColors.black100,
+      );
+
+  static TextStyle get input => _body.copyWith(
+        fontSize: 13,
+        color: LeoColors.signalWhite,
+      );
+
+  static TextStyle get inputPlaceholder => _body.copyWith(
+        fontSize: 13,
+        color: LeoColors.black300,
+      );
+
+  static TextStyle get link => _mono.copyWith(
+        fontSize: 11,
+        color: LeoColors.black100,
+      );
+
+  static TextStyle get note => _body.copyWith(
+        fontSize: 11,
+        height: 1.5,
+      );
+
+  static TextStyle get otpCell => _mono.copyWith(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: LeoColors.signalWhite,
+      );
+
+  static TextStyle get mono9 => _mono.copyWith(
+        fontSize: 9,
+        color: LeoColors.black300,
+      );
+
+  static TextStyle get mono10 => _mono.copyWith(
+        fontSize: 10,
+        color: LeoColors.black300,
+      );
+
+  static TextStyle get mono11 => _mono.copyWith(
+        fontSize: 11,
+        color: LeoColors.black100,
+      );
+
+  static TextStyle get mono12 => _mono.copyWith(
+        fontSize: 12,
+        letterSpacing: 1.2,
+        color: LeoColors.signalWhite,
+      );
+
+  static TextStyle get divider => _mono.copyWith(
+        fontSize: 11,
+        color: LeoColors.black300,
+      );
+
+  static TextStyle get checkboxLabel => _body.copyWith(
+        fontSize: 11,
+        color: LeoColors.black200,
+      );
+
+  static TextStyle get chip => _mono.copyWith(
+        fontSize: 10,
+        color: LeoColors.black100,
+      );
+
+  static TextStyle get listRowTitle => _body.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: LeoColors.signalWhite,
+      );
+
+  static TextStyle get listRowMeta => _mono.copyWith(
+        fontSize: 10,
+        color: LeoColors.black300,
+      );
+
+  static TextStyle get body13Medium => _body.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: LeoColors.signalWhite,
+      );
+
+  static TextStyle get body12Medium => _body.copyWith(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: LeoColors.signalWhite,
+      );
+}
+
 /// Night ≠ dark: night is a separate, dimmer variant (deeper black, softer text).
 enum LeoThemeMode { light, dark, night }
 
 CupertinoThemeData themeFor(LeoThemeMode mode) {
+  final body = LeoTypography.input;
+  final display = LeoTypography.pageTitle;
+
   switch (mode) {
     case LeoThemeMode.light:
-      return const CupertinoThemeData(
+      return CupertinoThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: LeoColors.lightBg,
         primaryColor: LeoColors.black900,
         barBackgroundColor: LeoColors.lightBg,
-        textTheme: CupertinoTextThemeData(primaryColor: LeoColors.lightText),
+        textTheme: CupertinoTextThemeData(
+          primaryColor: LeoColors.lightText,
+          textStyle: body.copyWith(color: LeoColors.lightText),
+          navTitleTextStyle: display.copyWith(color: LeoColors.lightText),
+          navLargeTitleTextStyle: display.copyWith(
+            fontSize: 28,
+            color: LeoColors.lightText,
+          ),
+        ),
       );
     case LeoThemeMode.dark:
-      return const CupertinoThemeData(
+      return CupertinoThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: LeoColors.black900,
         primaryColor: LeoColors.signalWhite,
         barBackgroundColor: LeoColors.black800,
-        textTheme: CupertinoTextThemeData(primaryColor: LeoColors.signalWhite),
+        textTheme: CupertinoTextThemeData(
+          primaryColor: LeoColors.signalWhite,
+          textStyle: body,
+          navTitleTextStyle: display,
+          navLargeTitleTextStyle: display.copyWith(fontSize: 28),
+        ),
       );
     case LeoThemeMode.night:
-      return const CupertinoThemeData(
+      return CupertinoThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: Color(0xFF050507),
+        scaffoldBackgroundColor: const Color(0xFF050507),
         primaryColor: LeoColors.black50,
-        barBackgroundColor: Color(0xFF050507),
-        textTheme: CupertinoTextThemeData(primaryColor: LeoColors.black50),
+        barBackgroundColor: const Color(0xFF050507),
+        textTheme: CupertinoTextThemeData(
+          primaryColor: LeoColors.black50,
+          textStyle: body.copyWith(color: LeoColors.black50),
+          navTitleTextStyle: display.copyWith(color: LeoColors.black50),
+          navLargeTitleTextStyle: display.copyWith(
+            fontSize: 28,
+            color: LeoColors.black50,
+          ),
+        ),
       );
   }
 }

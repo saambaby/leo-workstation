@@ -85,6 +85,13 @@ features read `deviceClassProvider` to hide the affordance; router is the backst
 Interpreter "Accept on mobile" is an **action-level** block inside `/idle`, not a route
 gate — out of scope here.
 
+**Navigation affordance vs stack (FM-CLIENT-4):** public auth and onboarding screens
+expose back via **in-screen copy** (e.g. “← Back to sign in” using `go('/login')` or
+route-appropriate `pop()`). Do not add app-level toolbar back that calls `GoRouter.pop`
+on those flows — mixed `push` + `go` makes `canPop()` lie. Global chrome that needs
+`GoRouter` must live in a root **`ShellRoute`**, not `CupertinoApp.router` `builder`
+(FM-CLIENT-2/3).
+
 ## Non-goals
 
 Auth logic + the `AuthState` machine (`auth`); `DeviceClass` derivation + the app root
@@ -102,7 +109,9 @@ admin/back-office routes (`INV-CLIENT-ROUTE-1`) — only `/web-handoff`'s extern
 ## Approach
 
 `lib/core/router/app_router.dart` (`routerProvider` → `GoRouter` with `routes` +
-`redirect`); `lib/core/router/redirect.dart` (the pure decision function, unit-tested
+`redirect`); root routes wrapped in a **`ShellRoute`** hosting
+`DesktopWorkstationShell` (macOS window frame — FM-CLIENT-5); **do not** mount
+GoRouter-dependent chrome in `CupertinoApp.builder` (FM-CLIENT-2). `lib/core/router/redirect.dart` (the pure decision function, unit-tested
 against the table); `lib/core/providers/auth_refresh_listenable.dart` (bridges
 `authNotifier` → `ChangeNotifier`). Workstation features expose a `List<RouteBase>`
 each, composed in `app_router.dart`.

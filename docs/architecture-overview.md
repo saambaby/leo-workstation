@@ -50,6 +50,20 @@ flowchart LR
 
 > Dependencies flow **View → ViewModel → Repository → wire**. The View never touches a repository or `dio` directly; the Repository never imports Flutter. State is always immutable (`freezed`).
 
+### Feature scaffold checklist (P2+)
+
+When adding a new slice under `lib/features/<name>/`:
+
+1. `presentation/state/<feature>_state.dart` — `freezed` union or struct (router contract arms are frozen once wired to `go_router`).
+2. `presentation/notifiers/<feature>_notifier.dart` — sole owner of async/business state for the slice.
+3. `presentation/providers/<feature>_ui_provider.dart` — derived UI helpers (`isLoading`, `errorMessage`, etc.) so screens do not pattern-match state on every build.
+4. Screens are `ConsumerWidget` unless they hold ephemeral `TextEditingController` / focus state.
+5. No `data/` imports in views; no repository calls from widgets — dispatch intents via `ref.read(<notifier>.notifier)`.
+
+Reference implementation: `features/auth/` (`AuthNotifier`, `AuthUiState`, `AuthFormShell`).
+
+**Verification:** `flutter analyze` (+ `build_runner` when codegen changes). Do not add Flutter tests unless explicitly requested (`INV-CLIENT-TEST-1`).
+
 ---
 
 ## 2. Directory layout

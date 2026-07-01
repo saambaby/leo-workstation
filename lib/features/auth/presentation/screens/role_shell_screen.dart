@@ -1,15 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/auth/leo_roles.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/platform/external_url.dart';
 import '../../../../core/shell/workstation_scaffold.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
 import '../state/auth_state.dart';
-import '../widgets/workspace_switcher.dart';
 
 /// Wraps role-home content in [WorkstationScaffold] with workspace chrome.
 class RoleShellScreen extends ConsumerWidget {
@@ -39,13 +38,52 @@ class RoleShellScreen extends ConsumerWidget {
       railLogo: _RailLogo(persona: persona),
       railItems: railItems,
       tenantChip: TenantChip(tenantId: tenantId, role: role),
-      avatar: WorkspaceAvatarButton(role: role),
+      avatar: _SignOutAvatarButton(role: role),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _PageHeader(title: title, routeLabel: routeLabel),
           Expanded(child: child),
         ],
+      ),
+    );
+  }
+}
+
+/// Tapping signs out — single-membership sessions have no workspace to
+/// switch to (D2: multi-tenant switching deferred pending a backend
+/// memberships-list endpoint).
+class _SignOutAvatarButton extends ConsumerWidget {
+  const _SignOutAvatarButton({required this.role});
+
+  final String role;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Semantics(
+      button: true,
+      label: AuthStrings.signOut,
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        minimumSize: Size.zero,
+        onPressed: () => ref.read(authNotifierProvider.notifier).logout(),
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: LeoColors.black600,
+            shape: BoxShape.circle,
+            border: Border.all(color: LeoColors.black400),
+          ),
+          child: Text(
+            role.isEmpty ? '?' : role.substring(0, 1).toUpperCase(),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: LeoColors.black100,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -136,8 +174,8 @@ class TenantChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = tenantId == null
-        ? 'Tenant-less · ${_roleLabel(role)}'
-        : 'Active workspace · ${_roleLabel(role)}';
+        ? 'Tenant-less · ${roleDisplayLabel(role)}'
+        : 'Active workspace · ${roleDisplayLabel(role)}';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -152,15 +190,6 @@ class TenantChip extends StatelessWidget {
       ),
     );
   }
-
-  String _roleLabel(String role) => switch (role) {
-        LeoRoles.lspAdmin => 'LSP Admin',
-        LeoRoles.subAdmin => 'Sub Admin',
-        LeoRoles.interpreter => 'Interpreter',
-        LeoRoles.customerUser => 'Customer',
-        LeoRoles.customerAdmin => 'Customer Admin',
-        _ => role,
-      };
 }
 
 class WebHandoffScreen extends ConsumerWidget {
@@ -199,15 +228,7 @@ class WebHandoffScreen extends ConsumerWidget {
                     button: true,
                     label: AuthStrings.openWebDashboard,
                     child: CupertinoButton.filled(
-                      onPressed: () async {
-                        final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
+                      onPressed: () => launchExternalUrl(url),
                       child: const Text(AuthStrings.openWebDashboard),
                     ),
                   ),
@@ -283,9 +304,7 @@ class OnboardingPlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: LeoColors.black900,
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Onboarding'),
-      ),
+      navigationBar: const CupertinoNavigationBar(middle: Text('Onboarding')),
       child: Center(
         child: Text(
           'Onboarding placeholder ($path)',

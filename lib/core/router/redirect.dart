@@ -5,7 +5,11 @@ import '../../features/auth/presentation/state/auth_state.dart';
 /// Public routes reachable while signed out.
 const publicRoutes = {
   '/login',
+  '/signup',
+  '/signup/details',
+  '/verify-email',
   '/forgot-password',
+  '/forgot-password/verify',
   '/reset-password',
   '/invite/accept',
 };
@@ -13,12 +17,15 @@ const publicRoutes = {
 /// Auth-transition + public auth screens (error state may stay here).
 const authFlowRoutes = {
   '/login',
+  '/signup',
+  '/signup/details',
+  '/verify-email',
   '/forgot-password',
+  '/forgot-password/verify',
   '/reset-password',
   '/invite/accept',
   '/mfa',
   '/mfa/enroll',
-  '/select-workspace',
 };
 
 const blockedSurfacePath = '/blocked-surface';
@@ -56,8 +63,7 @@ String onboardingEntryForRole(String role) {
 
 bool _isOnboardingPath(String loc) => loc.startsWith('/onboarding');
 
-bool _isCustomerRoute(String loc) =>
-    loc == '/call' || loc.startsWith('/call/');
+bool _isCustomerRoute(String loc) => loc == '/call' || loc.startsWith('/call/');
 
 /// Device entitlement backstop (INV-CLIENT-DEVICE-1).
 bool isRouteAllowedForDevice(String loc, String role, DeviceClass device) {
@@ -73,16 +79,10 @@ bool isRouteAllowedForDevice(String loc, String role, DeviceClass device) {
 String? authRedirect(AuthState auth, DeviceClass device, String loc) {
   return switch (auth) {
     AuthLoading() => null,
-    AuthUnauthenticated() =>
-      publicRoutes.contains(loc) ? null : '/login',
+    AuthUnauthenticated() => publicRoutes.contains(loc) ? null : '/login',
     AuthError() => authFlowRoutes.contains(loc) ? null : '/login',
-    AuthMfaRequired(:final firstLogin) =>
-      _redirectMfa(firstLogin, loc),
-    AuthPickMembership() => loc == '/select-workspace' ? null : '/select-workspace',
-    AuthAuthenticated(
-      :final role,
-      :final onboardingRequired,
-    ) =>
+    AuthMfaRequired(:final firstLogin) => _redirectMfa(firstLogin, loc),
+    AuthAuthenticated(:final role, :final onboardingRequired) =>
       _redirectAuthenticated(role, onboardingRequired, device, loc),
   };
 }
@@ -131,12 +131,7 @@ String? _redirectAuthenticated(
   return null;
 }
 
-const _authScreens = {
-  '/login',
-  '/mfa',
-  '/mfa/enroll',
-  '/select-workspace',
-};
+const _authScreens = {'/login', '/mfa', '/mfa/enroll'};
 
 bool _knownRoute(String loc) {
   if (publicRoutes.contains(loc) ||

@@ -24,7 +24,13 @@ A feature slice never imports another feature's `data/` layer. Cross-feature rea
 View state is immutable (`freezed`). `go_router`'s `redirect` is keyed on auth state via `refreshListenable`; there is no imperative navigation on login/logout. (arch §3, §5)
 
 ### INV-CLIENT-STATE-2 — `AuthState` is the auth→router contract
-`auth` owns the `AuthState` union and `router` consumes it; the union signature is frozen as a shared contract. Arms and their fields: `unauthenticated` · `loading` · `error(message)` · `mfaRequired(firstLogin, mfaToken)` · `pickMembership(memberships)` · `authenticated(role, tenantId?, onboardingRequired)`. Consumers must not branch on undeclared arms/fields; adding/changing an arm is a contract change to both specs. (promoted 2026-06-29 from auth ⋂ router)
+`auth` owns the `AuthState` union and `router` consumes it; the union **arm** signature is frozen as a shared contract. Arms: `unauthenticated(forgotPasswordSending?, resendCodeSending?)` · `loading(reason?)` · `error(message)` · `mfaRequired(firstLogin, enrollmentToken?, otpauthUrl?, secret?)` · `authenticated(role, tenantId?, onboardingRequired)`. Consumers must not branch on undeclared arms; adding/changing an **arm** is a contract change to both specs. Optional metadata fields on existing arms are UI-only and invisible to router redirect. (promoted 2026-06-29 from auth ⋂ router; narrowed 2026-06-30 — `pickMembership` arm and the `authenticated` workspace-switcher fields removed: the live backend has no multi-membership-picker response and no memberships-list endpoint, see `features/auth.md` D1/D2; `mfaRequired` no longer carries an opaque `mfaToken` — first-time enrollment carries the real enrollment payload instead)
+
+### INV-CLIENT-STATE-3 — Centralized async state, derived UI providers
+Async and business state (loading, errors, lists fetched for UI, in-flight operations) is owned by the feature `Notifier` (`presentation/notifiers/`), not private fields on `State` / `ConsumerState`. Screens and widgets watch a derived `presentation/providers/<feature>_ui_provider.dart` for display helpers (`isLoading`, `errorMessage`, etc.) instead of pattern-matching the domain union on every build. Views never call repositories. Ephemeral UI-only state (`TextEditingController`, focus nodes, overlay open/close) may remain local. Reference: `features/auth/` (`AuthNotifier`, `authUiProvider`, `AuthFormShell`). (promoted 2026-06-30)
+
+### INV-CLIENT-TEST-1 — No Flutter tests unless requested
+Do not add or expand unit/widget/integration tests in this repo unless the user explicitly asks. Verification for agent work is `flutter analyze` (+ `build_runner` when codegen changes). Existing tests may be kept passing but must not be extended by default. (promoted 2026-06-30)
 
 ---
 
@@ -36,8 +42,8 @@ No admin CRUD, reports, rate-card, or billing-export routes exist in this app. *
 ### INV-CLIENT-CONTRACT-1 — Thin, untrusted client
 All business rules and billing live in `leo-api`. The client never computes a charge and never starts the billing meter; it reflects state pushed over WSS. (arch §6)
 
-### INV-CLIENT-ROUTE-2 — Canonical role→home map + membership picker route
-Exactly one role→home mapping, referenced by `auth`, `router`, and `onboarding` (no per-spec restatement): `interpreter → /idle` (incl. tenant-less), `customer_user → /call`, `customer_admin → /call`, `sub_admin → /dispatch`, `lsp_admin → /dispatch`, `platform_admin → /web-handoff` (no workstation home). The multi-membership picker is the route **`/select-workspace`** (widget `tenant_picker_screen`), entered from `AuthState.pickMembership`. (promoted 2026-06-29 from auth ⋂ router ⋂ onboarding)
+### INV-CLIENT-ROUTE-2 — Canonical role→home map
+Exactly one role→home mapping, referenced by `auth`, `router`, and `onboarding` (no per-spec restatement): `interpreter → /idle` (incl. tenant-less), `customer_user → /call`, `customer_admin → /call`, `sub_admin → /dispatch`, `lsp_admin → /dispatch`, `platform_admin → /web-handoff` (no workstation home). (promoted 2026-06-29 from auth ⋂ router ⋂ onboarding; **`/select-workspace` clause removed 2026-06-30** — the live backend never returns multiple memberships to pick from at login, see `features/auth.md` D1. Multi-tenant switching is deferred pending a memberships-list endpoint, D2.)
 
 ---
 

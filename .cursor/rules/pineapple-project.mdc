@@ -10,14 +10,35 @@ Flutter ops client — interpreter, customer, dispatcher workstations in one app
 ## Read before editing
 
 - `docs/release-plan.md` / `docs/client-map.md` — what to build
-- `docs/architecture-overview.md` — MVVM + Riverpod
+- `docs/architecture-overview.md` — MVVM + Riverpod (§1 feature scaffold checklist)
 - `docs/platform-references.md` — links to `../leo-api` (never copy platform docs)
 - `.pineapple/features/` — feature specs
 - `.pineapple/invariants-client.md` — INV-CLIENT-* rules
 - `.pineapple/phases/INDEX.md` — active phase
+- `.pineapple/state.md` — as-built + recent decisions
+
+## Presentation & state (do not regress)
+
+- **Async/business state lives in the feature `Notifier`** — never private `_loading`, `_submitting`, `_memberships`, etc. on screens/widgets.
+- **Views watch a derived UI provider** (`presentation/providers/<feature>_ui_provider.dart`) for `isLoading`, `errorMessage`, and other display helpers — do not repeat `state is XLoading` / `state is XError` pattern-matching in every screen.
+- **Repository calls only from notifiers** — widgets dispatch `ref.read(<notifier>.notifier).method()`; no `ref.read(<repo>Provider)` in `presentation/`.
+- **Router guards in `go_router` redirects** — not `initState` post-frame redirects for missing route params.
+- **Reuse shared presentation widgets** before copying shell/layout (auth reference: `AuthFormShell`, `MfaCodeForm`; core: `roleDisplayLabel`, `launchExternalUrl`).
+- **Local widget state is allowed only for ephemeral UI**: `TextEditingController`, focus nodes, overlay open/close (`_menuOpen`), synchronous client-side validation before submit.
+- **Extend existing `freezed` state arms with optional metadata fields** — do not add new router-contract union arms without updating specs + `redirect.dart` (`INV-CLIENT-STATE-2`).
+
+Reference slice: `lib/features/auth/`.
+
+## Verification (this repo)
+
+- Run `flutter analyze` on edited files.
+- Run `dart run build_runner build --delete-conflicting-outputs` when changing `freezed` / `json_serializable`.
+- **Do not add or expand Flutter tests** unless the user explicitly asks. Do not add unit/widget tests as part of refactors, scaffolding, or feature work by default.
 
 ## Do NOT
 
 - Build admin CRUD/reports in Flutter (BD7)
 - Cross-import feature `data/` layers
 - Persist PHI on device
+- Introduce private async flags or duplicate loading/error extraction in views
+- Call repositories from `presentation/screens` or `presentation/widgets`

@@ -195,241 +195,56 @@ abstract class _AuthSession extends AuthSession {
       throw _privateConstructorUsedError;
 }
 
-Membership _$MembershipFromJson(Map<String, dynamic> json) {
-  return _Membership.fromJson(json);
-}
-
-/// @nodoc
-mixin _$Membership {
-  String get tenantId => throw _privateConstructorUsedError;
-  String get tenantName => throw _privateConstructorUsedError;
-  String get role => throw _privateConstructorUsedError;
-
-  /// Serializes this Membership to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Membership
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $MembershipCopyWith<Membership> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $MembershipCopyWith<$Res> {
-  factory $MembershipCopyWith(
-    Membership value,
-    $Res Function(Membership) then,
-  ) = _$MembershipCopyWithImpl<$Res, Membership>;
-  @useResult
-  $Res call({String tenantId, String tenantName, String role});
-}
-
-/// @nodoc
-class _$MembershipCopyWithImpl<$Res, $Val extends Membership>
-    implements $MembershipCopyWith<$Res> {
-  _$MembershipCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of Membership
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? tenantId = null,
-    Object? tenantName = null,
-    Object? role = null,
-  }) {
-    return _then(
-      _value.copyWith(
-            tenantId: null == tenantId
-                ? _value.tenantId
-                : tenantId // ignore: cast_nullable_to_non_nullable
-                      as String,
-            tenantName: null == tenantName
-                ? _value.tenantName
-                : tenantName // ignore: cast_nullable_to_non_nullable
-                      as String,
-            role: null == role
-                ? _value.role
-                : role // ignore: cast_nullable_to_non_nullable
-                      as String,
-          )
-          as $Val,
-    );
-  }
-}
-
-/// @nodoc
-abstract class _$$MembershipImplCopyWith<$Res>
-    implements $MembershipCopyWith<$Res> {
-  factory _$$MembershipImplCopyWith(
-    _$MembershipImpl value,
-    $Res Function(_$MembershipImpl) then,
-  ) = __$$MembershipImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String tenantId, String tenantName, String role});
-}
-
-/// @nodoc
-class __$$MembershipImplCopyWithImpl<$Res>
-    extends _$MembershipCopyWithImpl<$Res, _$MembershipImpl>
-    implements _$$MembershipImplCopyWith<$Res> {
-  __$$MembershipImplCopyWithImpl(
-    _$MembershipImpl _value,
-    $Res Function(_$MembershipImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of Membership
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? tenantId = null,
-    Object? tenantName = null,
-    Object? role = null,
-  }) {
-    return _then(
-      _$MembershipImpl(
-        tenantId: null == tenantId
-            ? _value.tenantId
-            : tenantId // ignore: cast_nullable_to_non_nullable
-                  as String,
-        tenantName: null == tenantName
-            ? _value.tenantName
-            : tenantName // ignore: cast_nullable_to_non_nullable
-                  as String,
-        role: null == role
-            ? _value.role
-            : role // ignore: cast_nullable_to_non_nullable
-                  as String,
-      ),
-    );
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$MembershipImpl implements _Membership {
-  const _$MembershipImpl({
-    required this.tenantId,
-    required this.tenantName,
-    required this.role,
-  });
-
-  factory _$MembershipImpl.fromJson(Map<String, dynamic> json) =>
-      _$$MembershipImplFromJson(json);
-
-  @override
-  final String tenantId;
-  @override
-  final String tenantName;
-  @override
-  final String role;
-
-  @override
-  String toString() {
-    return 'Membership(tenantId: $tenantId, tenantName: $tenantName, role: $role)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$MembershipImpl &&
-            (identical(other.tenantId, tenantId) ||
-                other.tenantId == tenantId) &&
-            (identical(other.tenantName, tenantName) ||
-                other.tenantName == tenantName) &&
-            (identical(other.role, role) || other.role == role));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, tenantId, tenantName, role);
-
-  /// Create a copy of Membership
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$MembershipImplCopyWith<_$MembershipImpl> get copyWith =>
-      __$$MembershipImplCopyWithImpl<_$MembershipImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$MembershipImplToJson(this);
-  }
-}
-
-abstract class _Membership implements Membership {
-  const factory _Membership({
-    required final String tenantId,
-    required final String tenantName,
-    required final String role,
-  }) = _$MembershipImpl;
-
-  factory _Membership.fromJson(Map<String, dynamic> json) =
-      _$MembershipImpl.fromJson;
-
-  @override
-  String get tenantId;
-  @override
-  String get tenantName;
-  @override
-  String get role;
-
-  /// Create a copy of Membership
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$MembershipImplCopyWith<_$MembershipImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
 /// @nodoc
 mixin _$LoginResult {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(AuthSession session) session,
-    required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
-    required TResult Function(List<Membership> memberships) pickMembership,
+    required TResult Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )
+    mfaRequired,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(AuthSession session)? session,
-    TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
-    TResult? Function(List<Membership> memberships)? pickMembership,
+    TResult? Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )?
+    mfaRequired,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(AuthSession session)? session,
-    TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
-    TResult Function(List<Membership> memberships)? pickMembership,
+    TResult Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )?
+    mfaRequired,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(LoginSession value) session,
     required TResult Function(LoginMfaRequired value) mfaRequired,
-    required TResult Function(LoginPickMembership value) pickMembership,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(LoginSession value)? session,
     TResult? Function(LoginMfaRequired value)? mfaRequired,
-    TResult? Function(LoginPickMembership value)? pickMembership,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(LoginSession value)? session,
     TResult Function(LoginMfaRequired value)? mfaRequired,
-    TResult Function(LoginPickMembership value)? pickMembership,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
 }
@@ -539,8 +354,13 @@ class _$LoginSessionImpl implements LoginSession {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(AuthSession session) session,
-    required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
-    required TResult Function(List<Membership> memberships) pickMembership,
+    required TResult Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )
+    mfaRequired,
   }) {
     return session(this.session);
   }
@@ -549,8 +369,13 @@ class _$LoginSessionImpl implements LoginSession {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(AuthSession session)? session,
-    TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
-    TResult? Function(List<Membership> memberships)? pickMembership,
+    TResult? Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )?
+    mfaRequired,
   }) {
     return session?.call(this.session);
   }
@@ -559,8 +384,13 @@ class _$LoginSessionImpl implements LoginSession {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(AuthSession session)? session,
-    TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
-    TResult Function(List<Membership> memberships)? pickMembership,
+    TResult Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )?
+    mfaRequired,
     required TResult orElse(),
   }) {
     if (session != null) {
@@ -574,7 +404,6 @@ class _$LoginSessionImpl implements LoginSession {
   TResult map<TResult extends Object?>({
     required TResult Function(LoginSession value) session,
     required TResult Function(LoginMfaRequired value) mfaRequired,
-    required TResult Function(LoginPickMembership value) pickMembership,
   }) {
     return session(this);
   }
@@ -584,7 +413,6 @@ class _$LoginSessionImpl implements LoginSession {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(LoginSession value)? session,
     TResult? Function(LoginMfaRequired value)? mfaRequired,
-    TResult? Function(LoginPickMembership value)? pickMembership,
   }) {
     return session?.call(this);
   }
@@ -594,7 +422,6 @@ class _$LoginSessionImpl implements LoginSession {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(LoginSession value)? session,
     TResult Function(LoginMfaRequired value)? mfaRequired,
-    TResult Function(LoginPickMembership value)? pickMembership,
     required TResult orElse(),
   }) {
     if (session != null) {
@@ -623,7 +450,12 @@ abstract class _$$LoginMfaRequiredImplCopyWith<$Res> {
     $Res Function(_$LoginMfaRequiredImpl) then,
   ) = __$$LoginMfaRequiredImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({bool firstLogin, String mfaToken});
+  $Res call({
+    bool firstLogin,
+    String? enrollmentToken,
+    String? otpauthUrl,
+    String? secret,
+  });
 }
 
 /// @nodoc
@@ -639,17 +471,30 @@ class __$$LoginMfaRequiredImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? firstLogin = null, Object? mfaToken = null}) {
+  $Res call({
+    Object? firstLogin = null,
+    Object? enrollmentToken = freezed,
+    Object? otpauthUrl = freezed,
+    Object? secret = freezed,
+  }) {
     return _then(
       _$LoginMfaRequiredImpl(
         firstLogin: null == firstLogin
             ? _value.firstLogin
             : firstLogin // ignore: cast_nullable_to_non_nullable
                   as bool,
-        mfaToken: null == mfaToken
-            ? _value.mfaToken
-            : mfaToken // ignore: cast_nullable_to_non_nullable
-                  as String,
+        enrollmentToken: freezed == enrollmentToken
+            ? _value.enrollmentToken
+            : enrollmentToken // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        otpauthUrl: freezed == otpauthUrl
+            ? _value.otpauthUrl
+            : otpauthUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        secret: freezed == secret
+            ? _value.secret
+            : secret // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -660,17 +505,23 @@ class __$$LoginMfaRequiredImplCopyWithImpl<$Res>
 class _$LoginMfaRequiredImpl implements LoginMfaRequired {
   const _$LoginMfaRequiredImpl({
     required this.firstLogin,
-    required this.mfaToken,
+    this.enrollmentToken,
+    this.otpauthUrl,
+    this.secret,
   });
 
   @override
   final bool firstLogin;
   @override
-  final String mfaToken;
+  final String? enrollmentToken;
+  @override
+  final String? otpauthUrl;
+  @override
+  final String? secret;
 
   @override
   String toString() {
-    return 'LoginResult.mfaRequired(firstLogin: $firstLogin, mfaToken: $mfaToken)';
+    return 'LoginResult.mfaRequired(firstLogin: $firstLogin, enrollmentToken: $enrollmentToken, otpauthUrl: $otpauthUrl, secret: $secret)';
   }
 
   @override
@@ -680,12 +531,16 @@ class _$LoginMfaRequiredImpl implements LoginMfaRequired {
             other is _$LoginMfaRequiredImpl &&
             (identical(other.firstLogin, firstLogin) ||
                 other.firstLogin == firstLogin) &&
-            (identical(other.mfaToken, mfaToken) ||
-                other.mfaToken == mfaToken));
+            (identical(other.enrollmentToken, enrollmentToken) ||
+                other.enrollmentToken == enrollmentToken) &&
+            (identical(other.otpauthUrl, otpauthUrl) ||
+                other.otpauthUrl == otpauthUrl) &&
+            (identical(other.secret, secret) || other.secret == secret));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, firstLogin, mfaToken);
+  int get hashCode =>
+      Object.hash(runtimeType, firstLogin, enrollmentToken, otpauthUrl, secret);
 
   /// Create a copy of LoginResult
   /// with the given fields replaced by the non-null parameter values.
@@ -702,32 +557,47 @@ class _$LoginMfaRequiredImpl implements LoginMfaRequired {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(AuthSession session) session,
-    required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
-    required TResult Function(List<Membership> memberships) pickMembership,
+    required TResult Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )
+    mfaRequired,
   }) {
-    return mfaRequired(firstLogin, mfaToken);
+    return mfaRequired(firstLogin, enrollmentToken, otpauthUrl, secret);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(AuthSession session)? session,
-    TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
-    TResult? Function(List<Membership> memberships)? pickMembership,
+    TResult? Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )?
+    mfaRequired,
   }) {
-    return mfaRequired?.call(firstLogin, mfaToken);
+    return mfaRequired?.call(firstLogin, enrollmentToken, otpauthUrl, secret);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(AuthSession session)? session,
-    TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
-    TResult Function(List<Membership> memberships)? pickMembership,
+    TResult Function(
+      bool firstLogin,
+      String? enrollmentToken,
+      String? otpauthUrl,
+      String? secret,
+    )?
+    mfaRequired,
     required TResult orElse(),
   }) {
     if (mfaRequired != null) {
-      return mfaRequired(firstLogin, mfaToken);
+      return mfaRequired(firstLogin, enrollmentToken, otpauthUrl, secret);
     }
     return orElse();
   }
@@ -737,7 +607,6 @@ class _$LoginMfaRequiredImpl implements LoginMfaRequired {
   TResult map<TResult extends Object?>({
     required TResult Function(LoginSession value) session,
     required TResult Function(LoginMfaRequired value) mfaRequired,
-    required TResult Function(LoginPickMembership value) pickMembership,
   }) {
     return mfaRequired(this);
   }
@@ -747,7 +616,6 @@ class _$LoginMfaRequiredImpl implements LoginMfaRequired {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(LoginSession value)? session,
     TResult? Function(LoginMfaRequired value)? mfaRequired,
-    TResult? Function(LoginPickMembership value)? pickMembership,
   }) {
     return mfaRequired?.call(this);
   }
@@ -757,7 +625,6 @@ class _$LoginMfaRequiredImpl implements LoginMfaRequired {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(LoginSession value)? session,
     TResult Function(LoginMfaRequired value)? mfaRequired,
-    TResult Function(LoginPickMembership value)? pickMembership,
     required TResult orElse(),
   }) {
     if (mfaRequired != null) {
@@ -770,179 +637,19 @@ class _$LoginMfaRequiredImpl implements LoginMfaRequired {
 abstract class LoginMfaRequired implements LoginResult {
   const factory LoginMfaRequired({
     required final bool firstLogin,
-    required final String mfaToken,
+    final String? enrollmentToken,
+    final String? otpauthUrl,
+    final String? secret,
   }) = _$LoginMfaRequiredImpl;
 
   bool get firstLogin;
-  String get mfaToken;
+  String? get enrollmentToken;
+  String? get otpauthUrl;
+  String? get secret;
 
   /// Create a copy of LoginResult
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LoginMfaRequiredImplCopyWith<_$LoginMfaRequiredImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class _$$LoginPickMembershipImplCopyWith<$Res> {
-  factory _$$LoginPickMembershipImplCopyWith(
-    _$LoginPickMembershipImpl value,
-    $Res Function(_$LoginPickMembershipImpl) then,
-  ) = __$$LoginPickMembershipImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({List<Membership> memberships});
-}
-
-/// @nodoc
-class __$$LoginPickMembershipImplCopyWithImpl<$Res>
-    extends _$LoginResultCopyWithImpl<$Res, _$LoginPickMembershipImpl>
-    implements _$$LoginPickMembershipImplCopyWith<$Res> {
-  __$$LoginPickMembershipImplCopyWithImpl(
-    _$LoginPickMembershipImpl _value,
-    $Res Function(_$LoginPickMembershipImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of LoginResult
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? memberships = null}) {
-    return _then(
-      _$LoginPickMembershipImpl(
-        null == memberships
-            ? _value._memberships
-            : memberships // ignore: cast_nullable_to_non_nullable
-                  as List<Membership>,
-      ),
-    );
-  }
-}
-
-/// @nodoc
-
-class _$LoginPickMembershipImpl implements LoginPickMembership {
-  const _$LoginPickMembershipImpl(final List<Membership> memberships)
-    : _memberships = memberships;
-
-  final List<Membership> _memberships;
-  @override
-  List<Membership> get memberships {
-    if (_memberships is EqualUnmodifiableListView) return _memberships;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_memberships);
-  }
-
-  @override
-  String toString() {
-    return 'LoginResult.pickMembership(memberships: $memberships)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LoginPickMembershipImpl &&
-            const DeepCollectionEquality().equals(
-              other._memberships,
-              _memberships,
-            ));
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    const DeepCollectionEquality().hash(_memberships),
-  );
-
-  /// Create a copy of LoginResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LoginPickMembershipImplCopyWith<_$LoginPickMembershipImpl> get copyWith =>
-      __$$LoginPickMembershipImplCopyWithImpl<_$LoginPickMembershipImpl>(
-        this,
-        _$identity,
-      );
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(AuthSession session) session,
-    required TResult Function(bool firstLogin, String mfaToken) mfaRequired,
-    required TResult Function(List<Membership> memberships) pickMembership,
-  }) {
-    return pickMembership(memberships);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(AuthSession session)? session,
-    TResult? Function(bool firstLogin, String mfaToken)? mfaRequired,
-    TResult? Function(List<Membership> memberships)? pickMembership,
-  }) {
-    return pickMembership?.call(memberships);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(AuthSession session)? session,
-    TResult Function(bool firstLogin, String mfaToken)? mfaRequired,
-    TResult Function(List<Membership> memberships)? pickMembership,
-    required TResult orElse(),
-  }) {
-    if (pickMembership != null) {
-      return pickMembership(memberships);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(LoginSession value) session,
-    required TResult Function(LoginMfaRequired value) mfaRequired,
-    required TResult Function(LoginPickMembership value) pickMembership,
-  }) {
-    return pickMembership(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(LoginSession value)? session,
-    TResult? Function(LoginMfaRequired value)? mfaRequired,
-    TResult? Function(LoginPickMembership value)? pickMembership,
-  }) {
-    return pickMembership?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(LoginSession value)? session,
-    TResult Function(LoginMfaRequired value)? mfaRequired,
-    TResult Function(LoginPickMembership value)? pickMembership,
-    required TResult orElse(),
-  }) {
-    if (pickMembership != null) {
-      return pickMembership(this);
-    }
-    return orElse();
-  }
-}
-
-abstract class LoginPickMembership implements LoginResult {
-  const factory LoginPickMembership(final List<Membership> memberships) =
-      _$LoginPickMembershipImpl;
-
-  List<Membership> get memberships;
-
-  /// Create a copy of LoginResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LoginPickMembershipImplCopyWith<_$LoginPickMembershipImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

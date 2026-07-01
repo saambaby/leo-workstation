@@ -1,0 +1,62 @@
+apiVersion: pineapple/v1
+kind: TaskGraph
+metadata:
+  project: leo-workstation
+  phase: v0.0.1-alpha.1-auth-live
+  status: approved
+  created: 2026-06-30
+
+waves:
+  - id: W1
+    name: "Contract core"
+    gate: manual
+  - id: W2
+    name: "View + dependency"
+    gate: auto            # fires when W1 clears (single-consumer chain)
+
+tasks:
+  - id: AL-T-01
+    issue: 13
+    title: "Live auth contract: repository/state-machine rewrite + router alignment + deletions"
+    wave: W1
+    feature_spec: .pineapple/features/auth.md
+    area: features/auth
+    surface: frontend
+    model: high
+    depends_on: []
+    verification: auto
+    human_admin: false
+    acceptance_criteria:
+      - "Login persists tokens and redirects to the role home with no manual navigation; a 0-membership interpreter gets a tenant-less token (role: interpreter, no tenant_id) and lands on /idle (INV-CLIENT-AUTH-3)."
+      - "Privileged + MFA-unsatisfied login yields enrollmentRequired (first time, carries otpauthUrl/secret/enrollmentToken) or mfaRequired (enrolled); submitMfa resubmits the held email+password+totp_code to /auth/login; no /auth/mfa path and no mfa_token exist anywhere."
+      - "The held password is never written to disk/secure storage/logs and is cleared from notifier state immediately after the MFA round-trip resolves or on navigating away (INV-CLIENT-PHI-1)."
+      - "Refresh token in flutter_secure_storage, access token in memory; AuthNotifier is the sole writer of currentAccessTokenProvider; logout clears both; cold start restores or routes to /login (INV-CLIENT-AUTH-1/-4)."
+      - "acceptInvite sends token+password+nested consent {tos, privacy, baa_ack}; the repository never issues the call without all three present."
+      - "No code path references listMemberships/selectMembership/switchTenant/pickMembership//select-workspace; tenant_picker_screen.dart and workspace_switcher.dart are deleted; WorkspaceAvatarButton mount removed from role_shell_screen.dart."
+      - "redirect.dart's switch is exhaustive over the narrowed AuthState (no AuthPickMembership arm); no redirect loop across any (state x location) pair; existing test/core/router/redirect_test.dart passes."
+      - "INV-CLIENT-STATE-2 (arm list) and INV-CLIENT-ROUTE-2 (drop the /select-workspace clause) amended to match the narrowed contract."
+    notes: "Foundation: owns the phase integration contract (narrowed AuthState union + live wire shapes: login totp_code resubmit, no /auth/mfa, consent on invite). Must merge before AL-T-02. Spans features/auth + core/router because it edits the shared AuthState/redirect contract -> routes coordinator-side on main, not a worker worktree (repo is coordinator-side-serial). Verify: build_runner (freezed regen) + flutter analyze clean + redirect_test passes. No new tests (INV-CLIENT-TEST-1); the one existing test touched is repaired, not extended."
+
+  - id: AL-T-02
+    issue: 14
+    title: "MFA-enrollment QR + invite consent UI + qr_flutter dependency"
+    wave: W2
+    feature_spec: .pineapple/features/auth.md
+    area: features/auth
+    surface: frontend
+    model: standard
+    depends_on: [AL-T-01]
+    verification: manual
+    human_admin: false
+    acceptance_criteria:
+      - "MfaEnrollScreen displays a real scannable QR encoding the server otpauth_url (via authUiProvider.otpauthUrl) plus the manual secret; the hardcoded backup-codes grid and the _QrPlaceholder checkerboard are deleted."
+      - "InviteAcceptScreen renders three required consent checkboxes (tos, privacy, baa_ack); submit stays disabled until all are checked; the wired acceptInvite carries them."
+      - "New user-facing copy goes through intl with no string literals in widgets (INV-CLIENT-I18N-1); semantics on the checkboxes and QR affordance (INV-CLIENT-A11Y-1)."
+      - "flutter analyze clean with qr_flutter added."
+    notes: "Branches off main after AL-T-01 merges; consumes the new contract + authUiProvider.otpauthUrl. Adds qr_flutter to pubspec (D7, locked at taskgraph approval 2026-06-30). Manual verify: scan the enrollment QR with a real authenticator and confirm enrollment completes; confirm invite-accept blocks submit until all three consents checked."
+
+coordinator:
+  max_concurrent: 1
+  stuck_threshold_seconds: 5400
+  worktree_strategy: per-task
+  completion_strategy: review-gate

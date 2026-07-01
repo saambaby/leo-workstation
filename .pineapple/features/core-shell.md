@@ -46,6 +46,7 @@ entitled to, routes are absent (gating enforced by `router`, derived here).
 5. `dioProvider` returns a `Dio` (baseUrl from config) whose request interceptor injects `Authorization: Bearer <access>` from the in-memory token seam, and whose `badCertificateCallback` enforces SHA-256 pin(s) with a rotation list; a pin mismatch fails the request (`INV-CLIENT-NET-1`).
 6. `tokenStorageProvider` reads/writes/clears the refresh token in `flutter_secure_storage` only; it is never written to logs/metrics (`INV-CLIENT-AUTH-1`, `INV-CLIENT-PHI-1`).
 7. The shared chrome renders the header (tenant chip + avatar mount) and exposes the rail-footer "Admin dashboard" external link **only** for `lsp_admin`, hidden until `webAdminBaseUrl` is set.
+8. **macOS window frame (FM-CLIENT-5):** on macOS, the system title bar is hidden; `DesktopWorkstationShell` (root `ShellRoute`) reserves traffic-light inset only — **not** a global back control. Auth/onboarding back navigation uses in-screen links (“Back to sign in”), never toolbar `pop()` (FM-CLIENT-4). `WorkstationScaffold` is the **logged-in** rail/header layout and is unrelated to the macOS window frame.
 
 ## Wire-format contract
 

@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:leo_workstation/core/auth/leo_roles.dart';
 import 'package:leo_workstation/core/device/device_class.dart';
 import 'package:leo_workstation/core/router/redirect.dart';
@@ -13,6 +12,17 @@ void main() {
           const AuthState.unauthenticated(),
           DeviceClass.desktop,
           '/login',
+        ),
+        isNull,
+      );
+    });
+
+    test('unauthenticated on signup route stays', () {
+      expect(
+        authRedirect(
+          const AuthState.unauthenticated(),
+          DeviceClass.desktop,
+          '/signup',
         ),
         isNull,
       );
@@ -32,25 +42,11 @@ void main() {
     test('mfaRequired first login goes to enroll', () {
       expect(
         authRedirect(
-          const AuthState.mfaRequired(
-            firstLogin: true,
-            mfaToken: 't',
-          ),
+          const AuthState.mfaRequired(firstLogin: true),
           DeviceClass.desktop,
           '/login',
         ),
         '/mfa/enroll',
-      );
-    });
-
-    test('pickMembership traps on select-workspace', () {
-      expect(
-        authRedirect(
-          const AuthState.pickMembership([]),
-          DeviceClass.desktop,
-          '/select-workspace',
-        ),
-        isNull,
       );
     });
 
@@ -92,12 +88,15 @@ void main() {
     const locations = [
       '/',
       '/login',
+      '/signup',
+      '/signup/details',
+      '/verify-email',
       '/forgot-password',
+      '/forgot-password/verify',
       '/reset-password',
       '/invite/accept',
       '/mfa',
       '/mfa/enroll',
-      '/select-workspace',
       '/web-handoff',
       '/blocked-surface',
       '/idle',
@@ -117,9 +116,8 @@ void main() {
       const AuthState.unauthenticated(),
       const AuthState.loading(),
       const AuthState.error(message: 'err'),
-      const AuthState.mfaRequired(firstLogin: false, mfaToken: 't'),
-      const AuthState.mfaRequired(firstLogin: true, mfaToken: 't'),
-      const AuthState.pickMembership([]),
+      const AuthState.mfaRequired(firstLogin: false),
+      const AuthState.mfaRequired(firstLogin: true),
       const AuthState.authenticated(role: LeoRoles.interpreter),
       const AuthState.authenticated(
         role: LeoRoles.interpreter,
@@ -133,13 +131,10 @@ void main() {
     for (final auth in states) {
       for (final device in devices) {
         for (final loc in locations) {
-          test(
-            'no loop: ${auth.runtimeType} × ${device.name} × $loc',
-            () {
-              final settled = resolveRedirectChain(auth, device, loc);
-              expect(authRedirect(auth, device, settled), isNull);
-            },
-          );
+          test('no loop: ${auth.runtimeType} × ${device.name} × $loc', () {
+            final settled = resolveRedirectChain(auth, device, loc);
+            expect(authRedirect(auth, device, settled), isNull);
+          });
         }
       }
     }

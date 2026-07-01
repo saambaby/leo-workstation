@@ -3,13 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../onboarding/l10n/onboarding_strings.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
-import '../state/auth_state.dart';
+import '../providers/auth_ui_provider.dart';
+import '../widgets/auth_form_shell.dart';
 import '../widgets/auth_screen_layout.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+    this.passwordResetSuccess = false,
+    this.emailVerifiedSuccess = false,
+  });
+
+  final bool passwordResetSuccess;
+  final bool emailVerifiedSuccess;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -36,92 +45,92 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authNotifierProvider);
-    final loading = auth is AuthLoading;
-    final error = auth is AuthError ? auth.message : null;
+    final ui = ref.watch(authUiProvider);
 
-    return AuthScreenLayout(
-      title: AuthStrings.signIn,
+    return AuthFormShell(
+      subtitle: AuthStrings.loginSub,
+      error: ui.errorMessage,
+      header: [
+        if (widget.passwordResetSuccess)
+          LeoNote(
+            variant: LeoNoteVariant.info,
+            icon: CupertinoIcons.checkmark_circle,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: const Text(AuthStrings.resetSuccessLoginNote),
+          ),
+        if (widget.emailVerifiedSuccess)
+          LeoNote(
+            variant: LeoNoteVariant.info,
+            icon: CupertinoIcons.checkmark_circle,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: const Text(OnboardingStrings.verifiedLoginNote),
+          ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (error != null) ...[
-            AuthErrorBanner(message: error),
-            const SizedBox(height: 16),
-          ],
-          AuthTextField(
+          LeoTextField(
             label: AuthStrings.email,
             controller: _email,
             keyboardType: TextInputType.emailAddress,
+            bottomSpacing: 14,
           ),
-          const SizedBox(height: 16),
-          AuthTextField(
+          LeoTextField(
             label: AuthStrings.password,
             controller: _password,
             obscureText: true,
             textInputAction: TextInputAction.done,
+            bottomSpacing: 6,
           ),
-          const SizedBox(height: 12),
-          Semantics(
-            checked: _rememberDevice,
-            label: AuthStrings.rememberDevice,
-            child: CupertinoButton(
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-              alignment: Alignment.centerLeft,
-              onPressed: () => setState(() => _rememberDevice = !_rememberDevice),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                LeoCheckbox(
+                  label: AuthStrings.rememberDevice,
+                  value: _rememberDevice,
+                  onChanged: (v) => setState(() => _rememberDevice = v),
+                ),
+                LeoLink(
+                  label: AuthStrings.forgotPassword,
+                  onPressed: () => context.push('/forgot-password'),
+                ),
+              ],
+            ),
+          ),
+          LeoButton(
+            label: ui.isLoading ? AuthStrings.signingIn : AuthStrings.signIn,
+            fullWidth: true,
+            enabled: !ui.isLoading,
+            onPressed: _submit,
+          ),
+          LeoNote(
+            variant: LeoNoteVariant.warn,
+            icon: CupertinoIcons.lock,
+            margin: const EdgeInsets.only(top: 14),
+            child: Text.rich(
+              TextSpan(
                 children: [
-                  Icon(
-                    _rememberDevice
-                        ? CupertinoIcons.checkmark_square_fill
-                        : CupertinoIcons.square,
-                    size: 18,
-                    color: LeoColors.black100,
+                  TextSpan(text: AuthStrings.mfaPrivilegedWarning),
+                  TextSpan(
+                    text: AuthStrings.mfaPrivilegedWarningBold,
+                    style: LeoTypography.note.copyWith(
+                      color: LeoColors.signalWarn,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    AuthStrings.rememberDevice,
-                    style: TextStyle(fontSize: 13, color: LeoColors.black100),
-                  ),
+                  TextSpan(text: AuthStrings.mfaPrivilegedWarningEnd),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          Semantics(
-            button: true,
-            label: AuthStrings.signIn,
-            child: CupertinoButton.filled(
-              onPressed: loading ? null : _submit,
-              child: Text(loading ? AuthStrings.signingIn : AuthStrings.signIn),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Semantics(
-            button: true,
-            label: AuthStrings.forgotPassword,
-            child: CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: () => context.push('/forgot-password'),
-              child: const Text(
-                AuthStrings.forgotPassword,
-                style: TextStyle(fontSize: 13, color: LeoColors.black100),
-              ),
-            ),
-          ),
-          Semantics(
-            button: true,
+          const LeoDivider(AuthStrings.newToLeo),
+          LeoButton(
             label: AuthStrings.createAccount,
-            child: CupertinoButton(
-              padding: const EdgeInsets.only(top: 8),
-              onPressed: () => context.push('/signup'),
-              child: const Text(
-                AuthStrings.createAccount,
-                style: TextStyle(fontSize: 13, color: LeoColors.signalInfo),
-              ),
-            ),
+            variant: LeoButtonVariant.ghost,
+            fullWidth: true,
+            onPressed: () => context.push('/signup'),
           ),
         ],
       ),

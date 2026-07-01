@@ -20,7 +20,7 @@ specs drafted ✅.
 | Phase | Tag | Status | Doc |
 |---|---|---|---|
 | P0 | — | ✅ done (scaffold) | [`phase-0-scaffold.md`](phase-0-scaffold.md) |
-| P1 | `v0.0.1-alpha.1` | 🎯 next — specs ✅ (core-shell, auth, router) | [`v0.0.1-alpha.1.md`](v0.0.1-alpha.1.md) |
+| P1 | `v0.0.1-alpha.1` | 🎯 next — specs ✅ (core-shell, auth, router) | [`v0.0.1-alpha.1.md`](v0.0.1-alpha.1.md) · COE: [`v0.0.1-alpha.1-coe.md`](v0.0.1-alpha.1-coe.md) |
 | — | `v0.0.1-alpha.2/3` | n/a (no client release — backend-only) | release-plan |
 | — | `v0.0.1-alpha.4` | folded into P1 auth contract | release-plan / `features/auth.md` |
 | — | `v0.0.1-alpha.5` | minimal pre-P2 (`platform_admin`, affiliations if needed) | release-plan |
