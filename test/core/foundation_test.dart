@@ -19,9 +19,8 @@ void main() {
   });
 
   group('AppConfig defaults', () {
-    test('useMocks defaults true; webAdminBaseUrl empty; no pins', () {
+    test('webAdminBaseUrl empty; no pins; apiBaseUrl set', () {
       final c = AppConfig.fromEnvironment();
-      expect(c.useMocks, isTrue);
       expect(c.webAdminBaseUrl, isEmpty);
       expect(c.certPinsSha256, isEmpty);
       expect(c.apiBaseUrl, isNotEmpty);
@@ -32,22 +31,23 @@ void main() {
     final der = utf8.encode('fake-cert-bytes');
     final fp = base64.encode(sha256.convert(der).bytes);
 
-    test('no pins + mocks => allowed (dev escape, never a release bypass)', () {
-      const cfg = AppConfig(
-        apiBaseUrl: 'x',
-        realtimeWsUrl: 'x',
-        webAdminBaseUrl: '',
-        useMocks: true,
-      );
-      expect(pinMatches(der, cfg), isTrue);
-    });
+    test(
+      'no pins + debug build => allowed (dev escape, never a release bypass)',
+      () {
+        const cfg = AppConfig(
+          apiBaseUrl: 'x',
+          realtimeWsUrl: 'x',
+          webAdminBaseUrl: '',
+        );
+        expect(pinMatches(der, cfg), isTrue);
+      },
+    );
 
     test('pins configured => only the matching fingerprint is allowed', () {
       final cfg = AppConfig(
         apiBaseUrl: 'x',
         realtimeWsUrl: 'x',
         webAdminBaseUrl: '',
-        useMocks: true,
         certPinsSha256: [fp],
       );
       expect(pinMatches(der, cfg), isTrue);
