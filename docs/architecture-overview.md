@@ -19,8 +19,9 @@ Every feature is a vertical slice. Within a slice the layers map onto MVVM + rep
 | **View** | `presentation/screens/`, `presentation/widgets/` | Stateless/Consumer widgets — render state, dispatch intents. No logic. |
 | **ViewModel** | `presentation/notifiers/` | Riverpod `Notifier` (e.g. `AuthNotifier`, `IdleNotifier`) — holds no widgets; orchestrates repositories, emits state. |
 | **View state** | `presentation/state/` | `freezed` immutable state (union like `AuthState`, or `copyWith` struct like `IdleState`). |
-| **Model (domain)** | `domain/` | `freezed` + `json_serializable` models mirroring the backend (e.g. `AuthSession`, `idle_models`). |
-| **Repository** | `data/` | Plain classes over `dio` / secure storage (e.g. `AuthRepository`, `TokenStorage`, `InterpreterRepository`). The only layer that knows the wire. |
+| **Entity (domain)** | `domain/` | Feature entities (`AuthSession`, `SignupResult`). Add `fromJson`/`toJson` on the entity when the wire shape matches what notifiers/screens consume. UI-only structs (router `extra`, form drafts) stay plain. |
+| **DTO (wire)** | `data/dto/` | `freezed` + `json_serializable` request bodies for `dio`. Snake_case on the wire → camelCase fields via `@JsonKey`. Never imported from `presentation/`. |
+| **Repository** | `data/` | Plain classes over `dio` / secure storage. Calls `dto.toJson()` for requests and `Entity.fromJson()` for responses — **no private `_map*` helpers or inline `Map` literals**. |
 
 ```mermaid
 flowchart LR
@@ -35,31 +36,49 @@ flowchart LR
         R["Repository"]
         TS["TokenStorage"]
     end
-    subgraph model["Model — domain/"]
-        M["freezed + json models"]
+    subgraph entity["Entity — domain/"]
+        M["entities + fromJson where needed"]
+    end
+    subgraph dto["DTO — data/dto/"]
+        D["request bodies"]
     end
     SCR -->|ref.watch state| ST
     SCR -->|ref.read notifier .method| NOT
     NOT --> ST
     NOT -->|calls| R
+    R --> D
     R --> M
-    R -->|dio| API[("leo-api REST")]
+    D -->|toJson / fromJson| API[("leo-api REST")]
     R --> TS
     TS --> SS[("flutter_secure_storage")]
 ```
 
 > Dependencies flow **View → ViewModel → Repository → wire**. The View never touches a repository or `dio` directly; the Repository never imports Flutter. State is always immutable (`freezed`).
 
+### Wire serialization (DTO + entity)
+
+| Direction | Owner | Rule |
+|---|---|---|
+| **Request** (`dio.data`) | `data/dto/<feature>_dto.dart` | One `freezed` DTO per endpoint body; `toJson()` only. Factory helpers like `fromInput(domainInput)` live on the DTO when the entity shape differs. |
+| **Response** (matches domain) | `domain/<feature>_entities.dart` | `factory Entity.fromJson(Map<String, dynamic>)` on the existing class — do **not** duplicate a parallel wire type. Discriminated unions (e.g. `LoginResult`) use a custom `fromJson` factory. |
+| **Response** (differs from domain) | `data/dto/` + mapper in repository | Rare; map DTO → entity in the repository before returning. |
+
+**Never:** private `_mapFoo` methods, inline `{'snake_key': value}` maps in repositories, DTOs in `domain/` / `presentation/`, or `*_models.dart` filenames — use `*_entities.dart` for domain types.
+
+**Codegen:** `dart run build_runner build --delete-conflicting-outputs` after changing `freezed` / `json_serializable` types. Reference: `features/auth/`, `features/onboarding/`.
+
 ### Feature scaffold checklist (P2+)
 
 When adding a new slice under `lib/features/<name>/`:
 
-1. `presentation/state/<feature>_state.dart` — `freezed` union or struct (router contract arms are frozen once wired to `go_router`).
-2. `presentation/notifiers/<feature>_notifier.dart` — sole owner of async/business state for the slice.
-3. `presentation/providers/<feature>_ui_provider.dart` — derived UI helpers (`isLoading`, `errorMessage`, etc.) so screens do not pattern-match state on every build.
-4. Screens are `ConsumerWidget` unless they hold ephemeral `TextEditingController` / focus state.
-5. No `data/` imports in views; no repository calls from widgets — dispatch intents via `ref.read(<notifier>.notifier)`.
-6. `presentation/routes/<feature>_routes.dart` — exports `List<RouteBase>` (and path constants for the redirect table when the feature owns public routes). Composed in `core/router/app_router.dart`; redirect guard stays in `core/router/redirect.dart`.
+1. `domain/<feature>_entities.dart` — feature entities; `fromJson` when wire shape matches what notifiers consume.
+2. `data/dto/<feature>_dto.dart` — wire request DTOs (`toJson()`).
+3. `presentation/state/<feature>_state.dart` — `freezed` union or struct (router contract arms are frozen once wired to `go_router`).
+4. `presentation/notifiers/<feature>_notifier.dart` — sole owner of async/business state for the slice.
+5. `presentation/providers/<feature>_ui_provider.dart` — derived UI helpers (`isLoading`, `errorMessage`, etc.) so screens do not pattern-match state on every build.
+6. Screens are `ConsumerWidget` unless they hold ephemeral `TextEditingController` / focus state.
+7. No `data/` imports in views; no repository calls from widgets — dispatch intents via `ref.read(<notifier>.notifier)`.
+8. `presentation/routes/<feature>_routes.dart` — exports `List<RouteBase>` (and path constants for the redirect table when the feature owns public routes). Composed in `core/router/app_router.dart`; redirect guard stays in `core/router/redirect.dart`.
 
 Reference implementation: `features/auth/` (`AuthNotifier`, `AuthUiState`, `AuthFormShell`).
 
@@ -85,7 +104,8 @@ lib/
   features/
     auth/
       data/        auth_repository.dart, token_storage.dart
-      domain/      auth_models.dart            (+ .freezed/.g)
+                   dto/auth_dto.dart         (+ .freezed/.g)
+      domain/      auth_entities.dart        (+ .freezed)
       presentation/
         routes/    auth_routes.dart            # auth GoRoute tree + path constants
         screens/   login_screen.dart
@@ -93,7 +113,7 @@ lib/
         state/     auth_state.dart             # freezed union
     idle/
       data/        interpreter_repository.dart
-      domain/      idle_models.dart
+      domain/      idle_entities.dart
       presentation/{screens,notifiers,state,widgets}
     <feature>/ …  # session, requests, tasks, dispatch, customer/call (added per release-plan)
     # NOT in this repo: admin reports, user CRUD, rate cards — see leo-web
@@ -284,7 +304,7 @@ flowchart LR
 | Routing | `go_router` |
 | HTTP | `dio` (+ auth/refresh/cert-pin interceptors) |
 | Realtime | `web_socket_channel` (added with the session feature) |
-| Models / serialization | `freezed` + `json_serializable` |
+| Entities / serialization | `freezed` + `json_serializable` |
 | Secure storage | `flutter_secure_storage` |
 | Video media | Vonage Video Flutter SDK (added with the session feature) |
 | Icons / theme | `cupertino_icons` |

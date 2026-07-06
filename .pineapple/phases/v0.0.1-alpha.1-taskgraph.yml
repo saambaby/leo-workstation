@@ -31,9 +31,9 @@ tasks:
     human_admin: false
     acceptance_criteria:
       - "main() wraps the app in ProviderScope; LeoApp builds CupertinoApp.router; flutter analyze clean; app boots."
-      - "appConfigProvider exposes apiBaseUrl/realtimeWsUrl/webAdminBaseUrl/useMocks from --dart-define; useMocks defaults true."
+      - "appConfigProvider exposes apiBaseUrl/realtimeWsUrl/webAdminBaseUrl from .env (flutter_dotenv)."
       - "dioProvider baseUrl from config; interceptor injects Authorization: Bearer <token> from currentAccessTokenProvider when non-null, omits when null."
-      - "badCertificateCallback returns true only on SHA-256 pin match (rotation list); any dev bypass is gated to debug/useMocks and never enabled in release (INV-CLIENT-NET-1)."
+      - "badCertificateCallback returns true only on SHA-256 pin match (rotation list); any dev bypass is gated to debug builds (kDebugMode) when no pins are configured and never enabled in release (INV-CLIENT-NET-1)."
       - "currentAccessTokenProvider defined here (in-memory, default null); core-shell never writes it (INV-CLIENT-AUTH-4)."
       - "tokenStorageProvider reads/writes/clears the refresh token in flutter_secure_storage only; never logged (INV-CLIENT-AUTH-1, -PHI-1)."
       - "deviceClassProvider derives {desktop,tablet,smartphone} from MediaQuery (documented breakpoints); updates on resize (INV-CLIENT-DEVICE-1)."
@@ -59,7 +59,7 @@ tasks:
 
   - id: P1-T-03
     issue: 4
-    title: "auth core: AuthRepository (+mock), AuthState union, AuthNotifier state machine, session restore, token-holder writes"
+    title: "auth core: AuthRepository, AuthState union, AuthNotifier state machine, session restore, token-holder writes"
     wave: W2
     feature_spec: .pineapple/features/auth.md
     area: features/auth
@@ -74,7 +74,7 @@ tasks:
       - "Privileged role -> mfaRequired on login and switch-tenant; first login routes through enroll; non-privileged never challenged."
       - "switchTenant re-mints the active context; non-held tenant -> 404 handled gracefully."
       - "AuthNotifier is the sole writer of currentAccessTokenProvider (set on mint/refresh/switch; cleared on logout) (INV-CLIENT-AUTH-4)."
-      - "AuthRepository maps snake_case -> camelCase AuthSession with coercions (exp seconds, tenant_id optional); MockAuthRepository backs useMocks=true."
+      - "AuthRepository maps snake_case -> camelCase AuthSession with coercions (exp seconds, tenant_id optional); ApiAuthRepository calls live endpoints."
       - "build() restores session from secure storage on cold start (or routes to /login if absent/expired)."
     notes: "Owns the AuthState contract consumed by router (T-05). Decodes JWT claims for routing/UX only; server remains source of truth."
 

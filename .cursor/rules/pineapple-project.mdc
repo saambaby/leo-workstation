@@ -29,6 +29,13 @@ Flutter ops client — interpreter, customer, dispatcher workstations in one app
 
 Reference slice: `lib/features/auth/`.
 
+## Data layer (DTO + entity)
+
+- **Request bodies** → `data/dto/<feature>_dto.dart` (`freezed` + `json_serializable`, `toJson()` for `dio.data`).
+- **Domain types** → `domain/<feature>_entities.dart` (not `*_models.dart`). Add `fromJson` on entities when wire shape matches what notifiers consume.
+- **Repositories** call `dto.toJson()` / `Entity.fromJson()` — never private `_map*` helpers or inline `Map<String, dynamic>` wire literals.
+- **No DTOs** in `domain/` or `presentation/`; **no cross-feature `data/` imports** (`INV-CLIENT-ARCH-2`).
+
 ## Verification (this repo)
 
 - Run `flutter analyze` on edited files.
@@ -42,3 +49,5 @@ Reference slice: `lib/features/auth/`.
 - Persist PHI on device
 - Introduce private async flags or duplicate loading/error extraction in views
 - Call repositories from `presentation/screens` or `presentation/widgets`
+- Parse API JSON with private `_map*` methods or inline wire `Map` literals in repositories — use `data/dto/` + entity `fromJson`/`toJson` instead (arch §1 wire serialization)
+- Name domain files `*_models.dart` — use `domain/<feature>_entities.dart` for feature entities

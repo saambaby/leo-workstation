@@ -299,24 +299,4 @@ Target `lib/` tree and cross-feature rules: [`architecture-overview.md`](./archi
 
 ---
 
-## Mock strategy
-
-Until the client integrates each `../leo-api` endpoint:
-
-```dart
-// core/config/app_config.dart
-const useMocks = bool.fromEnvironment('USE_MOCKS', defaultValue: true);
-```
-
-| Feature | Mock enables |
-|---|---|
-| auth | UI dev without backend (incl. multi-membership picker fixtures) |
-| session + idle | Vonage UI with fake tokens |
-| dispatch | Queue UI with fixture sessions |
-| call | Customer flow without `POST /sessions` |
-
-Switch off mocks per integration milestone.
-
----
-
 *Companion: [`client-map.md`](./client-map.md) · [`architecture-overview.md`](./architecture-overview.md) · [`product-spec.md`](./product-spec.md) · [`.pineapple/features/INDEX.md`](../.pineapple/features/INDEX.md) · [`release-checklists.md`](./release-checklists.md).*

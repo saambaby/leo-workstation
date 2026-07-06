@@ -150,8 +150,7 @@ Full product targets: [`product-spec.md`](./product-spec.md) §4 (client) and pl
 
 1. **Contract-first** — OpenAPI + WSS events from `leo-api` before deep UI.
 2. **No duplicate admin UI** — reports/users/rates once in `leo-web`.
-3. **Repository mocks** — `Mock*Repository` until endpoints land.
-4. **Same phase tags** — tag `v0.0.1` when this repo’s DoD passes ([`release-checklists.md`](./release-checklists.md)).
+3. **Same phase tags** — tag `v0.0.1` when this repo’s DoD passes ([`release-checklists.md`](./release-checklists.md)).
 
 ---
 

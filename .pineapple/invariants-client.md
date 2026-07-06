@@ -20,6 +20,9 @@ Every feature is a vertical slice: **View → ViewModel (Riverpod `Notifier`) �
 ### INV-CLIENT-ARCH-2 — No cross-slice data coupling
 A feature slice never imports another feature's `data/` layer. Cross-feature reads go through the other feature's notifier provider (`ref.read`). (arch §2, §11)
 
+### INV-CLIENT-SERIAL-1 — DTOs in `data/`, entity `fromJson` for responses
+Wire serialization is explicit and typed. **Request** bodies are `freezed` DTOs under `data/dto/` with `toJson()`. **Responses** that match domain shape use `factory Entity.fromJson` on the existing `domain/<feature>_entities.dart` class — no duplicate wire types, no private `_map*` parsers, no inline `{'snake_key': …}` maps in repositories, no `*_models.dart` filenames. Discriminated API responses (e.g. login MFA vs session) use a custom `fromJson` on the domain union. DTOs never live in `domain/` or `presentation/`. (arch §1 wire serialization; reference: `features/auth/`, `features/onboarding/`)
+
 ### INV-CLIENT-STATE-1 — Immutable state, navigation is a pure function of state
 View state is immutable (`freezed`). `go_router`'s `redirect` is keyed on auth state via `refreshListenable`; there is no imperative navigation on login/logout. (arch §3, §5)
 

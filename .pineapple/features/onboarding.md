@@ -58,7 +58,8 @@ get a minimal profile step, then their role home.
 - **Catalog (read-only, global):** `GET /catalog/languages`, `/catalog/certifications` — `is_signed`/`is_active` are JSON **booleans**; `code` is a BCP-47-style string; client never sets ids.
 - **Invitations:** `POST /invitations { email, role }` (`customer_user`|`customer_admin`).
 - **Interpreter profile + cert proof upload** are backend `interpreter-profiles` surface (alpha.5/P2) — likely S3 presigned upload; **confirm availability** (Open questions).
-- **Consent** is append-only server-side (backend `INV-CONSENT-1`); the client submits booleans only. Transformation owner: `OnboardingRepository`/`AuthRepository` (snake_case→camelCase `freezed`), the only wire-aware layer (`INV-CLIENT-ARCH-1`).
+- **Consent** is append-only server-side (backend `INV-CONSENT-1`); the client submits booleans only.
+- **Transformation owner:** `OnboardingRepository`/`AuthRepository` (snake_case→camelCase entities/DTOs via `@JsonKey`), the only wire-aware layer (`INV-CLIENT-ARCH-1`).
 
 ## Key decisions (with rejected alternatives)
 

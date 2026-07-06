@@ -34,8 +34,8 @@ lib/
     theme/     app_theme.dart            # Cupertino light/dark/night
     providers/ auth_refresh_listenable.dart
   features/<name>/            # one vertical slice each:
-    data/                     # repositories, token storage (only layer that knows the wire)
-    domain/                   # freezed + json models
+    data/                     # repositories, token storage, dto/ (wire request bodies)
+    domain/                   # <feature>_entities.dart + fromJson where needed
     presentation/{routes,screens,widgets,notifiers,state}
 ```
 
