@@ -27,13 +27,16 @@ lib/
   core/
     config/    app_config.dart          # apiBaseUrl, realtimeWsUrl (env-scoped)
     network/   dio_provider.dart         # Dio + Bearer interceptor (+ cert pin)
-    router/    app_router.dart           # go_router + auth redirect guard
+    router/    app_router.dart           # composition root: routerProvider + ShellRoute
+               device_class_scope.dart   # DeviceClassScope wrapper for route builders
+               role_home_routes.dart     # P1 role-home placeholders
+               redirect.dart             # pure auth redirect guard
     theme/     app_theme.dart            # Cupertino light/dark/night
     providers/ auth_refresh_listenable.dart
   features/<name>/            # one vertical slice each:
     data/                     # repositories, token storage (only layer that knows the wire)
     domain/                   # freezed + json models
-    presentation/{screens,widgets,notifiers,state}
+    presentation/{routes,screens,widgets,notifiers,state}
 ```
 
 Per-feature targets and backend deps: architecture-overview §11.

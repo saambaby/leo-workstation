@@ -1,31 +1,19 @@
 import '../../core/auth/leo_roles.dart';
 import '../../core/device/device_class.dart';
+import '../../features/auth/presentation/routes/auth_routes.dart';
 import '../../features/auth/presentation/state/auth_state.dart';
+import '../../features/onboarding/presentation/routes/onboarding_routes.dart';
 
 /// Public routes reachable while signed out.
 const publicRoutes = {
-  '/login',
-  '/signup',
-  '/signup/details',
-  '/verify-email',
-  '/forgot-password',
-  '/forgot-password/verify',
-  '/reset-password',
-  '/invite/accept',
+  ...authPublicRoutes,
+  ...onboardingPublicRoutes,
 };
 
 /// Auth-transition + public auth screens (error state may stay here).
 const authFlowRoutes = {
-  '/login',
-  '/signup',
-  '/signup/details',
-  '/verify-email',
-  '/forgot-password',
-  '/forgot-password/verify',
-  '/reset-password',
-  '/invite/accept',
-  '/mfa',
-  '/mfa/enroll',
+  ...publicRoutes,
+  ...authTransitionRoutes,
 };
 
 const blockedSurfacePath = '/blocked-surface';

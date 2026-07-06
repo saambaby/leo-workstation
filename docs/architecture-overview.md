@@ -59,6 +59,7 @@ When adding a new slice under `lib/features/<name>/`:
 3. `presentation/providers/<feature>_ui_provider.dart` — derived UI helpers (`isLoading`, `errorMessage`, etc.) so screens do not pattern-match state on every build.
 4. Screens are `ConsumerWidget` unless they hold ephemeral `TextEditingController` / focus state.
 5. No `data/` imports in views; no repository calls from widgets — dispatch intents via `ref.read(<notifier>.notifier)`.
+6. `presentation/routes/<feature>_routes.dart` — exports `List<RouteBase>` (and path constants for the redirect table when the feature owns public routes). Composed in `core/router/app_router.dart`; redirect guard stays in `core/router/redirect.dart`.
 
 Reference implementation: `features/auth/` (`AuthNotifier`, `AuthUiState`, `AuthFormShell`).
 
@@ -75,7 +76,10 @@ lib/
   core/
     config/    app_config.dart            # apiBaseUrl, realtimeWsUrl (env-scoped)
     network/   dio_provider.dart          # Dio + auth interceptor (Bearer JWT)
-    router/    app_router.dart            # go_router + auth redirect guard
+    router/    app_router.dart            # composition root: routerProvider + ShellRoute
+               device_class_scope.dart    # DeviceClassScope wrapper for route builders
+               role_home_routes.dart       # P1 role-home placeholders (/idle, /call, /dispatch)
+               redirect.dart               # pure auth redirect guard
     theme/     app_theme.dart             # Cupertino theme (light/dark/night) — migrating from Material 3
     providers/ auth_refresh_listenable.dart  # bridges authNotifier → GoRouter.refreshListenable
   features/
@@ -83,6 +87,7 @@ lib/
       data/        auth_repository.dart, token_storage.dart
       domain/      auth_models.dart            (+ .freezed/.g)
       presentation/
+        routes/    auth_routes.dart            # auth GoRoute tree + path constants
         screens/   login_screen.dart
         notifiers/ auth_notifier.dart          # ViewModel
         state/     auth_state.dart             # freezed union
@@ -156,6 +161,13 @@ flowchart TD
 | **LSP Admin** | Dispatch + **link** to `leo-web` | — | Same mobile dispatch as sub-admin |
 
 A `DeviceClass` derivation (from `MediaQuery`/platform) hides routes a device isn't entitled to — e.g. customer routes on smartphone are blocked until v0.1.0; interpreter **Accept** is not reachable on mobile.
+
+### Route composition
+
+- Feature modules own their `GoRoute` trees and path constants (`features/<name>/presentation/routes/<name>_routes.dart`).
+- `routerProvider` and the pure `authRedirect` guard live in `core/router/` (`app_router.dart`, `redirect.dart`).
+- `app_router.dart` is the composition root — it spreads feature route lists inside a `ShellRoute`; it does not define individual routes.
+- P1 role-home placeholders (`/idle`, `/call`, `/dispatch`) live in `core/router/role_home_routes.dart`; migrate to workstation features in P2.
 
 ---
 
