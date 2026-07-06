@@ -19,6 +19,8 @@ enum AuthLoadingReason {
 /// Optional fields on existing arms are UI/metadata only.
 @freezed
 sealed class AuthState with _$AuthState {
+  const AuthState._();
+
   const factory AuthState.unauthenticated({
     @Default(false) bool forgotPasswordSending,
     @Default(false) bool resendCodeSending,

@@ -21,7 +21,7 @@ Dart 3 · Flutter (Cupertino) · Riverpod · go_router · dio · Vonage (P2)
 
 ## Conventions
 
-- `lib/features/<name>/{data,domain,presentation}` — MVVM slices
+- `lib/features/<name>/{data,domain,presentation}` — MVVM slices; wire DTOs in `data/dto/`, domain entities in `domain/<name>_entities.dart`
 - `flutter analyze` · `dart run build_runner build --delete-conflicting-outputs`
 - **Tests:** do not add Flutter tests unless explicitly requested (`INV-CLIENT-TEST-1`)
 - **State:** async in notifiers + derived `<feature>_ui_provider`; see arch §1 checklist

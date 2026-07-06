@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'auth_models.freezed.dart';
+part 'auth_entities.freezed.dart';
 
 /// Decoded access-token claims — routing/UX only; server is source of truth.
 class Claims {
@@ -82,9 +82,17 @@ class AuthSession with _$AuthSession {
       claims: claims,
     );
   }
+
+  /// Token-pair response (`access_token`, `refresh_token`, optional `expires_in`).
+  factory AuthSession.fromJson(Map<String, dynamic> json) {
+    return AuthSession.fromTokens(
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
+    );
+  }
 }
 
-/// Wire-level login outcome before the ViewModel maps to [AuthState].
+/// Login outcome entity before the ViewModel maps to [AuthState].
 ///
 /// `mfaRequired` covers both real-backend cases: first-time privileged login
 /// (`firstLogin: true`, carries the enrollment payload to render a QR) and an
@@ -93,6 +101,8 @@ class AuthSession with _$AuthSession {
 /// original login (or switch-tenant) call with a TOTP code instead.
 @freezed
 sealed class LoginResult with _$LoginResult {
+  const LoginResult._();
+
   const factory LoginResult.session(AuthSession session) = LoginSession;
   const factory LoginResult.mfaRequired({
     required bool firstLogin,
@@ -100,4 +110,20 @@ sealed class LoginResult with _$LoginResult {
     String? otpauthUrl,
     String? secret,
   }) = LoginMfaRequired;
+
+  /// Discriminated login response before mapping to [AuthState].
+  factory LoginResult.fromJson(Map<String, dynamic> json) {
+    if (json['mfa_enrollment_required'] == true) {
+      return LoginResult.mfaRequired(
+        firstLogin: true,
+        enrollmentToken: json['enrollment_token'] as String,
+        otpauthUrl: json['otpauth_url'] as String,
+        secret: json['secret'] as String,
+      );
+    }
+    if (json['mfa_required'] == true) {
+      return const LoginResult.mfaRequired(firstLogin: false);
+    }
+    return LoginResult.session(AuthSession.fromJson(json));
+  }
 }

@@ -18,26 +18,15 @@ void main() {
     });
   });
 
-  group('AppConfig defaults', () {
-    test('useMocks defaults true; webAdminBaseUrl empty; no pins', () {
-      final c = AppConfig.fromEnvironment();
-      expect(c.useMocks, isTrue);
-      expect(c.webAdminBaseUrl, isEmpty);
-      expect(c.certPinsSha256, isEmpty);
-      expect(c.apiBaseUrl, isNotEmpty);
-    });
-  });
-
   group('Cert pinning (pinMatches)', () {
     final der = utf8.encode('fake-cert-bytes');
     final fp = base64.encode(sha256.convert(der).bytes);
 
-    test('no pins + mocks => allowed (dev escape, never a release bypass)', () {
+    test('no pins + debug build => allowed (dev escape, never a release bypass)', () {
       const cfg = AppConfig(
         apiBaseUrl: 'x',
         realtimeWsUrl: 'x',
         webAdminBaseUrl: '',
-        useMocks: true,
       );
       expect(pinMatches(der, cfg), isTrue);
     });
@@ -47,7 +36,6 @@ void main() {
         apiBaseUrl: 'x',
         realtimeWsUrl: 'x',
         webAdminBaseUrl: '',
-        useMocks: true,
         certPinsSha256: [fp],
       );
       expect(pinMatches(der, cfg), isTrue);

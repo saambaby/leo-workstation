@@ -52,11 +52,11 @@ final dioProvider = Provider<Dio>((ref) {
   return dio;
 });
 
-/// Pure pin check (testable). With no pins configured, allow ONLY in a dev
-/// context (mocks on or debug build) — never a silent bypass in a release build.
+/// Pure pin check (testable). With no pins configured, allow ONLY in a debug
+/// build — never a silent bypass in a release build.
 bool pinMatches(List<int> certDer, AppConfig config) {
   if (config.certPinsSha256.isEmpty) {
-    return config.useMocks || kDebugMode;
+    return kDebugMode;
   }
   final fingerprint = base64.encode(sha256.convert(certDer).bytes);
   return config.certPinsSha256.contains(fingerprint);

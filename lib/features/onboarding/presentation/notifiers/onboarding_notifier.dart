@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/notifiers/auth_notifier.dart';
 import '../../data/onboarding_repository.dart';
-import '../../domain/onboarding_models.dart';
+import '../../domain/onboarding_entities.dart';
 
 final onboardingNotifierProvider =
     NotifierProvider<OnboardingNotifier, OnboardingUiState>(

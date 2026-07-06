@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/widgets/auth_screen_layout.dart';
 import '../../../auth/presentation/widgets/otp_input_row.dart';
-import '../../domain/onboarding_models.dart';
+import '../../domain/onboarding_entities.dart';
 import '../../l10n/onboarding_strings.dart';
 import '../notifiers/signup_notifier.dart';
 import '../widgets/leo_wizard_steps.dart';

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/onboarding_repository.dart';
-import '../../domain/onboarding_models.dart';
+import '../../domain/onboarding_entities.dart';
 
 final signupNotifierProvider =
     NotifierProvider<SignupNotifier, SignupUiState>(SignupNotifier.new);

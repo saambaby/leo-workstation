@@ -40,7 +40,7 @@ entitled to, routes are absent (gating enforced by `router`, derived here).
 ## Acceptance criteria
 
 1. `main()` wraps the app in `ProviderScope`; `LeoApp` builds a `CupertinoApp.router` using the theme + router providers; `flutter analyze` is clean and the app boots to the router's initial location.
-2. `appConfigProvider` exposes `apiBaseUrl`, `realtimeWsUrl`, `useMocks`, and `webAdminBaseUrl?` from compile-time env (`--dart-define`); `useMocks` defaults to `true`.
+2. `appConfigProvider` exposes `apiBaseUrl`, `realtimeWsUrl`, and `webAdminBaseUrl?` from `.env` (loaded at startup via `flutter_dotenv`).
 3. The theme provides **light, dark, and night** `CupertinoThemeData` variants mapped from the design tokens; the workstation defaults to **dark**; the chosen brightness is persisted and restored on next launch.
 4. `deviceClassProvider` derives `DeviceClass { desktop, tablet, smartphone }` from `MediaQuery` (documented short-side breakpoints) and updates on resize/rotation.
 5. `dioProvider` returns a `Dio` (baseUrl from config) whose request interceptor injects `Authorization: Bearer <access>` from the in-memory token seam, and whose `badCertificateCallback` enforces SHA-256 pin(s) with a rotation list; a pin mismatch fails the request (`INV-CLIENT-NET-1`).
@@ -50,7 +50,7 @@ entitled to, routes are absent (gating enforced by `router`, derived here).
 
 ## Wire-format contract
 
-- **`AppConfig`** is sourced at compile time: `apiBaseUrl`/`realtimeWsUrl`/`webAdminBaseUrl` via `String.fromEnvironment`, `useMocks` via `bool.fromEnvironment('USE_MOCKS', defaultValue: true)`. No runtime mutation; it's a `Provider<AppConfig>` of an immutable struct. **`webAdminBaseUrl` is the single source** for both the `lsp_admin` "Admin dashboard" link (here) and `router`'s `platform_admin` `/web-handoff` interstitial.
+- **`AppConfig`** is loaded from `.env` at startup (`flutter_dotenv`). Copy `.env.template` → `.env` for local dev. No runtime mutation; it's a `Provider<AppConfig>` of an immutable struct. **`webAdminBaseUrl` is the single source** for both the `lsp_admin` "Admin dashboard" link (here) and `router`'s `platform_admin` `/web-handoff` interstitial.
 - **Bearer seam (`INV-CLIENT-AUTH-4`, avoids a circular dep):** `dioProvider`'s interceptor **reads** `currentAccessTokenProvider` (in-memory holder, default `null`); core-shell defines the holder + interceptor but never writes it — **`auth` (`AuthNotifier`) is the sole writer**. Header is exactly `Authorization: Bearer <token>` when non-null, omitted otherwise.
 - **Theme tokens:** design CSS custom properties (`--black-900 #0A0A0B` … `--signal-live #22C55E`, `--signal-white #F8F8FA`) map to `Color(0xFF…)` constants; spacing/radius tokens (`--r-md` etc.) to `double`s. Owner: `app_theme.dart`. Night ≠ dark — night is a separate, dimmer variant, not a brightness toggle.
 - **Cert pin:** SHA-256 base64 pin list compiled in (or from config); `badCertificateCallback` returns `true` only on a pin match.
@@ -76,7 +76,7 @@ New deps: `flutter_riverpod`, `dio`, `flutter_secure_storage`, `url_launcher`, `
 
 ## Open questions / Out of scope
 
-- **Cert-pin blast radius:** pinning **blocks** local dev against a self-signed/proxy host (Charles/Proxyman) and any non-pinned env. Decide a dev escape hatch (e.g. pinning disabled when `useMocks` or a debug flag) so it doesn't block local work — must never ship enabled-bypass in release.
+- **Cert-pin blast radius:** pinning **blocks** local dev against a self-signed/proxy host (Charles/Proxyman) and any non-pinned env. Dev escape hatch: pinning disabled in debug builds (`kDebugMode`) when no pins are configured — must never ship enabled-bypass in release.
 - Brightness persistence store — reuse `flutter_secure_storage` or add `shared_preferences`? (theme choice is non-sensitive; prefs is lighter.)
 - Exact `DeviceClass` breakpoints (tablet vs desktop short-side px) — confirm against `client-map` device matrix.
-- `webAdminBaseUrl` source — `--dart-define` per build, or fetched per-tenant from the API later?
+- `webAdminBaseUrl` source — `.env` for now, or fetched per-tenant from the API later?

@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:leo_workstation/core/storage/token_storage.dart';
 
-import '../storage/token_storage.dart';
+
 
 /// Design tokens from the workstation design system (INV-CLIENT-UI-1).
 class LeoColors {
