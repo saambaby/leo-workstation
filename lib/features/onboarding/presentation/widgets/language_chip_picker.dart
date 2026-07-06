@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../domain/onboarding_models.dart';
+import '../../domain/onboarding_entities.dart';
 
 /// Multi-select language chips with catalog picker.
 class LanguageChipPicker extends StatelessWidget {

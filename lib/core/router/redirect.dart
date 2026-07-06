@@ -3,6 +3,9 @@ import '../../core/device/device_class.dart';
 import '../../features/auth/presentation/routes/auth_routes.dart';
 import '../../features/auth/presentation/state/auth_state.dart';
 import '../../features/onboarding/presentation/routes/onboarding_routes.dart';
+import 'route_paths.dart';
+
+export 'route_paths.dart';
 
 /// Public routes reachable while signed out.
 const publicRoutes = {
@@ -15,9 +18,6 @@ const authFlowRoutes = {
   ...publicRoutes,
   ...authTransitionRoutes,
 };
-
-const blockedSurfacePath = '/blocked-surface';
-const webHandoffPath = '/web-handoff';
 
 /// Canonical role→home map (INV-CLIENT-ROUTE-2).
 String roleHome(String role) {

@@ -1,3 +1,8 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'onboarding_entities.freezed.dart';
+part 'onboarding_entities.g.dart';
+
 /// Signup path for native workstation onboarding.
 enum SignupPath {
   personal,
@@ -28,44 +33,44 @@ class SignupVerifyContext {
   final SignupPath path;
 }
 
-class SignupResult {
-  const SignupResult({
-    required this.userId,
-    required this.emailVerificationRequired,
-    this.organizationId,
-    this.status,
-  });
+@freezed
+class SignupResult with _$SignupResult {
+  const factory SignupResult({
+    @JsonKey(name: 'user_id') required String userId,
+    @JsonKey(name: 'email_verification_required')
+    @Default(true)
+    bool emailVerificationRequired,
+    @JsonKey(name: 'organization_id') String? organizationId,
+    String? status,
+  }) = _SignupResult;
 
-  final String userId;
-  final bool emailVerificationRequired;
-  final String? organizationId;
-  final String? status;
+  factory SignupResult.fromJson(Map<String, dynamic> json) =>
+      _$SignupResultFromJson(json);
 }
 
-class CatalogLanguage {
-  const CatalogLanguage({
-    required this.id,
-    required this.code,
-    required this.name,
-    this.isSigned = false,
-  });
+@freezed
+class CatalogLanguage with _$CatalogLanguage {
+  const factory CatalogLanguage({
+    required String id,
+    required String code,
+    required String name,
+    @JsonKey(name: 'is_signed') @Default(false) bool isSigned,
+  }) = _CatalogLanguage;
 
-  final String id;
-  final String code;
-  final String name;
-  final bool isSigned;
+  factory CatalogLanguage.fromJson(Map<String, dynamic> json) =>
+      _$CatalogLanguageFromJson(json);
 }
 
-class CatalogCertification {
-  const CatalogCertification({
-    required this.id,
-    required this.name,
-    required this.issuer,
-  });
+@freezed
+class CatalogCertification with _$CatalogCertification {
+  const factory CatalogCertification({
+    required String id,
+    required String name,
+    @Default('') String issuer,
+  }) = _CatalogCertification;
 
-  final String id;
-  final String name;
-  final String issuer;
+  factory CatalogCertification.fromJson(Map<String, dynamic> json) =>
+      _$CatalogCertificationFromJson(json);
 }
 
 class InterpreterCertEntry {

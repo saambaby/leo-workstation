@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/device_class_scope.dart';
-import '../../domain/onboarding_models.dart';
+import '../../domain/onboarding_entities.dart';
 import '../screens/customer_onboarding_screen.dart';
 import '../screens/personal_onboarding_screen.dart';
 import '../screens/signup_details_screen.dart';

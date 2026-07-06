@@ -164,11 +164,11 @@ class __$$AuthUnauthenticatedImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
+class _$AuthUnauthenticatedImpl extends AuthUnauthenticated {
   const _$AuthUnauthenticatedImpl({
     this.forgotPasswordSending = false,
     this.resendCodeSending = false,
-  });
+  }) : super._();
 
   @override
   @JsonKey()
@@ -320,11 +320,12 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
   }
 }
 
-abstract class AuthUnauthenticated implements AuthState {
+abstract class AuthUnauthenticated extends AuthState {
   const factory AuthUnauthenticated({
     final bool forgotPasswordSending,
     final bool resendCodeSending,
   }) = _$AuthUnauthenticatedImpl;
+  const AuthUnauthenticated._() : super._();
 
   bool get forgotPasswordSending;
   bool get resendCodeSending;
@@ -373,8 +374,9 @@ class __$$AuthLoadingImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthLoadingImpl implements AuthLoading {
-  const _$AuthLoadingImpl({this.reason = AuthLoadingReason.session});
+class _$AuthLoadingImpl extends AuthLoading {
+  const _$AuthLoadingImpl({this.reason = AuthLoadingReason.session})
+    : super._();
 
   @override
   @JsonKey()
@@ -516,9 +518,10 @@ class _$AuthLoadingImpl implements AuthLoading {
   }
 }
 
-abstract class AuthLoading implements AuthState {
+abstract class AuthLoading extends AuthState {
   const factory AuthLoading({final AuthLoadingReason reason}) =
       _$AuthLoadingImpl;
+  const AuthLoading._() : super._();
 
   AuthLoadingReason get reason;
 
@@ -566,8 +569,8 @@ class __$$AuthErrorImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthErrorImpl implements AuthError {
-  const _$AuthErrorImpl({required this.message});
+class _$AuthErrorImpl extends AuthError {
+  const _$AuthErrorImpl({required this.message}) : super._();
 
   @override
   final String message;
@@ -708,8 +711,9 @@ class _$AuthErrorImpl implements AuthError {
   }
 }
 
-abstract class AuthError implements AuthState {
+abstract class AuthError extends AuthState {
   const factory AuthError({required final String message}) = _$AuthErrorImpl;
+  const AuthError._() : super._();
 
   String get message;
 
@@ -779,13 +783,13 @@ class __$$AuthMfaRequiredImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthMfaRequiredImpl implements AuthMfaRequired {
+class _$AuthMfaRequiredImpl extends AuthMfaRequired {
   const _$AuthMfaRequiredImpl({
     required this.firstLogin,
     this.enrollmentToken,
     this.otpauthUrl,
     this.secret,
-  });
+  }) : super._();
 
   @override
   final bool firstLogin;
@@ -942,13 +946,14 @@ class _$AuthMfaRequiredImpl implements AuthMfaRequired {
   }
 }
 
-abstract class AuthMfaRequired implements AuthState {
+abstract class AuthMfaRequired extends AuthState {
   const factory AuthMfaRequired({
     required final bool firstLogin,
     final String? enrollmentToken,
     final String? otpauthUrl,
     final String? secret,
   }) = _$AuthMfaRequiredImpl;
+  const AuthMfaRequired._() : super._();
 
   bool get firstLogin;
   String? get enrollmentToken;
@@ -1011,12 +1016,12 @@ class __$$AuthAuthenticatedImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthAuthenticatedImpl implements AuthAuthenticated {
+class _$AuthAuthenticatedImpl extends AuthAuthenticated {
   const _$AuthAuthenticatedImpl({
     required this.role,
     this.tenantId,
     this.onboardingRequired = false,
-  });
+  }) : super._();
 
   @override
   final String role;
@@ -1170,12 +1175,13 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
   }
 }
 
-abstract class AuthAuthenticated implements AuthState {
+abstract class AuthAuthenticated extends AuthState {
   const factory AuthAuthenticated({
     required final String role,
     final String? tenantId,
     final bool onboardingRequired,
   }) = _$AuthAuthenticatedImpl;
+  const AuthAuthenticated._() : super._();
 
   String get role;
   String? get tenantId;

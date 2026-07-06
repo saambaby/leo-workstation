@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/widgets/design/leo_button.dart';
-import '../../domain/onboarding_models.dart';
+import '../../domain/onboarding_entities.dart';
 
 class CertificationList extends StatelessWidget {
   const CertificationList({

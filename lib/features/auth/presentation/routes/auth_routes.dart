@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/device_class_scope.dart';
-import '../../../../core/router/redirect.dart';
+import '../../../../core/router/route_paths.dart';
 import '../screens/forgot_password_screen.dart';
 import '../screens/forgot_password_verify_screen.dart';
 import '../screens/login_screen.dart';

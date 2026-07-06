@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/widgets/auth_screen_layout.dart';
-import '../../domain/onboarding_models.dart';
+import '../../domain/onboarding_entities.dart';
 import '../../l10n/onboarding_strings.dart';
 import '../widgets/leo_opt_card.dart';
 import '../widgets/leo_wizard_steps.dart';
