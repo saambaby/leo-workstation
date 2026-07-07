@@ -1,6 +1,6 @@
 # leo-workstation — As-built state
 
-_Last updated: 2026-07-06._
+_Last updated: 2026-07-07._
 
 > What is **actually built** in this repo right now, vs. what the docs target.
 > Target architecture: [`docs/architecture-overview.md`](../docs/architecture-overview.md).
@@ -14,9 +14,9 @@ _Last updated: 2026-07-06._
 
 | Area | As-built |
 |---|---|
-| `lib/core/` | Config, Dio + auth interceptor, `go_router` composition root (`app_router.dart`) + redirect guard, feature-owned route modules (`auth_routes`, `onboarding_routes`, `role_home_routes`), `DeviceClassScope`, Cupertino theme, `DeviceClass`, `WorkstationScaffold`, `DesktopWorkstationShell` (macOS window frame), `leo_roles` (+ `roleDisplayLabel`), `external_url` |
+| `lib/core/` | Config, Dio + auth interceptor, `api_error` helper, `go_router` composition root (`app_router.dart`) + redirect guard, feature-owned route modules (`auth_routes`, `onboarding_routes`, `role_home_routes`), `DeviceClassScope`, Cupertino theme, `DeviceClass`, `WorkstationScaffold`, `DesktopWorkstationShell` (macOS window frame), `leo_roles` (+ `roleDisplayLabel`), `external_url`, `email_launcher` |
 | `lib/features/auth/` | Full P1 auth vertical slice, **rebuilt 2026-07-01 against the live backend contract**: `ApiAuthRepository`, `AuthNotifier`, `AuthState`, `authUiProvider`, screens (login, MFA challenge, real-QR MFA enroll, forgot/reset, invite w/ consent), design system widgets, `AuthFormShell`, `MfaCodeForm`. No pre-login membership picker or in-app workspace switcher (cut — no backend support, see `features/auth.md` D1/D2). |
-| `lib/features/onboarding/` | Signup type/details, verify email, personal + customer onboarding wizards (`ApiOnboardingRepository`) |
+| `lib/features/onboarding/` | Signup type/details, verify-email pending screen (magic link), personal + customer onboarding wizards (`ApiOnboardingRepository`) |
 | `pubspec.yaml` | `flutter_riverpod`, `go_router`, `dio`, `freezed`, `json_serializable`, `flutter_secure_storage`, `url_launcher`, `intl`, `crypto` |
 | Tests | Minimal (`redirect_test`, a few core tests). **Policy: no new Flutter tests unless explicitly requested** (`INV-CLIENT-TEST-1`). |
 | Theming | Cupertino (`CupertinoApp` + `CupertinoThemeData` light/dark/night) |
@@ -49,6 +49,7 @@ on `main`. `INV-CLIENT-STATE-2`/`INV-CLIENT-ROUTE-2` amendments landed with AL-T
 
 ## Decisions (client-side)
 
+- **2026-07-07 — Flutter email verify = pending screen only:** replaced OTP/deep-link verify with `VerifyEmailPendingScreen` (open email → verify in `leo-web` → sign in). Login `401` `"Email not verified"` routes to the same screen. Removed `POST /auth/verify-email` client call and `VerifyEmailRequestDto`.
 - **2026-07-06 — Domain terminology (`model` → `entity`):** renamed `auth_models.dart` / `onboarding_models.dart` → `*_entities.dart`; docs/rules/invariants updated. Domain layer uses **entity**; wire request bodies stay **DTO** in `data/dto/`. MVVM **ViewModel** unchanged.
 - **2026-07-06 — Wire serialization (DTO + entity):** replaced private `_map*` parsers and inline wire maps in auth/onboarding repositories. Request bodies → `data/dto/` (`freezed` + `toJson`); responses → `fromJson` on domain entities (`LoginResult`, `AuthSession`, `SignupResult`, catalog types). New invariant `INV-CLIENT-SERIAL-1`; documented in `docs/architecture-overview.md` §1 wire serialization, `.cursor/rules/pineapple-project.mdc`, `.pineapple/code-map.md`.
 - **2026-07-06 — Feature-owned route modules:** split monolithic `app_router.dart` into `features/auth/presentation/routes/auth_routes.dart`, `features/onboarding/presentation/routes/onboarding_routes.dart`, and `core/router/role_home_routes.dart`; `DeviceClassScope` extracted to `core/router/device_class_scope.dart`. Path constants for redirect deduped via feature exports. Documented in `docs/architecture-overview.md` §1/§2/§4 and `.pineapple/code-map.md`.
