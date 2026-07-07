@@ -22,14 +22,22 @@ class SignupDraft {
   final String timezone;
 }
 
-/// Passed to verify-email after successful signup.
-class SignupVerifyContext {
-  const SignupVerifyContext({
+/// Where the user entered the verify-email pending screen.
+enum VerifyEmailSource {
+  signup,
+  login,
+}
+
+/// Passed to `/verify-email` after signup or login with an unverified email.
+class VerifyEmailPendingContext {
+  const VerifyEmailPendingContext({
     required this.email,
-    required this.path,
+    this.source = VerifyEmailSource.signup,
+    this.path = SignupPath.personal,
   });
 
   final String email;
+  final VerifyEmailSource source;
   final SignupPath path;
 }
 

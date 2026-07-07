@@ -30,7 +30,7 @@ class SignupNotifier extends Notifier<SignupUiState> {
 
   OnboardingRepository get _repo => ref.read(onboardingRepositoryProvider);
 
-  Future<SignupVerifyContext?> submitPersonal({
+  Future<VerifyEmailPendingContext?> submitPersonal({
     required String email,
     required String password,
     required bool tos,
@@ -44,7 +44,7 @@ class SignupNotifier extends Notifier<SignupUiState> {
         ), email, SignupPath.personal);
   }
 
-  Future<SignupVerifyContext?> submitCustomer({
+  Future<VerifyEmailPendingContext?> submitCustomer({
     required String email,
     required String password,
     required String orgName,
@@ -62,34 +62,24 @@ class SignupNotifier extends Notifier<SignupUiState> {
         ), email, SignupPath.customer);
   }
 
-  Future<SignupVerifyContext?> _submit(
+  Future<VerifyEmailPendingContext?> _submit(
     Future<SignupResult> Function() call,
     String email,
     SignupPath path,
   ) async {
     state = state.copyWith(loading: true, error: null);
     try {
-      await call();
+      final result = await call();
       state = const SignupUiState();
-      return SignupVerifyContext(email: email, path: path);
+      if (!result.emailVerificationRequired) return null;
+      return VerifyEmailPendingContext(
+        email: email,
+        path: path,
+        source: VerifyEmailSource.signup,
+      );
     } catch (e) {
       state = SignupUiState(loading: false, error: _mapError(e));
       return null;
-    }
-  }
-
-  Future<bool> verifyEmail({
-    required String token,
-    required String email,
-  }) async {
-    state = state.copyWith(loading: true, error: null);
-    try {
-      await _repo.verifyEmail(token: token, email: email);
-      state = const SignupUiState();
-      return true;
-    } catch (e) {
-      state = SignupUiState(loading: false, error: _mapVerifyError(e));
-      return false;
     }
   }
 
@@ -98,14 +88,6 @@ class SignupNotifier extends Notifier<SignupUiState> {
       final status = error.response?.statusCode;
       if (status == 409) return 'An account with this email already exists';
       if (status == 400) return 'Please check your details and try again';
-    }
-    return 'Something went wrong. Please try again.';
-  }
-
-  String _mapVerifyError(Object error) {
-    if (error is DioException) {
-      final status = error.response?.statusCode;
-      if (status == 400) return 'Invalid or expired verification code';
     }
     return 'Something went wrong. Please try again.';
   }

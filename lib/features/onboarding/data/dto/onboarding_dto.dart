@@ -46,15 +46,6 @@ class SignupCustomerRequestDto with _$SignupCustomerRequestDto {
 }
 
 @freezed
-class VerifyEmailRequestDto with _$VerifyEmailRequestDto {
-  const factory VerifyEmailRequestDto({required String token}) =
-      _VerifyEmailRequestDto;
-
-  factory VerifyEmailRequestDto.fromJson(Map<String, dynamic> json) =>
-      _$VerifyEmailRequestDtoFromJson(json);
-}
-
-@freezed
 class InterpreterCertDto with _$InterpreterCertDto {
   const factory InterpreterCertDto({
     @JsonKey(name: 'certification_id') required String certificationId,

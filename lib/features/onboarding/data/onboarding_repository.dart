@@ -22,8 +22,6 @@ abstract class OnboardingRepository {
     required bool privacy,
   });
 
-  Future<void> verifyEmail({required String token, String? email});
-
   Future<List<CatalogLanguage>> fetchLanguages();
 
   Future<List<CatalogCertification>> fetchCertifications();
@@ -82,14 +80,6 @@ class ApiOnboardingRepository implements OnboardingRepository {
       ).toJson(),
     );
     return SignupResult.fromJson(response.data!);
-  }
-
-  @override
-  Future<void> verifyEmail({required String token, String? email}) async {
-    await _dio.post<void>(
-      '/auth/verify-email',
-      data: VerifyEmailRequestDto(token: token).toJson(),
-    );
   }
 
   @override

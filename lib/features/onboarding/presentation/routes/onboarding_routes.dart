@@ -45,23 +45,34 @@ List<RouteBase> get onboardingRoutes => [
   GoRoute(
     path: '/verify-email',
     redirect: (_, state) {
-      final token = state.uri.queryParameters['token'];
-      if (token != null && token.isNotEmpty) return null;
-      if (state.extra is! SignupVerifyContext) return '/signup';
-      return null;
+      if (state.extra is VerifyEmailPendingContext) return null;
+      final email = state.uri.queryParameters['email'];
+      if (email != null && email.isNotEmpty) return null;
+      return '/login';
     },
     builder: (_, state) {
-      final token = state.uri.queryParameters['token'];
-      final ctx = state.extra as SignupVerifyContext?;
+      final extra = state.extra as VerifyEmailPendingContext?;
+      if (extra != null) {
+        return DeviceClassScope(
+          child: VerifyEmailPendingScreen(pendingContext: extra),
+        );
+      }
+      final email = state.uri.queryParameters['email'] ?? '';
+      final sourceParam = state.uri.queryParameters['source'];
+      final source = sourceParam == 'login'
+          ? VerifyEmailSource.login
+          : VerifyEmailSource.signup;
+      final pathParam = state.uri.queryParameters['path'];
+      final path = pathParam == 'customer'
+          ? SignupPath.customer
+          : SignupPath.personal;
       return DeviceClassScope(
-        child: VerifyEmailScreen(
-          verifyContext:
-              ctx ??
-              const SignupVerifyContext(
-                email: '',
-                path: SignupPath.personal,
-              ),
-          token: token,
+        child: VerifyEmailPendingScreen(
+          pendingContext: VerifyEmailPendingContext(
+            email: email,
+            source: source,
+            path: path,
+          ),
         ),
       );
     },

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/network/api_error.dart';
 import '../../../../core/network/dio_provider.dart';
 import '../../../../core/storage/onboarding_completion_storage.dart';
 import '../../../../core/storage/token_storage.dart';
@@ -52,14 +53,27 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> login({required String email, required String password}) async {
+  /// Returns [email] when the API refused login because email is not verified.
+  Future<String?> login({
+    required String email,
+    required String password,
+  }) async {
     state = const AuthState.loading(reason: AuthLoadingReason.login);
     try {
       final result = await _repo.login(email: email, password: password);
       await _handleLoginResult(result, email: email, password: password);
+      return null;
     } catch (e) {
       _clearPendingCredentials();
+      if (e is DioException) {
+        final status = e.response?.statusCode;
+        if (status == 401 && apiErrorMessage(e) == 'Email not verified') {
+          state = const AuthState.unauthenticated();
+          return email;
+        }
+      }
       state = AuthState.error(message: _mapError(e));
+      return null;
     }
   }
 

@@ -40,16 +40,21 @@ abstract final class OnboardingStrings {
   static const duplicateEmail = 'An account with this email already exists';
 
   static const verifySub = 'Verify your email';
-  static const verifyNotePrefix = 'We sent a verification code to ';
-  static const verifyNoteSuffix = '. Enter it below to continue.';
-  static const verificationCode = 'Verification code';
-  static const verifyEmail = 'Verify email';
-  static const resendIn = 'Resend in';
-  static const resendCode = 'Resend code';
-  static const changeEmail = 'Change email';
+  static const verifyLoginSub =
+      'Sign in after you verify the link we emailed you';
+  static const verifyPendingTitle = 'Check your email';
+  static const verifyLinkSentPrefix = 'We sent a verification link to ';
+  static const verifyLinkSentSuffix =
+      '. Open it in your browser to verify your account.';
+  static const verifyPendingBody =
+      'After verifying, return here and sign in with your password.';
+  static const verifyLinkExpires = 'The link expires in 24 hours.';
+  static const openEmailApp = 'Open email app';
+  static const goToSignIn = 'Go to sign in';
+  static const wrongEmailSignup =
+      'Wrong email? Sign up again (duplicate emails return an error)';
   static const verifiedLoginNote =
       'Email verified — sign in with your new password.';
-  static const invalidVerifyCode = 'Invalid or expired verification code';
 
   static const personalWelcome = 'Set up your interpreter profile';
   static const personalChip = 'Personal · interpreter';
