@@ -16,9 +16,10 @@
       "agent": "coordinator",
       "started_at": "2026-07-11",
       "completed_at": "2026-07-11",
-      "commit": null,
+      "commit": "9e6af7c",
       "attempt": 1,
       "error": null,
+      "pr": 29,
       "verification": "flutter analyze lib/core/auth lib/features/onboarding clean; wire paths match alpha.6"
     },
     "P2-O-T-02": {
@@ -30,9 +31,10 @@
       "agent": "coordinator",
       "started_at": "2026-07-11",
       "completed_at": "2026-07-11",
-      "commit": null,
+      "commit": "9e6af7c",
       "attempt": 1,
       "error": null,
+      "pr": 29,
       "verification": "emailVerificationPending redirect; no login?verified=success; applyLoginResult(fromEmailVerify)"
     },
     "P2-O-T-03": {
@@ -44,9 +46,10 @@
       "agent": "coordinator",
       "started_at": "2026-07-11",
       "completed_at": "2026-07-11",
-      "commit": null,
+      "commit": "9e6af7c",
       "attempt": 1,
       "error": null,
+      "pr": 29,
       "verification": "personal_onboarding_screen + catalog + affiliation note on disk"
     },
     "P2-O-T-04": {
@@ -58,9 +61,10 @@
       "agent": "coordinator",
       "started_at": "2026-07-11",
       "completed_at": "2026-07-11",
-      "commit": null,
+      "commit": "9e6af7c",
       "attempt": 1,
       "error": null,
+      "pr": 29,
       "verification": "customer_onboarding_screen + org/invites on disk"
     },
     "P2-O-T-05": {
