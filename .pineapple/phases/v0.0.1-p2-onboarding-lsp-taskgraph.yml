@@ -1,0 +1,100 @@
+apiVersion: pineapple/v2
+kind: TaskGraph
+metadata:
+  project: leo-workstation
+  phase: v0.0.1-p2-onboarding-lsp
+  status: approved
+  created: 2026-07-11
+
+integration_contract:
+  owner_task: LSP-T-01
+  wire_format:
+    signup_lsp: "POST /auth/signup {account_type:'business', business_type:'lsp', email, password, name, timezone, consent:{tos,privacy,baa_ack}} -> 201 {account_type, organization_id, user_id, status, email_verification_required:true}. baa_ack required; status may be active|pending (LSP_ACTIVATION_INTERIM_AUTO) — no client branch on it."
+  env: []
+
+coordinator:
+  max_concurrent: 2
+  stuck_threshold_seconds: 5400
+
+tasks:
+  - id: LSP-T-01
+    issue: 31
+    title: "core/auth wire: signupLsp DTO + AuthRepository method + SignupPath.lsp"
+    feature_spec: .pineapple/features/lsp-native-signup.md
+    area: core/auth
+    surface: frontend
+    model_tier: mechanical
+    depends_on: []
+    owns:
+      - lib/core/auth/domain/email_verification.dart
+      - lib/core/auth/data/dto/auth_dto.dart
+      - lib/core/auth/data/auth_repository.dart
+    must_not_touch:
+      - lib/features/onboarding/presentation/screens/signup_type_screen.dart
+      - lib/features/onboarding/presentation/screens/signup_details_screen.dart
+      - lib/features/onboarding/presentation/notifiers/signup_notifier.dart
+      - lib/features/onboarding/l10n/onboarding_strings.dart
+    verification: auto
+    human_admin: false
+    acceptance_criteria:
+      - "SignupPath (lib/core/auth/domain/email_verification.dart) gains an lsp value alongside personal/customer; VerifyEmailPendingContext.path accepts it."
+      - "auth_dto.dart gains a signup DTO for business_type:'lsp' (new SignupLspRequestDto or SignupCustomerRequestDto extended) with a required baaAck on the shared ConsentDto (ConsentDto.baaAck already exists at auth_dto.dart:10 — reuse it, do not add a second consent type)."
+      - "AuthRepository gains signupLsp({email, password, name, timezone, tos, privacy, baaAck, ...}) -> POST /auth/signup, mirroring the existing signupCustomer implementation (auth_repository.dart:220-239) — same endpoint, same response parse via SignupResult.fromJson."
+      - "flutter analyze clean; build_runner regenerates *.freezed.dart / *.g.dart with no hand-edits to generated files."
+    notes: "No new endpoint — this is a third variant on the same POST /auth/signup union leo-api alpha.4+ already accepts. Foundation task: fixes the one new wire fact (baa_ack, business_type:'lsp') that LSP-T-02 depends on."
+
+  - id: LSP-T-02
+    issue: 32
+    title: "LSP signup UI: in-app card push, LSP details fields + baa_ack gate, SignupNotifier.submitLsp"
+    feature_spec: .pineapple/features/lsp-native-signup.md
+    area: features/onboarding
+    surface: frontend
+    model_tier: mechanical
+    depends_on:
+      - LSP-T-01
+    owns:
+      - lib/features/onboarding/presentation/screens/signup_type_screen.dart
+      - lib/features/onboarding/presentation/screens/signup_details_screen.dart
+      - lib/features/onboarding/presentation/notifiers/signup_notifier.dart
+      - lib/features/onboarding/l10n/onboarding_strings.dart
+    must_not_touch:
+      - lib/core/auth/domain/email_verification.dart
+      - lib/core/auth/data/dto/auth_dto.dart
+      - lib/core/auth/data/auth_repository.dart
+    verification: manual
+    human_admin: false
+    acceptance_criteria:
+      - "signup_type_screen.dart: tapping the LSP card (_BusinessType.lsp) no longer calls launchUrl; it pushes /signup/details with SignupDraft(path: SignupPath.lsp) — same whole-card tap target as the personal/customer cards, not just the radio dot."
+      - "signup_details_screen.dart: for path == SignupPath.lsp, renders org name, email, password, timezone, and three required consent checkboxes (tos, privacy, baa_ack, full-row tap surface); Continue is disabled (onPressed: null) until all three are checked — no network call fires on an incomplete consent state (INV-CLIENT-CONSENT-1)."
+      - "signup_notifier.dart gains submitLsp(...) calling AuthRepository.signupLsp; on success sets emailVerificationPending the same way submitPersonal/submitCustomer do — no imperative push to /verify-email."
+      - "409 (EMAIL_ALREADY_EXISTS) and 400 (CONSENT_REQUIRED) surface via the existing mapUserFacingError path — no new error-code branch added for LSP."
+      - "All new copy (LSP details labels, baa_ack checkbox text) goes through OnboardingStrings/intl — no hardcoded strings (INV-CLIENT-I18N-1)."
+      - "flutter analyze clean on lib/features/onboarding."
+    notes: "No new routes or screens — reuses /signup, /signup/details, /verify-email, /mfa/enroll exactly as registered by onboarding.md and auth.md."
+
+  - id: LSP-T-03
+    issue: 33
+    title: "LSP signup E2E smoke: card -> details -> verify -> MFA enroll -> /dispatch"
+    feature_spec: .pineapple/features/lsp-native-signup.md
+    area: features/onboarding
+    surface: frontend
+    model_tier: n/a
+    depends_on:
+      - LSP-T-02
+    owns:
+      - .pineapple/phases/v0.0.1-p2-onboarding-lsp.md
+    must_not_touch:
+      - lib/core/auth/domain/email_verification.dart
+      - lib/core/auth/data/dto/auth_dto.dart
+      - lib/core/auth/data/auth_repository.dart
+      - lib/features/onboarding/presentation/screens/signup_type_screen.dart
+      - lib/features/onboarding/presentation/screens/signup_details_screen.dart
+      - lib/features/onboarding/presentation/notifiers/signup_notifier.dart
+    verification: manual
+    human_admin: false
+    acceptance_criteria:
+      - "Manual, against staging leo-api alpha.4+: LSP card -> details (all consent checked) -> submit -> /verify-email -> OTP -> mfa_enrollment_required -> /mfa/enroll (real QR scan with an authenticator app) -> submit TOTP -> session role lsp_admin -> router lands on /dispatch."
+      - "Manual: submitting the LSP details step with baa_ack unchecked never reaches the network (Continue stays disabled throughout)."
+      - "Manual: a duplicate LSP signup email surfaces 409 through the same error UI as personal/customer signup, not a distinct LSP error path."
+      - "Manual: confirm the signup response's status:'pending' vs 'active' has no client-visible branch, per lsp-native-signup.md's open question."
+    notes: "Founder/admin runs this against staging. No DNS/secrets/paid-account setup required (human_admin: false) — it's manual verification, not admin provisioning."
