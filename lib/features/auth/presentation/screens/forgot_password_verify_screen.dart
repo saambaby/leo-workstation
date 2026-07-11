@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
-import '../providers/auth_ui_provider.dart';
+import '../state/auth_state.dart';
 import '../widgets/auth_form_shell.dart';
 import '../widgets/auth_screen_layout.dart';
 import '../widgets/otp_input_row.dart';
@@ -44,6 +44,7 @@ class _ForgotPasswordVerifyScreenState
   Widget build(BuildContext context) {
     final ui = ref.watch(authUiProvider);
     final masked = _maskEmail(widget.email);
+    final verifying = ui.loadingReason == AuthLoadingReason.passwordReset;
 
     return AuthFormShell(
       subtitle: AuthStrings.forgotVerifySub,
@@ -80,14 +81,14 @@ class _ForgotPasswordVerifyScreenState
           ),
           const SizedBox(height: 6),
           OtpInputRow(
-            enabled: !ui.isLoading,
+            enabled: !verifying,
             onChanged: (code) => setState(() => _code = code),
             onCompleted: _continue,
           ),
           LeoButton(
             label: AuthStrings.continueToNewPassword,
             fullWidth: true,
-            enabled: !ui.isLoading && _code.length == 6,
+            enabled: !verifying && _code.length == 6,
             onPressed: () => _continue(),
           ),
           Padding(

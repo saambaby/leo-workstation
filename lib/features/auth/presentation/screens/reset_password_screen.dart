@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
-import '../providers/auth_ui_provider.dart';
+import '../state/auth_state.dart';
 import '../widgets/auth_form_shell.dart';
 import '../widgets/auth_screen_layout.dart';
 
@@ -53,6 +53,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final ui = ref.watch(authUiProvider);
     final error = _localError ?? ui.errorMessage;
+    final resetting = ui.loadingReason == AuthLoadingReason.passwordReset;
 
     return AuthFormShell(
       subtitle: AuthStrings.resetSub,
@@ -91,7 +92,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           LeoButton(
             label: AuthStrings.setPasswordAndSignIn,
             fullWidth: true,
-            enabled: !ui.isLoading,
+            enabled: !resetting,
             onPressed: _submit,
           ),
           Center(
@@ -151,7 +152,6 @@ class InviteAcceptScreen extends ConsumerStatefulWidget {
 }
 
 class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
-  final _name = TextEditingController();
   final _password = TextEditingController();
   bool _tos = false;
   bool _privacy = false;
@@ -161,7 +161,6 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
 
   @override
   void dispose() {
-    _name.dispose();
     _password.dispose();
     super.dispose();
   }
@@ -184,6 +183,7 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
   @override
   Widget build(BuildContext context) {
     final ui = ref.watch(authUiProvider);
+    final submitting = ui.loadingReason == AuthLoadingReason.inviteAccept;
 
     return AuthFormShell(
       subtitle: AuthStrings.inviteSub,
@@ -247,12 +247,6 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
             ),
           ),
           LeoTextField(
-            label: AuthStrings.yourName,
-            controller: _name,
-            placeholder: AuthStrings.namePlaceholder,
-            bottomSpacing: 14,
-          ),
-          LeoTextField(
             label: AuthStrings.setPassword,
             controller: _password,
             obscureText: true,
@@ -286,7 +280,7 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen> {
           LeoButton(
             label: AuthStrings.acceptAndJoin,
             fullWidth: true,
-            enabled: !ui.isLoading && _canSubmit,
+            enabled: !submitting && _canSubmit,
             onPressed: _submit,
           ),
         ],

@@ -6,7 +6,6 @@ import '../../../../core/shell/workstation_scaffold.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
-import '../state/auth_state.dart';
 
 /// Wraps role-home content in [WorkstationScaffold] with workspace chrome.
 class RoleShellScreen extends ConsumerWidget {
@@ -27,9 +26,9 @@ class RoleShellScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authNotifierProvider);
-    final role = auth is AuthAuthenticated ? auth.role : LeoRoles.interpreter;
-    final tenantId = auth is AuthAuthenticated ? auth.tenantId : null;
+    final ui = ref.watch(authUiProvider);
+    final role = ui.role ?? LeoRoles.interpreter;
+    final tenantId = ui.currentTenantId;
 
     return WorkstationScaffold(
       role: role,

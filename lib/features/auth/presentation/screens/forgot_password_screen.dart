@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
-import '../providers/auth_ui_provider.dart';
 import '../widgets/auth_form_shell.dart';
 import '../widgets/auth_screen_layout.dart';
 
@@ -29,8 +28,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final email = _email.text.trim();
     if (email.isEmpty) return;
 
-    await ref.read(authNotifierProvider.notifier).forgotPassword(email: email);
-    if (!mounted) return;
+    final ok = await ref
+        .read(authNotifierProvider.notifier)
+        .forgotPassword(email: email);
+    if (!mounted || !ok) return;
     context.push('/forgot-password/verify', extra: email);
   }
 
@@ -40,6 +41,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     return AuthFormShell(
       subtitle: AuthStrings.forgotSub,
+      error: ui.errorMessage,
       header: [
         LeoNote(
           variant: LeoNoteVariant.info,

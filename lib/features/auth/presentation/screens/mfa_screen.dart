@@ -5,7 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
-import '../providers/auth_ui_provider.dart';
+import '../state/auth_state.dart';
 import '../widgets/auth_form_shell.dart';
 import '../widgets/auth_screen_layout.dart';
 import '../widgets/mfa_code_form.dart';
@@ -16,6 +16,7 @@ class MfaScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ui = ref.watch(authUiProvider);
+    final mfaLoading = ui.loadingReason == AuthLoadingReason.mfa;
 
     return AuthFormShell(
       subtitle: AuthStrings.mfaSub,
@@ -28,22 +29,10 @@ class MfaScreen extends ConsumerWidget {
           child: const Text(AuthStrings.mfaInfoNote),
         ),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          MfaCodeForm(
-            loading: ui.isLoading,
-            onSubmit: (code) =>
-                ref.read(authNotifierProvider.notifier).submitMfa(code: code),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 14),
-            child: Align(
-              alignment: Alignment.center,
-              child: LeoLink(label: AuthStrings.resend, onPressed: () {}),
-            ),
-          ),
-        ],
+      child: MfaCodeForm(
+        loading: mfaLoading,
+        onSubmit: (code) =>
+            ref.read(authNotifierProvider.notifier).submitMfa(code: code),
       ),
     );
   }
@@ -56,6 +45,7 @@ class MfaEnrollScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ui = ref.watch(authUiProvider);
     final manualKey = ui.mfaSecret ?? '';
+    final mfaLoading = ui.loadingReason == AuthLoadingReason.mfa;
 
     return AuthFormShell(
       subtitle: AuthStrings.mfaEnrollSub,
@@ -133,7 +123,7 @@ class MfaEnrollScreen extends ConsumerWidget {
             style: LeoTypography.fieldLabel,
           ),
           MfaCodeForm(
-            loading: ui.isLoading,
+            loading: mfaLoading,
             submitLabel: AuthStrings.confirmEnrollment,
             onSubmit: (code) =>
                 ref.read(authNotifierProvider.notifier).submitMfa(code: code),
