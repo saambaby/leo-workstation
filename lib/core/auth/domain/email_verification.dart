@@ -2,6 +2,7 @@
 enum SignupPath {
   personal,
   customer,
+  lsp,
 }
 
 /// Where the user entered the verify-email flow.
@@ -26,6 +27,10 @@ class VerifyEmailPendingContext {
 /// Location string for redirect when [VerifyEmailPendingContext] is on auth state.
 String verifyEmailLocation(VerifyEmailPendingContext ctx) {
   final source = ctx.source == VerifyEmailSource.login ? 'login' : 'signup';
-  final path = ctx.path == SignupPath.customer ? 'customer' : 'personal';
+  final path = switch (ctx.path) {
+    SignupPath.customer => 'customer',
+    SignupPath.lsp => 'lsp',
+    SignupPath.personal => 'personal',
+  };
   return '/verify-email?email=${Uri.encodeComponent(ctx.email)}&source=$source&path=$path';
 }

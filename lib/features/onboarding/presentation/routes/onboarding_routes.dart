@@ -52,9 +52,11 @@ List<RouteBase> get onboardingRoutes => [
           ? VerifyEmailSource.login
           : VerifyEmailSource.signup;
       final pathParam = state.uri.queryParameters['path'];
-      final path = pathParam == 'customer'
-          ? SignupPath.customer
-          : SignupPath.personal;
+      final path = switch (pathParam) {
+        'customer' => SignupPath.customer,
+        'lsp' => SignupPath.lsp,
+        _ => SignupPath.personal,
+      };
       return DeviceClassScope(
         child: VerifyEmailScreen(
           pendingContext: VerifyEmailPendingContext(

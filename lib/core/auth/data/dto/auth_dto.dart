@@ -129,6 +129,22 @@ class SignupCustomerRequestDto with _$SignupCustomerRequestDto {
 }
 
 @freezed
+class SignupLspRequestDto with _$SignupLspRequestDto {
+  const factory SignupLspRequestDto({
+    @JsonKey(name: 'account_type') @Default('business') String accountType,
+    @JsonKey(name: 'business_type') @Default('lsp') String businessType,
+    required String email,
+    required String password,
+    required String name,
+    required String timezone,
+    required ConsentDto consent,
+  }) = _SignupLspRequestDto;
+
+  factory SignupLspRequestDto.fromJson(Map<String, dynamic> json) =>
+      _$SignupLspRequestDtoFromJson(json);
+}
+
+@freezed
 class InviteAcceptRequestDto with _$InviteAcceptRequestDto {
   const factory InviteAcceptRequestDto({
     required String token,
