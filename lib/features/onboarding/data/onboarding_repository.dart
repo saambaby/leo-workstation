@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/network/api_response.dart';
 import '../../../core/network/dio_provider.dart';
 import '../domain/onboarding_entities.dart';
 import 'dto/onboarding_dto.dart';
@@ -28,8 +29,9 @@ class ApiOnboardingRepository implements OnboardingRepository {
 
   @override
   Future<List<CatalogLanguage>> fetchLanguages() async {
-    final response = await _dio.get<List<dynamic>>('/catalog/languages');
-    return response.data!
+    const endpoint = '/catalog/languages';
+    final response = await _dio.get<List<dynamic>>(endpoint);
+    return requireJsonList(response, endpoint: endpoint)
         .cast<Map<String, dynamic>>()
         .map(CatalogLanguage.fromJson)
         .toList();
@@ -37,8 +39,9 @@ class ApiOnboardingRepository implements OnboardingRepository {
 
   @override
   Future<List<CatalogCertification>> fetchCertifications() async {
-    final response = await _dio.get<List<dynamic>>('/catalog/certifications');
-    return response.data!
+    const endpoint = '/catalog/certifications';
+    final response = await _dio.get<List<dynamic>>(endpoint);
+    return requireJsonList(response, endpoint: endpoint)
         .cast<Map<String, dynamic>>()
         .map(CatalogCertification.fromJson)
         .toList();
