@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../network/api_response.dart';
 import '../../network/dio_provider.dart';
 import '../domain/auth_entities.dart';
 import '../domain/signup_entities.dart';
@@ -82,15 +83,18 @@ class ApiAuthRepository implements AuthRepository {
     required String password,
     String? totpCode,
   }) async {
+    const endpoint = '/auth/login';
     final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/login',
+      endpoint,
       data: LoginRequestDto(
         email: email,
         password: password,
         totpCode: totpCode,
       ).toJson(),
     );
-    return LoginResult.fromJson(response.data!);
+    return LoginResult.fromJson(
+      requireJsonMap(response, endpoint: endpoint),
+    );
   }
 
   @override
@@ -98,23 +102,29 @@ class ApiAuthRepository implements AuthRepository {
     required String enrollmentToken,
     required String totpCode,
   }) async {
+    const endpoint = '/auth/mfa/enroll';
     final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/mfa/enroll',
+      endpoint,
       data: MfaEnrollRequestDto(
         enrollmentToken: enrollmentToken,
         totpCode: totpCode,
       ).toJson(),
     );
-    return AuthSession.fromJson(response.data!);
+    return AuthSession.fromJson(
+      requireJsonMap(response, endpoint: endpoint),
+    );
   }
 
   @override
   Future<AuthSession> refreshSession({required String refreshToken}) async {
+    const endpoint = '/auth/refresh';
     final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/refresh',
+      endpoint,
       data: RefreshTokenRequestDto(refreshToken: refreshToken).toJson(),
     );
-    return AuthSession.fromJson(response.data!);
+    return AuthSession.fromJson(
+      requireJsonMap(response, endpoint: endpoint),
+    );
   }
 
   @override
@@ -138,11 +148,14 @@ class ApiAuthRepository implements AuthRepository {
     required String email,
     required String code,
   }) async {
+    const endpoint = '/auth/verify-email';
     final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/verify-email',
+      endpoint,
       data: VerifyEmailRequestDto(email: email, code: code).toJson(),
     );
-    return LoginResult.fromJson(response.data!);
+    return LoginResult.fromJson(
+      requireJsonMap(response, endpoint: endpoint),
+    );
   }
 
   @override
@@ -158,11 +171,14 @@ class ApiAuthRepository implements AuthRepository {
     required String email,
     required String code,
   }) async {
+    const endpoint = '/auth/reset-password/verify';
     final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/reset-password/verify',
+      endpoint,
       data: ResetPasswordVerifyRequestDto(email: email, code: code).toJson(),
     );
-    return ResetTicket.fromJson(response.data!);
+    return ResetTicket.fromJson(
+      requireJsonMap(response, endpoint: endpoint),
+    );
   }
 
   @override
@@ -186,15 +202,18 @@ class ApiAuthRepository implements AuthRepository {
     required bool tos,
     required bool privacy,
   }) async {
+    const endpoint = '/auth/signup';
     final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/signup',
+      endpoint,
       data: SignupPersonalRequestDto(
         email: email,
         password: password,
         consent: ConsentDto(tos: tos, privacy: privacy),
       ).toJson(),
     );
-    return SignupResult.fromJson(response.data!);
+    return SignupResult.fromJson(
+      requireJsonMap(response, endpoint: endpoint),
+    );
   }
 
   @override
@@ -206,8 +225,9 @@ class ApiAuthRepository implements AuthRepository {
     required bool tos,
     required bool privacy,
   }) async {
+    const endpoint = '/auth/signup';
     final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/signup',
+      endpoint,
       data: SignupCustomerRequestDto(
         email: email,
         password: password,
@@ -216,7 +236,9 @@ class ApiAuthRepository implements AuthRepository {
         consent: ConsentDto(tos: tos, privacy: privacy),
       ).toJson(),
     );
-    return SignupResult.fromJson(response.data!);
+    return SignupResult.fromJson(
+      requireJsonMap(response, endpoint: endpoint),
+    );
   }
 
   @override
