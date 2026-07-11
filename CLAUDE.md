@@ -22,9 +22,10 @@ Dart 3 · Flutter (Cupertino) · Riverpod · go_router · dio · Vonage (P2)
 ## Conventions
 
 - `lib/features/<name>/{data,domain,presentation}` — MVVM slices; wire DTOs in `data/dto/`, domain entities in `domain/<name>_entities.dart`
+- `lib/core/network/` — `api_error.dart` (INV-ERROR-1 / `ApiErrorCode`), `api_response.dart` (`requireJsonMap`/`requireJsonList`; no `response.data!`)
 - `flutter analyze` · `dart run build_runner build --delete-conflicting-outputs`
 - **Tests:** do not add Flutter tests unless explicitly requested (`INV-CLIENT-TEST-1`)
-- **State:** async in notifiers + derived `<feature>_ui_provider`; see arch §1 checklist
+- **State (INV-CLIENT-STATE-1…3):** freezed `<feature>_state.dart` + `<feature>_ui_state.dart` under `presentation/state/`; Notifier owns async/repo; co-locate `<feature>UiProvider` on the notifier file; screens watch the UI provider only; session nav via `redirect.dart` (not imperative `context.go` after login/onboarding). Ops modules OK for large notifiers. References: `features/auth/`, `features/onboarding/`. Detail: `.cursor/rules/state-management.mdc` · arch §1
 
 ## Pineapple
 

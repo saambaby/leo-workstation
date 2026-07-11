@@ -13,41 +13,48 @@ Flutter ops client — interpreter, customer, dispatcher workstations in one app
 - `docs/architecture-overview.md` — MVVM + Riverpod (§1 feature scaffold checklist)
 - `docs/platform-references.md` — links to `../leo-api` (never copy platform docs)
 - `.pineapple/features/` — feature specs
-- `.pineapple/invariants-client.md` — INV-CLIENT-* rules
 - `.pineapple/phases/INDEX.md` — active phase
-- `.pineapple/state.md` — as-built + recent decisions
+
+## Consult invariants & state (when needed)
+
+| If you need… | Read |
+|---|---|
+| Load-bearing rules — what must not break | [`.pineapple/invariants-client.md`](.pineapple/invariants-client.md) — `INV-CLIENT-*` |
+| As-built reality + recent decisions | [`.pineapple/state.md`](.pineapple/state.md) — Floor, Decisions |
+| Platform error/auth contract | `../leo-api/.pineapple/invariants.md` (`INV-ERROR-1`, `INV-AUTH-*`) via platform-references |
+
+**Grep invariants before changing:** repos/dio/errors → `INV-CLIENT-SERIAL-1`, `INV-CLIENT-NET-2`, `INV-CLIENT-AUTH-REPO-1`; notifiers/UI/router → `INV-CLIENT-STATE-1`…`3`; auth/session → `INV-CLIENT-AUTH-*`. If a change would add or amend an invariant, update `invariants-client.md` and note it in `state.md` Decisions.
 
 ## Presentation & state (do not regress)
 
-- **Async/business state lives in the feature `Notifier`** — never private `_loading`, `_submitting`, `_memberships`, etc. on screens/widgets.
-- **Views watch a derived UI provider** (`presentation/providers/<feature>_ui_provider.dart`) for `isLoading`, `errorMessage`, and other display helpers — do not repeat `state is XLoading` / `state is XError` pattern-matching in every screen.
-- **Repository calls only from notifiers** — widgets dispatch `ref.read(<notifier>.notifier).method()`; no `ref.read(<repo>Provider)` in `presentation/`.
-- **Router guards in `go_router` redirects** — not `initState` post-frame redirects for missing route params.
-- **Reuse shared presentation widgets** before copying shell/layout (auth reference: `AuthFormShell`, `MfaCodeForm`; core: `roleDisplayLabel`, `launchExternalUrl`).
-- **Local widget state is allowed only for ephemeral UI**: `TextEditingController`, focus nodes, overlay open/close (`_menuOpen`), synchronous client-side validation before submit.
-- **Extend existing `freezed` state arms with optional metadata fields** — do not add new router-contract union arms without updating specs + `redirect.dart` (`INV-CLIENT-STATE-2`).
+Full rules: [`.cursor/rules/state-management.mdc`](state-management.mdc) (`INV-CLIENT-STATE-1`…`3`).
 
-Reference slice: `lib/features/auth/`.
+- **Freezed notifier state** in `presentation/state/<feature>_state.dart`; **freezed UI state** in `presentation/state/<feature>_ui_state.dart`.
+- **Async/business state lives in the feature `Notifier`** — never private `_loading`, `_submitting`, etc. on screens/widgets.
+- **Views watch a derived UI provider co-located on the notifier file** (`authUiProvider`, `signupUiProvider`, `onboardingUiProvider`) — not a separate `presentation/providers/` file.
+- **Repository calls only from notifiers** — widgets dispatch `ref.read(<notifier>.notifier).method()`; no `ref.read(<repo>Provider)` in `presentation/`.
+- **Session navigation is redirect-driven** — no imperative `context.go` to role home after login / `completeOnboarding()`; router reacts to `AuthState`.
+- **Extend existing `freezed` state arms with optional metadata** — do not add router-contract union arms without specs + `redirect.dart` (`INV-CLIENT-STATE-2`).
+
+Reference slices: `lib/features/auth/`, `lib/features/onboarding/`.
 
 ## Data layer (DTO + entity)
 
-- **Request bodies** → `data/dto/<feature>_dto.dart` (`freezed` + `json_serializable`, `toJson()` for `dio.data`).
-- **Domain types** → `domain/<feature>_entities.dart` (not `*_models.dart`). Add `fromJson` on entities when wire shape matches what notifiers consume.
-- **Repositories** call `dto.toJson()` / `Entity.fromJson()` — never private `_map*` helpers or inline `Map<String, dynamic>` wire literals.
-- **No DTOs** in `domain/` or `presentation/`; **no cross-feature `data/` imports** (`INV-CLIENT-ARCH-2`).
+- **Request bodies** → `data/dto/<feature>_dto.dart` (`freezed` + `json_serializable`, `toJson()`).
+- **Domain types** → `domain/<feature>_entities.dart` (not `*_models.dart`); entity `fromJson` when wire matches domain.
+- **Repositories** → `dto.toJson()` / `Entity.fromJson(requireJsonMap|List(...))` — never `response.data!`, `_map*`, or inline wire maps (`INV-CLIENT-SERIAL-1`).
+- **API errors** → show server `message` via `mapUserFacingError`; branch on `ApiErrorCode` only for special UX (redirect, field highlight, session teardown). No client code→copy map (`INV-CLIENT-NET-2`). Reference: `lib/core/network/api_error.dart`.
+- **No cross-feature `data/` imports** (`INV-CLIENT-ARCH-2`).
 
-## Verification (this repo)
+## Verification
 
-- Run `flutter analyze` on edited files.
-- Run `dart run build_runner build --delete-conflicting-outputs` when changing `freezed` / `json_serializable`.
-- **Do not add or expand Flutter tests** unless the user explicitly asks. Do not add unit/widget tests as part of refactors, scaffolding, or feature work by default.
+- `flutter analyze` on edited files; `build_runner` after `freezed` / `json_serializable` changes.
+- **Do not add or expand Flutter tests** unless the user explicitly asks (`INV-CLIENT-TEST-1`).
 
 ## Do NOT
 
-- Build admin CRUD/reports in Flutter (BD7)
-- Cross-import feature `data/` layers
-- Persist PHI on device
-- Introduce private async flags or duplicate loading/error extraction in views
-- Call repositories from `presentation/screens` or `presentation/widgets`
-- Parse API JSON with private `_map*` methods or inline wire `Map` literals in repositories — use `data/dto/` + entity `fromJson`/`toJson` instead (arch §1 wire serialization)
-- Name domain files `*_models.dart` — use `domain/<feature>_entities.dart` for feature entities
+- Build admin CRUD/reports in Flutter (BD7) · cross-import feature `data/` · persist PHI on device
+- Private async flags or repo calls from `presentation/screens` or `widgets`
+- `response.data!`, `_map*`, or inline wire maps in repositories
+- Client code→copy maps or branching on API `message` text — show `message`; branch on `code` only
+- Name domain files `*_models.dart`
