@@ -2,15 +2,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/platform/email_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/l10n/auth_strings.dart';
 import '../../../auth/presentation/widgets/auth_screen_layout.dart';
+import '../../../auth/presentation/widgets/otp_input_row.dart';
 import '../../domain/onboarding_entities.dart';
 import '../../l10n/onboarding_strings.dart';
+import '../notifiers/signup_notifier.dart';
+import '../providers/signup_ui_provider.dart';
 import '../widgets/leo_wizard_steps.dart';
 
-class VerifyEmailPendingScreen extends ConsumerWidget {
-  const VerifyEmailPendingScreen({
+class VerifyEmailScreen extends ConsumerStatefulWidget {
+  const VerifyEmailScreen({
     super.key,
     required this.pendingContext,
   });
@@ -18,9 +21,44 @@ class VerifyEmailPendingScreen extends ConsumerWidget {
   final VerifyEmailPendingContext pendingContext;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final fromSignup = pendingContext.source == VerifyEmailSource.signup;
-    final masked = _maskEmail(pendingContext.email);
+  ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+}
+
+class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
+  var _code = '';
+  var _cooldown = 0;
+
+  Future<void> _verify(String code) async {
+    if (code.length != 6) return;
+    await ref.read(signupNotifierProvider.notifier).verifyEmail(
+          email: widget.pendingContext.email,
+          code: code,
+        );
+  }
+
+  void _startCooldown() {
+    setState(() => _cooldown = 42);
+    Future.doWhile(() async {
+      await Future<void>.delayed(const Duration(seconds: 1));
+      if (!mounted) return false;
+      setState(() => _cooldown--);
+      return _cooldown > 0;
+    });
+  }
+
+  Future<void> _resend() async {
+    if (_cooldown > 0) return;
+    _startCooldown();
+    await ref
+        .read(signupNotifierProvider.notifier)
+        .resendVerifyEmail(email: widget.pendingContext.email);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ui = ref.watch(signupUiProvider);
+    final fromSignup = widget.pendingContext.source == VerifyEmailSource.signup;
+    final masked = _maskEmail(widget.pendingContext.email);
 
     return AuthStage(
       child: AuthCard(
@@ -47,20 +85,10 @@ class VerifyEmailPendingScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Icon(
-                CupertinoIcons.mail_solid,
-                size: 40,
-                color: LeoColors.signalInfo,
-              ),
-            ),
-            Text(
-              OnboardingStrings.verifyPendingTitle,
-              textAlign: TextAlign.center,
-              style: LeoTypography.pageTitle,
-            ),
-            const SizedBox(height: 14),
+            if (ui.errorMessage != null) ...[
+              AuthErrorBanner(message: ui.errorMessage!),
+              const SizedBox(height: 16),
+            ],
             LeoNote(
               variant: LeoNoteVariant.info,
               icon: CupertinoIcons.mail,
@@ -69,7 +97,7 @@ class VerifyEmailPendingScreen extends ConsumerWidget {
                 TextSpan(
                   style: LeoTypography.note,
                   children: [
-                    const TextSpan(text: OnboardingStrings.verifyLinkSentPrefix),
+                    const TextSpan(text: OnboardingStrings.verifyNotePrefix),
                     TextSpan(
                       text: masked,
                       style: LeoTypography.note.copyWith(
@@ -77,40 +105,55 @@ class VerifyEmailPendingScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const TextSpan(text: OnboardingStrings.verifyLinkSentSuffix),
+                    const TextSpan(text: OnboardingStrings.verifyNoteSuffix),
                   ],
                 ),
               ),
             ),
             Text(
-              OnboardingStrings.verifyPendingBody,
-              style: LeoTypography.note,
+              OnboardingStrings.verificationCode,
+              style: LeoTypography.fieldLabel,
             ),
-            const SizedBox(height: 8),
-            Text(
-              OnboardingStrings.verifyLinkExpires,
-              style: LeoTypography.mono10,
+            const SizedBox(height: 6),
+            OtpInputRow(
+              enabled: !ui.isLoading,
+              onChanged: (c) => setState(() => _code = c),
+              onCompleted: _verify,
             ),
-            const SizedBox(height: 20),
             LeoButton(
-              label: OnboardingStrings.openEmailApp,
+              label: OnboardingStrings.verifyEmail,
               fullWidth: true,
-              onPressed: openEmailApp,
+              enabled: !ui.isLoading && _code.length == 6,
+              onPressed: () => _verify(_code),
             ),
-            const SizedBox(height: 10),
-            LeoButton(
-              label: OnboardingStrings.goToSignIn,
-              variant: LeoButtonVariant.ghost,
-              fullWidth: true,
-              onPressed: () => context.go('/login'),
-            ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 14),
-                child: LeoLink(
-                  label: OnboardingStrings.wrongEmailSignup,
-                  onPressed: () => context.go('/signup'),
-                ),
+            Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (ui.resendVerifySending || _cooldown > 0)
+                    Text(
+                      ui.resendVerifySending
+                          ? AuthStrings.resendingCode
+                          : '${OnboardingStrings.resendIn} 0:$_cooldown',
+                      style: LeoTypography.mono10,
+                    )
+                  else
+                    LeoLink(
+                      label: OnboardingStrings.resendCode,
+                      onPressed: _resend,
+                    ),
+                  if (fromSignup)
+                    LeoLink(
+                      label: OnboardingStrings.changeEmail,
+                      onPressed: () => context.go('/signup'),
+                    )
+                  else
+                    LeoLink(
+                      label: OnboardingStrings.goToSignIn,
+                      onPressed: () => context.go('/login'),
+                    ),
+                ],
               ),
             ),
           ],

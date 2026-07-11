@@ -8,8 +8,9 @@
 | Feature | First version | Area | Spec |
 |---|---|---|---|
 | **core-shell** | `v0.0.1-alpha.1` | `core/`, `app.dart` | [`core-shell.md`](core-shell.md) ✅ drafted — bootstrap/config/theme/DeviceClass/dio+cert-pin/token storage/chrome |
-| **auth** | `v0.0.1-alpha.1` (alpha.4 contract) | `features/auth/` | [`auth.md`](auth.md) ✅ drafted — login/MFA/switch-tenant/multi-membership/token storage |
-| **onboarding** | P2 `v0.0.1` (signup primitives alpha.4) | `features/onboarding/` | [`onboarding.md`](onboarding.md) ✅ drafted — native signup+verify+onboarding for personal+customer; LSP→leo-web; self-service from pilot |
+| **auth** | `v0.0.1-alpha.1` (alpha.4 contract) | `features/auth/` presentation + `core/auth/` wire | [`auth.md`](auth.md) ✅ drafted — login/MFA/session/token storage; wire in `core/auth` |
+| **otp-email-verification** | P1 signup/verify (alpha.4+) | `core/auth/` wire · `onboarding/` + `auth/` presentation | [`otp-email-verification.md`](otp-email-verification.md) ✅ drafted — 6-digit OTP verify, resend, login re-entry via `emailVerificationPending` |
+| **onboarding** | P2 `v0.0.1` (signup primitives alpha.4) | `features/onboarding/` (+ `core/auth` for signup/verify wire) | [`onboarding.md`](onboarding.md) ✅ drafted — native signup+verify+onboarding for personal+customer; LSP→leo-web; self-service from pilot |
 | **realtime** | `v0.0.1-alpha.1` | `features/realtime/` | _pending_ |
 | **router** | `v0.0.1-alpha.1` | `core/router/` | [`router.md`](router.md) ✅ drafted — go_router + pure redirect table (auth×device×location), role homes, device gating |
 | **interpreter-workstation** | `v0.0.1` (P2) | `features/idle/`, `features/session/` | _pending_ |
@@ -20,6 +21,9 @@
 
 ## Next step
 
-Run the Phase 3→4 gate (`/pineapple:prd-readiness`), then loop
-`/pineapple:feature-spec` per P1 feature (core-shell, auth, realtime, router),
-then `/pineapple:cross-spec-audit`.
+Cross-spec audit ✅ [`cross-spec-audit.md`](../cross-spec-audit.md) (2026-07-11).
+
+**Start taskgraph:** `/pineapple:orchestrate v0.0.1-p2-onboarding` — see
+[`phases/v0.0.1-p2-onboarding-taskgraph.md`](../phases/v0.0.1-p2-onboarding-taskgraph.md).
+
+Remaining spec loop: `realtime`, `interpreter-workstation`, `customer-call`, `dispatch-portal`.

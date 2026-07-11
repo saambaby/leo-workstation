@@ -9,7 +9,6 @@ import '../screens/mfa_screen.dart';
 import '../screens/reset_password_screen.dart';
 import '../screens/role_shell_screen.dart';
 
-/// Public auth routes reachable while signed out.
 const authPublicRoutes = {
   '/login',
   '/forgot-password',
@@ -18,7 +17,6 @@ const authPublicRoutes = {
   '/invite/accept',
 };
 
-/// MFA transition screens (error state may stay here).
 const authTransitionRoutes = {
   '/mfa',
   '/mfa/enroll',
@@ -30,7 +28,6 @@ List<RouteBase> get authRoutes => [
     builder: (_, state) => DeviceClassScope(
       child: LoginScreen(
         passwordResetSuccess: state.uri.queryParameters['reset'] == 'success',
-        emailVerifiedSuccess: state.uri.queryParameters['verified'] == 'success',
       ),
     ),
   ),
@@ -40,11 +37,6 @@ List<RouteBase> get authRoutes => [
     routes: [
       GoRoute(
         path: 'verify',
-        redirect: (_, state) {
-          final email = state.extra as String? ?? '';
-          if (email.isEmpty) return '/forgot-password';
-          return null;
-        },
         builder: (_, state) {
           final email = state.extra as String? ?? '';
           return DeviceClassScope(
@@ -56,13 +48,10 @@ List<RouteBase> get authRoutes => [
   ),
   GoRoute(
     path: '/reset-password',
-    redirect: (_, state) {
-      final token = state.uri.queryParameters['token'];
-      if (token == null || token.isEmpty) return '/forgot-password';
-      return null;
-    },
     builder: (_, state) => DeviceClassScope(
-      child: ResetPasswordScreen(token: state.uri.queryParameters['token']),
+      child: ResetPasswordScreen(
+        resetTicket: state.extra as String?,
+      ),
     ),
   ),
   GoRoute(
@@ -78,10 +67,6 @@ List<RouteBase> get authRoutes => [
   GoRoute(
     path: '/mfa/enroll',
     builder: (_, _) => const DeviceClassScope(child: MfaEnrollScreen()),
-  ),
-  GoRoute(
-    path: webHandoffPath,
-    builder: (_, _) => const DeviceClassScope(child: WebHandoffScreen()),
   ),
   GoRoute(
     path: blockedSurfacePath,

@@ -19,7 +19,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final auth = ref.read(authNotifierProvider);
       final device = ref.read(deviceClassProvider);
-      return authRedirect(auth, device, state.uri.path);
+      return authRedirect(
+        auth,
+        device,
+        state.uri.path,
+        extra: state.extra,
+        queryParameters: state.uri.queryParameters,
+      );
     },
     routes: [
       ShellRoute(

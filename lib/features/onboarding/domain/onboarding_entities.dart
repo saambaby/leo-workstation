@@ -1,13 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/auth/domain/email_verification.dart';
+
+export '../../../../core/auth/domain/email_verification.dart';
+export '../../../../core/auth/domain/signup_entities.dart';
+
 part 'onboarding_entities.freezed.dart';
 part 'onboarding_entities.g.dart';
-
-/// Signup path for native workstation onboarding.
-enum SignupPath {
-  personal,
-  customer,
-}
 
 /// Context passed between signup screens via go_router [extra].
 class SignupDraft {
@@ -20,40 +19,6 @@ class SignupDraft {
   final SignupPath path;
   final String? orgName;
   final String timezone;
-}
-
-/// Where the user entered the verify-email pending screen.
-enum VerifyEmailSource {
-  signup,
-  login,
-}
-
-/// Passed to `/verify-email` after signup or login with an unverified email.
-class VerifyEmailPendingContext {
-  const VerifyEmailPendingContext({
-    required this.email,
-    this.source = VerifyEmailSource.signup,
-    this.path = SignupPath.personal,
-  });
-
-  final String email;
-  final VerifyEmailSource source;
-  final SignupPath path;
-}
-
-@freezed
-class SignupResult with _$SignupResult {
-  const factory SignupResult({
-    @JsonKey(name: 'user_id') required String userId,
-    @JsonKey(name: 'email_verification_required')
-    @Default(true)
-    bool emailVerificationRequired,
-    @JsonKey(name: 'organization_id') String? organizationId,
-    String? status,
-  }) = _SignupResult;
-
-  factory SignupResult.fromJson(Map<String, dynamic> json) =>
-      _$SignupResultFromJson(json);
 }
 
 @freezed

@@ -2,8 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/leo_roles.dart';
-import '../../../../core/config/app_config.dart';
-import '../../../../core/platform/external_url.dart';
 import '../../../../core/shell/workstation_scaffold.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
@@ -187,65 +185,6 @@ class TenantChip extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(fontSize: 11, color: LeoColors.black100),
-      ),
-    );
-  }
-}
-
-class WebHandoffScreen extends ConsumerWidget {
-  const WebHandoffScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final url = ref.watch(appConfigProvider).webAdminBaseUrl;
-
-    return CupertinoPageScaffold(
-      backgroundColor: LeoColors.black900,
-      child: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  AuthStrings.webHandoffTitle,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: LeoColors.signalWhite,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  AuthStrings.webHandoffSubtitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: LeoColors.black100, height: 1.4),
-                ),
-                const SizedBox(height: 24),
-                if (url.isNotEmpty)
-                  Semantics(
-                    button: true,
-                    label: AuthStrings.openWebDashboard,
-                    child: CupertinoButton.filled(
-                      onPressed: () => launchExternalUrl(url),
-                      child: const Text(AuthStrings.openWebDashboard),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                Semantics(
-                  button: true,
-                  label: AuthStrings.signOut,
-                  child: CupertinoButton(
-                    onPressed: () =>
-                        ref.read(authNotifierProvider.notifier).logout(),
-                    child: const Text(AuthStrings.signOut),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

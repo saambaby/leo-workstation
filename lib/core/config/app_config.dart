@@ -13,8 +13,8 @@ class AppConfig {
   final String apiBaseUrl;
   final String realtimeWsUrl;
 
-  /// Single source for the `lsp_admin` "Admin dashboard" link (core-shell) and
-  /// the router `platform_admin` `/web-handoff` interstitial. Empty = unset.
+  /// Single source for the `lsp_admin` "Admin dashboard" external link (core-shell).
+  /// Empty = unset. `platform_admin` has no workstation home — rejected at session mint.
   final String webAdminBaseUrl;
 
   /// Base64 SHA-256 cert pins (rotation list). Empty = no pins configured.

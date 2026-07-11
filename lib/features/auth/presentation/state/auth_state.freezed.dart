@@ -22,6 +22,7 @@ mixin _$AuthState {
     required TResult Function(
       bool forgotPasswordSending,
       bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
     )
     unauthenticated,
     required TResult Function(AuthLoadingReason reason) loading,
@@ -42,7 +43,11 @@ mixin _$AuthState {
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult? Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
@@ -58,7 +63,11 @@ mixin _$AuthState {
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
@@ -127,7 +136,11 @@ abstract class _$$AuthUnauthenticatedImplCopyWith<$Res> {
     $Res Function(_$AuthUnauthenticatedImpl) then,
   ) = __$$AuthUnauthenticatedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({bool forgotPasswordSending, bool resendCodeSending});
+  $Res call({
+    bool forgotPasswordSending,
+    bool resendCodeSending,
+    VerifyEmailPendingContext? emailVerificationPending,
+  });
 }
 
 /// @nodoc
@@ -146,6 +159,7 @@ class __$$AuthUnauthenticatedImplCopyWithImpl<$Res>
   $Res call({
     Object? forgotPasswordSending = null,
     Object? resendCodeSending = null,
+    Object? emailVerificationPending = freezed,
   }) {
     return _then(
       _$AuthUnauthenticatedImpl(
@@ -157,6 +171,10 @@ class __$$AuthUnauthenticatedImplCopyWithImpl<$Res>
             ? _value.resendCodeSending
             : resendCodeSending // ignore: cast_nullable_to_non_nullable
                   as bool,
+        emailVerificationPending: freezed == emailVerificationPending
+            ? _value.emailVerificationPending
+            : emailVerificationPending // ignore: cast_nullable_to_non_nullable
+                  as VerifyEmailPendingContext?,
       ),
     );
   }
@@ -168,6 +186,7 @@ class _$AuthUnauthenticatedImpl extends AuthUnauthenticated {
   const _$AuthUnauthenticatedImpl({
     this.forgotPasswordSending = false,
     this.resendCodeSending = false,
+    this.emailVerificationPending,
   }) : super._();
 
   @override
@@ -177,9 +196,13 @@ class _$AuthUnauthenticatedImpl extends AuthUnauthenticated {
   @JsonKey()
   final bool resendCodeSending;
 
+  /// Drives redirect to `/verify-email` (login-unverified or post-signup).
+  @override
+  final VerifyEmailPendingContext? emailVerificationPending;
+
   @override
   String toString() {
-    return 'AuthState.unauthenticated(forgotPasswordSending: $forgotPasswordSending, resendCodeSending: $resendCodeSending)';
+    return 'AuthState.unauthenticated(forgotPasswordSending: $forgotPasswordSending, resendCodeSending: $resendCodeSending, emailVerificationPending: $emailVerificationPending)';
   }
 
   @override
@@ -190,12 +213,21 @@ class _$AuthUnauthenticatedImpl extends AuthUnauthenticated {
             (identical(other.forgotPasswordSending, forgotPasswordSending) ||
                 other.forgotPasswordSending == forgotPasswordSending) &&
             (identical(other.resendCodeSending, resendCodeSending) ||
-                other.resendCodeSending == resendCodeSending));
+                other.resendCodeSending == resendCodeSending) &&
+            (identical(
+                  other.emailVerificationPending,
+                  emailVerificationPending,
+                ) ||
+                other.emailVerificationPending == emailVerificationPending));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, forgotPasswordSending, resendCodeSending);
+  int get hashCode => Object.hash(
+    runtimeType,
+    forgotPasswordSending,
+    resendCodeSending,
+    emailVerificationPending,
+  );
 
   /// Create a copy of AuthState
   /// with the given fields replaced by the non-null parameter values.
@@ -214,6 +246,7 @@ class _$AuthUnauthenticatedImpl extends AuthUnauthenticated {
     required TResult Function(
       bool forgotPasswordSending,
       bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
     )
     unauthenticated,
     required TResult Function(AuthLoadingReason reason) loading,
@@ -232,13 +265,21 @@ class _$AuthUnauthenticatedImpl extends AuthUnauthenticated {
     )
     authenticated,
   }) {
-    return unauthenticated(forgotPasswordSending, resendCodeSending);
+    return unauthenticated(
+      forgotPasswordSending,
+      resendCodeSending,
+      emailVerificationPending,
+    );
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult? Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
@@ -252,13 +293,21 @@ class _$AuthUnauthenticatedImpl extends AuthUnauthenticated {
     TResult? Function(String role, String? tenantId, bool onboardingRequired)?
     authenticated,
   }) {
-    return unauthenticated?.call(forgotPasswordSending, resendCodeSending);
+    return unauthenticated?.call(
+      forgotPasswordSending,
+      resendCodeSending,
+      emailVerificationPending,
+    );
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
@@ -274,7 +323,11 @@ class _$AuthUnauthenticatedImpl extends AuthUnauthenticated {
     required TResult orElse(),
   }) {
     if (unauthenticated != null) {
-      return unauthenticated(forgotPasswordSending, resendCodeSending);
+      return unauthenticated(
+        forgotPasswordSending,
+        resendCodeSending,
+        emailVerificationPending,
+      );
     }
     return orElse();
   }
@@ -324,11 +377,15 @@ abstract class AuthUnauthenticated extends AuthState {
   const factory AuthUnauthenticated({
     final bool forgotPasswordSending,
     final bool resendCodeSending,
+    final VerifyEmailPendingContext? emailVerificationPending,
   }) = _$AuthUnauthenticatedImpl;
   const AuthUnauthenticated._() : super._();
 
   bool get forgotPasswordSending;
   bool get resendCodeSending;
+
+  /// Drives redirect to `/verify-email` (login-unverified or post-signup).
+  VerifyEmailPendingContext? get emailVerificationPending;
 
   /// Create a copy of AuthState
   /// with the given fields replaced by the non-null parameter values.
@@ -412,6 +469,7 @@ class _$AuthLoadingImpl extends AuthLoading {
     required TResult Function(
       bool forgotPasswordSending,
       bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
     )
     unauthenticated,
     required TResult Function(AuthLoadingReason reason) loading,
@@ -436,7 +494,11 @@ class _$AuthLoadingImpl extends AuthLoading {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult? Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
@@ -456,7 +518,11 @@ class _$AuthLoadingImpl extends AuthLoading {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
@@ -605,6 +671,7 @@ class _$AuthErrorImpl extends AuthError {
     required TResult Function(
       bool forgotPasswordSending,
       bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
     )
     unauthenticated,
     required TResult Function(AuthLoadingReason reason) loading,
@@ -629,7 +696,11 @@ class _$AuthErrorImpl extends AuthError {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult? Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
@@ -649,7 +720,11 @@ class _$AuthErrorImpl extends AuthError {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
@@ -840,6 +915,7 @@ class _$AuthMfaRequiredImpl extends AuthMfaRequired {
     required TResult Function(
       bool forgotPasswordSending,
       bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
     )
     unauthenticated,
     required TResult Function(AuthLoadingReason reason) loading,
@@ -864,7 +940,11 @@ class _$AuthMfaRequiredImpl extends AuthMfaRequired {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult? Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
@@ -884,7 +964,11 @@ class _$AuthMfaRequiredImpl extends AuthMfaRequired {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,
@@ -1069,6 +1153,7 @@ class _$AuthAuthenticatedImpl extends AuthAuthenticated {
     required TResult Function(
       bool forgotPasswordSending,
       bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
     )
     unauthenticated,
     required TResult Function(AuthLoadingReason reason) loading,
@@ -1093,7 +1178,11 @@ class _$AuthAuthenticatedImpl extends AuthAuthenticated {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult? Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult? Function(AuthLoadingReason reason)? loading,
     TResult? Function(String message)? error,
@@ -1113,7 +1202,11 @@ class _$AuthAuthenticatedImpl extends AuthAuthenticated {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(bool forgotPasswordSending, bool resendCodeSending)?
+    TResult Function(
+      bool forgotPasswordSending,
+      bool resendCodeSending,
+      VerifyEmailPendingContext? emailVerificationPending,
+    )?
     unauthenticated,
     TResult Function(AuthLoadingReason reason)? loading,
     TResult Function(String message)? error,

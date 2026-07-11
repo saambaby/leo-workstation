@@ -6,46 +6,6 @@ part 'onboarding_dto.freezed.dart';
 part 'onboarding_dto.g.dart';
 
 @freezed
-class ConsentDto with _$ConsentDto {
-  const factory ConsentDto({
-    required bool tos,
-    required bool privacy,
-  }) = _ConsentDto;
-
-  factory ConsentDto.fromJson(Map<String, dynamic> json) =>
-      _$ConsentDtoFromJson(json);
-}
-
-@freezed
-class SignupPersonalRequestDto with _$SignupPersonalRequestDto {
-  const factory SignupPersonalRequestDto({
-    @JsonKey(name: 'account_type') @Default('personal') String accountType,
-    required String email,
-    required String password,
-    required ConsentDto consent,
-  }) = _SignupPersonalRequestDto;
-
-  factory SignupPersonalRequestDto.fromJson(Map<String, dynamic> json) =>
-      _$SignupPersonalRequestDtoFromJson(json);
-}
-
-@freezed
-class SignupCustomerRequestDto with _$SignupCustomerRequestDto {
-  const factory SignupCustomerRequestDto({
-    @JsonKey(name: 'account_type') @Default('business') String accountType,
-    @JsonKey(name: 'business_type') @Default('customer') String businessType,
-    required String email,
-    required String password,
-    required String name,
-    required String timezone,
-    required ConsentDto consent,
-  }) = _SignupCustomerRequestDto;
-
-  factory SignupCustomerRequestDto.fromJson(Map<String, dynamic> json) =>
-      _$SignupCustomerRequestDtoFromJson(json);
-}
-
-@freezed
 class InterpreterCertDto with _$InterpreterCertDto {
   const factory InterpreterCertDto({
     @JsonKey(name: 'certification_id') required String certificationId,

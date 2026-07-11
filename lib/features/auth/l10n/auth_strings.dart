@@ -93,10 +93,8 @@ abstract final class AuthStrings {
       'I acknowledge the Business Associate Agreement';
 
   static const signOut = 'Sign out';
-  static const webHandoffTitle = 'Continue in Leo Web';
-  static const webHandoffSubtitle =
-      'Platform administration is handled in the web dashboard.';
-  static const openWebDashboard = 'Open web dashboard';
+  static const platformAdminUseWeb =
+      'Platform admin accounts use Leo Web. Sign in at your organization\'s web dashboard instead.';
   static const blockedSurfaceTitle = 'Desktop or tablet required';
   static const blockedSurfaceSubtitle =
       'Customer sessions require a larger screen. Smartphone support arrives in v0.1.0.';

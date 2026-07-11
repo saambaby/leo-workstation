@@ -5,42 +5,38 @@
 
 ## Current target
 
-**P1 / `v0.0.1-alpha.1` — App shell.** core-shell + auth + router (theme, config,
-`DeviceClass`, cert-pinned `dio`, secure tokens, redirect). **Realtime/WSS deferred**
-(re-carved 2026-06-29). Carve: [`v0.0.1-alpha.1.md`](v0.0.1-alpha.1.md). All three
-specs drafted ✅.
+**P2 onboarding primitives — `v0.0.1-p2-onboarding`.** Signup + OTP verify + personal/customer
+onboarding wizards against **alpha.6 OTP backend**. Carve:
+[`v0.0.1-p2-onboarding-taskgraph.md`](v0.0.1-p2-onboarding-taskgraph.md).
+Cross-spec audit: [`cross-spec-audit.md`](../cross-spec-audit.md) ✅ PASS (2026-07-11).
 
-> **Auth dependency:** build P1 against the **alpha.4** backend auth contract from
-> day one (multi-membership login + tenant picker, `switch-tenant`, `platform_admin`
-> slug). The backend is already at `alpha.5`; the client is catching up to that
-> contract in its first real phase. See [`features/auth.md`](../features/auth.md).
+> **Auth contract:** P1 built against the **live backend** (single-membership login, no
+> picker/switcher — `auth.md` D1/D2). Wire in `lib/core/auth/` (`INV-CLIENT-AUTH-REPO-1`).
+> OTP verify/reset paths match **alpha.6** (`/auth/resend-verify`, `/auth/reset-password/verify`).
 
 ## Map
 
 | Phase | Tag | Status | Doc |
 |---|---|---|---|
 | P0 | — | ✅ done (scaffold) | [`phase-0-scaffold.md`](phase-0-scaffold.md) |
-| P1 | `v0.0.1-alpha.1` | ✅ shipped (core-shell, auth, router) | [`v0.0.1-alpha.1.md`](v0.0.1-alpha.1.md) · COE: [`v0.0.1-alpha.1-coe.md`](v0.0.1-alpha.1-coe.md) |
-| P1 (auth correction) | `v0.0.1-alpha.1-auth-live` | ✅ shipped — auth client rebuilt against the live backend contract (D1–D7) | Spec: [`../features/auth.md`](../features/auth.md) · Taskgraph: [`v0.0.1-alpha.1-auth-live-taskgraph.md`](v0.0.1-alpha.1-auth-live-taskgraph.md) · COE: [`v0.0.1-alpha.1-auth-live-coe.md`](v0.0.1-alpha.1-auth-live-coe.md) |
-| — | `v0.0.1-alpha.2/3` | n/a (no client release — backend-only) | release-plan |
-| — | `v0.0.1-alpha.4` | folded into P1 auth contract | release-plan / `features/auth.md` |
+| P1 | `v0.0.1-alpha.1` | ✅ shipped (core-shell, auth, router) | [`v0.0.1-alpha.1.md`](v0.0.1-alpha.1.md) · taskgraph: [`v0.0.1-alpha.1-taskgraph.md`](v0.0.1-alpha.1-taskgraph.md) (revised 2026-07-11) |
+| P1 (auth correction) | `v0.0.1-alpha.1-auth-live` | ✅ shipped | [`v0.0.1-alpha.1-auth-live-taskgraph.md`](v0.0.1-alpha.1-auth-live-taskgraph.md) |
+| P2 (onboarding) | `v0.0.1-p2-onboarding` | **running** — orchestrated 2026-07-11 ([#23](https://github.com/saambaby/leo-workstation/issues/23)) | [`v0.0.1-p2-onboarding.md`](v0.0.1-p2-onboarding.md) · taskgraph: [`v0.0.1-p2-onboarding-taskgraph.md`](v0.0.1-p2-onboarding-taskgraph.md) |
+| — | `v0.0.1-alpha.2/3` | n/a (no client release) | release-plan |
+| — | `v0.0.1-alpha.4` | folded into P1 auth contract (picker cut) | `features/auth.md` |
 | — | `v0.0.1-alpha.5` | minimal pre-P2 (`platform_admin`, affiliations if needed) | release-plan |
-| (P1b) | — | **realtime** (WSS) — deferred from alpha.1; spec pending | release-plan |
-| P2 | `v0.0.1` | planned (MVP) — **onboarding** ✅ specced; session/dispatch/call pending | release-plan |
+| (P1b) | — | **realtime** (WSS) — deferred; spec pending | release-plan |
+| P2 | `v0.0.1` | planned (MVP) — session/dispatch/call pending | release-plan |
 | P3+ | `v0.1.0`→`v1.0.0` | planned | release-plan |
 
-## Phase-carve note (2026-06-29)
+## Phase-carve note (2026-06-29, updated 2026-07-11)
 
-Four-question diagnostic on the drafted scope returned **4× Yes → split**. The
-`{core-shell → auth → router}` cluster is the load-bearing app-shell phase
-(`v0.0.1-alpha.1`) and is *not* split further (tightly coupled). **realtime** was cut
-from alpha.1 (deferred). **onboarding** is carved to **P2** with the not-yet-specced
-MVP features; P2 is **not** fully carved until session/dispatch/call are specced.
+`{core-shell → auth → router}` shipped as P1. **Onboarding** carved to P2 with its own
+taskgraph (`v0.0.1-p2-onboarding`) — signup/verify scaffold exists on disk; orchestration
+targets integration + E2E smoke. **realtime** still deferred. Full P2 MVP
+(session/dispatch/call) awaits feature specs.
 
 ## Pineapple adoption note
 
-Adopted onto the existing repo via `/pineapple:ongoing` (2026-06-29). The code is
-pre-P1 (scaffold); Phases 1–3 were reverse-engineered from the rich `docs/` layer
-and the sibling backend, not from built client code. Next: run the Phase 3→4 gate
-(`/pineapple:prd-readiness`), then the `/pineapple:feature-spec` loop for P1
-features.
+Next: `/pineapple:orchestrate v0.0.1-p2-onboarding` (after reviewing
+[`cross-spec-audit.md`](../cross-spec-audit.md)).

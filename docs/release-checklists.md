@@ -43,13 +43,18 @@ When tagging the **web admin app** (not this repo), also verify:
 - [ ] Customer routes **blocked on smartphone** (`DeviceClass`)
 - [ ] LSP Admin dashboard link configured (may open stub URL)
 
-### `v0.0.1-alpha.4` — Auth contract (multi-membership)
+### `v0.0.1-alpha.4` — Auth contract (client subset)
 
-- [ ] Multi-membership login → tenant picker → correct role home
+- [ ] Single-membership login → correct role home (server auto-picks active tenant)
 - [ ] Tenant-less interpreter login → `/idle` without error
-- [ ] `switch-tenant` re-mints token; MFA re-challenged for privileged roles
+- [ ] MFA enroll/challenge for privileged roles (login resubmit + `/auth/mfa/enroll`)
 - [ ] JWT handling uses `platform_admin` slug (no `superadmin` in code or docs)
+- [ ] `platform_admin` session rejected in workstation (use `leo-web`)
 - [ ] All alpha.1 app-shell gates still pass
+
+> **Deferred:** multi-membership picker + `switch-tenant` UI — no memberships-list
+> endpoint (`features/auth.md` D1/D2). Revisit when `leo-api` adds self-scoped
+> memberships list.
 
 ### `v0.0.1` — P2 MVP
 

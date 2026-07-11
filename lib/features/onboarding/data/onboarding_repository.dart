@@ -6,22 +6,6 @@ import '../domain/onboarding_entities.dart';
 import 'dto/onboarding_dto.dart';
 
 abstract class OnboardingRepository {
-  Future<SignupResult> signupPersonal({
-    required String email,
-    required String password,
-    required bool tos,
-    required bool privacy,
-  });
-
-  Future<SignupResult> signupCustomer({
-    required String email,
-    required String password,
-    required String orgName,
-    required String timezone,
-    required bool tos,
-    required bool privacy,
-  });
-
   Future<List<CatalogLanguage>> fetchLanguages();
 
   Future<List<CatalogCertification>> fetchCertifications();
@@ -41,46 +25,6 @@ class ApiOnboardingRepository implements OnboardingRepository {
   ApiOnboardingRepository(this._dio);
 
   final Dio _dio;
-
-  @override
-  Future<SignupResult> signupPersonal({
-    required String email,
-    required String password,
-    required bool tos,
-    required bool privacy,
-  }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/signup',
-      data: SignupPersonalRequestDto(
-        email: email,
-        password: password,
-        consent: ConsentDto(tos: tos, privacy: privacy),
-      ).toJson(),
-    );
-    return SignupResult.fromJson(response.data!);
-  }
-
-  @override
-  Future<SignupResult> signupCustomer({
-    required String email,
-    required String password,
-    required String orgName,
-    required String timezone,
-    required bool tos,
-    required bool privacy,
-  }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/signup',
-      data: SignupCustomerRequestDto(
-        email: email,
-        password: password,
-        name: orgName,
-        timezone: timezone,
-        consent: ConsentDto(tos: tos, privacy: privacy),
-      ).toJson(),
-    );
-    return SignupResult.fromJson(response.data!);
-  }
 
   @override
   Future<List<CatalogLanguage>> fetchLanguages() async {

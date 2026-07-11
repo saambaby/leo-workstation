@@ -10,9 +10,9 @@ import '../widgets/auth_form_shell.dart';
 import '../widgets/auth_screen_layout.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
-  const ResetPasswordScreen({super.key, this.token});
+  const ResetPasswordScreen({super.key, this.resetTicket});
 
-  final String? token;
+  final String? resetTicket;
 
   @override
   ConsumerState<ResetPasswordScreen> createState() =>
@@ -32,8 +32,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   }
 
   Future<void> _submit() async {
-    final token = widget.token;
-    if (token == null || token.isEmpty) return;
+    final ticket = widget.resetTicket;
+    if (ticket == null || ticket.isEmpty) return;
 
     if (_password.text != _confirmPassword.text) {
       setState(() => _localError = AuthStrings.passwordMismatch);
@@ -41,9 +41,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     }
 
     setState(() => _localError = null);
-    final ok = await ref
-        .read(authNotifierProvider.notifier)
-        .resetPassword(token: token, password: _password.text);
+    final ok = await ref.read(authNotifierProvider.notifier).resetPassword(
+          resetTicket: ticket,
+          password: _password.text,
+        );
     if (!mounted || !ok) return;
     context.go('/login?reset=success');
   }
