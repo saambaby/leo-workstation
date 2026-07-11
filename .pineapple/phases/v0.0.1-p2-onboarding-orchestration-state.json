@@ -4,11 +4,13 @@
   "current_wave": 3,
   "parent_issue": 23,
   "started_at": "2026-07-11",
+  "merged_at": "2026-07-11",
+  "merge_commit": "6a9372b",
   "mode": "coordinator-side-serial",
-  "notes": "GITHUB_TOKEN invalid in env; gh via env -u GITHUB_TOKEN. Implementation on branch feat/otp-email-verification. W1+W2 code complete; W3 P2-O-T-05 awaits human E2E smoke against staging alpha.6+.",
+  "notes": "PR #29 squash-merged to main (6a9372b). P2-O-T-01..04 merged. P2-O-T-05 manual E2E smoke remains open (#28).",
   "tasks": {
     "P2-O-T-01": {
-      "status": "review",
+      "status": "merged",
       "role": "high",
       "depends_on": [],
       "tracker_issue": 24,
@@ -16,14 +18,13 @@
       "agent": "coordinator",
       "started_at": "2026-07-11",
       "completed_at": "2026-07-11",
-      "commit": "9e6af7c",
+      "commit": "6a9372b",
       "attempt": 1,
       "error": null,
-      "pr": 29,
-      "verification": "flutter analyze lib/core/auth lib/features/onboarding clean; wire paths match alpha.6"
+      "pr": 29
     },
     "P2-O-T-02": {
-      "status": "review",
+      "status": "merged",
       "role": "standard",
       "depends_on": ["P2-O-T-01"],
       "tracker_issue": 25,
@@ -31,14 +32,13 @@
       "agent": "coordinator",
       "started_at": "2026-07-11",
       "completed_at": "2026-07-11",
-      "commit": "9e6af7c",
+      "commit": "6a9372b",
       "attempt": 1,
       "error": null,
-      "pr": 29,
-      "verification": "emailVerificationPending redirect; no login?verified=success; applyLoginResult(fromEmailVerify)"
+      "pr": 29
     },
     "P2-O-T-03": {
-      "status": "review",
+      "status": "merged",
       "role": "standard",
       "depends_on": ["P2-O-T-02"],
       "tracker_issue": 26,
@@ -46,14 +46,13 @@
       "agent": "coordinator",
       "started_at": "2026-07-11",
       "completed_at": "2026-07-11",
-      "commit": "9e6af7c",
+      "commit": "6a9372b",
       "attempt": 1,
       "error": null,
-      "pr": 29,
-      "verification": "personal_onboarding_screen + catalog + affiliation note on disk"
+      "pr": 29
     },
     "P2-O-T-04": {
-      "status": "review",
+      "status": "merged",
       "role": "standard",
       "depends_on": ["P2-O-T-02"],
       "tracker_issue": 27,
@@ -61,11 +60,10 @@
       "agent": "coordinator",
       "started_at": "2026-07-11",
       "completed_at": "2026-07-11",
-      "commit": "9e6af7c",
+      "commit": "6a9372b",
       "attempt": 1,
       "error": null,
-      "pr": 29,
-      "verification": "customer_onboarding_screen + org/invites on disk"
+      "pr": 29
     },
     "P2-O-T-05": {
       "status": "pending",

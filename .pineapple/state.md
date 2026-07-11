@@ -67,6 +67,6 @@ on `main`. `INV-CLIENT-STATE-2`/`INV-CLIENT-ROUTE-2` amendments landed with AL-T
 - Memberships-list endpoint — flag to `leo-api` if/when multi-tenant switching (D2) is reprioritized; not yet filed.
 - Stale remote branches on GitHub (`pin-2`…`pin-6`, `pin-13`, `pin-14`, `pin-revert/orchestration-state-direct-push`) — merged/closed PRs didn't auto-delete them; left alone pending explicit cleanup authorization.
 - Feature-spec loop: `realtime`, session/dispatch/call — see [`features/INDEX.md`](features/INDEX.md).
-- **Next orchestration:** `v0.0.1-p2-onboarding` **running** — PR [#29](https://github.com/saambaby/leo-workstation/pull/29), parent issue [#23](https://github.com/saambaby/leo-workstation/issues/23). P2-O-T-05 manual E2E smoke pending post-merge.
+- **P2 onboarding orchestration:** PR [#29](https://github.com/saambaby/leo-workstation/pull/29) merged to `main` (`6a9372b`). P2-O-T-01..04 done; [#28](https://github.com/saambaby/leo-workstation/issues/28) manual E2E smoke remains.
 - P2 remaining beyond onboarding: WSS realtime, session/dispatch/call MVP.
 - Onboarding backend deps — see [`features/onboarding.md`](features/onboarding.md) open questions (A8).
