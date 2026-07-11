@@ -124,3 +124,22 @@ graph TD
 ```
 
 Start at **P2-O-T-01** (alpha.6 OTP wire integration verify) — most scaffold is on disk; taskgraph focuses on integration smoke + E2E gates.
+
+---
+
+## Addendum 2026-07-11 — `lsp-native-signup.md` delta reconciliation
+
+A new spec, `features/lsp-native-signup.md`, moved LSP signup in-app (previously external-only). A follow-up audit (fresh `pineapple-consistency-checker` run) found 5 DRIFT / 3 AMBIGUOUS / 3 OPEN against the specs above. Resolved same-day:
+
+| # | Was | Now |
+|---|---|---|
+| 1 | `invariants-client.md` `INV-CLIENT-ROUTE-1`: unconditional "LSP signup + LSP onboarding live in `leo-web`" | Narrowed: LSP *onboarding* stays web; LSP *signup* is in-app (P2 delta) |
+| 2 | `onboarding.md` Summary/AC1/KD1/Non-goals asserted LSP signup is external-only | Amended to point at `lsp-native-signup.md` as the owner of that transaction, not restate it |
+| 3 | `onboarding.md` wire contract: "client emits only `personal` and `business+customer`" | Scoped to "this spec's screens"; noted `lsp-native-signup.md` adds a third variant |
+| 4 | `onboarding.md` AC8 route list omitted `/signup/details` despite 3 other docs depending on it | Added to the registered-routes list |
+| 5 | `otp-email-verification.md` non-goals: "LSP signup stays `leo-web`"; `path` enum listed as `personal`\|`customer` only | Reworded non-goal; `path` enum now notes `lsp` extension |
+| — | AMBIG-2: `lsp-native-signup.md` named `SignupPath`/`SignupNotifier`/`SignupTypeScreen`/`SignupDetailsScreen` as reused from `onboarding.md`, but `onboarding.md` never named them | `onboarding.md` User flow section now names all four concretely |
+| — | AMBIG-3: privileged (LSP) verify never asserted "always enrolls, never direct-mints" in `otp-email-verification.md` | Added to AC5 |
+| — | New: `INV-CLIENT-CONSENT-1` promoted (client-side consent gate before submit — honored by `auth.md`, `onboarding.md`, `lsp-native-signup.md`, previously unnamed) | Added to `invariants-client.md` |
+
+**Still open (not a doc-drift issue — a scheduling decision):** whether `lsp-native-signup.md` ships as a separate pass after `v0.0.1-p2-onboarding` closes, or folds into that taskgraph before it closes. Both the phase doc and the LSP spec now say this explicitly rather than asserting an order. Founder call before `lsp-native-signup` is orchestrated.

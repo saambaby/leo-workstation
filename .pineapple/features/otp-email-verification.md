@@ -1,6 +1,6 @@
 # Feature: otp-email-verification
 
-**Status:** Drafted · **Phase:** P1 signup/verify primitives (alpha.4+) · **Owner:** client
+**Status:** Drafted (amended 2026-07-11 for cross-spec-audit reconciliation against `lsp-native-signup.md`) · **Phase:** P1 signup/verify primitives (alpha.4+) · **Owner:** client
 
 ## Summary
 
@@ -13,10 +13,13 @@ presentation is split: **onboarding** owns the verify screen + `SignupNotifier`;
 ## User-facing behaviour
 
 After signup or failed login (unverified), the user lands on `/verify-email` with
-`email`, `source` (`signup`|`login`), and `path` (`personal`|`customer`) query
+`email`, `source` (`signup`|`login`), and `path` (`personal`|`customer`, extended to
+`lsp` by [`lsp-native-signup.md`](lsp-native-signup.md) on the same screen) query
 params. They enter a 6-digit code, can resend, and on success the app mints a
 session via the same `LoginResult` path as login (MFA enrollment or challenge when
-applicable). No magic-link handoff to `leo-web`; no `?verified=success` on login.
+applicable) — for privileged paths (`lsp`) that always means enrollment on first
+verify, never a direct token mint (see AC5). No magic-link handoff to `leo-web`; no
+`?verified=success` on login.
 
 ## Acceptance criteria
 
@@ -24,7 +27,7 @@ applicable). No magic-link handoff to `leo-web`; no `?verified=success` on login
 2. Login `401` unverified sets the same metadata with `source=login`.
 3. `POST /auth/verify-email` `{ email, code }` → `LoginResult`; success calls `AuthNotifier.applyLoginResult(fromEmailVerify: true)`.
 4. Resend calls `POST /auth/resend-verify` `{ email }`; UI shows sending state via `signupUiProvider`.
-5. **A7:** If verify returns `mfa_required` with `firstLogin: false`, surface error — user must sign in again (unexpected after verify). Enrollment (`firstLogin: true`) routes to `/mfa/enroll` normally.
+5. **A7:** Privileged accounts (e.g. `lsp_admin`) never receive a direct token mint from first verify — they always come back `mfa_enrollment_required` (`firstLogin: true`), which routes to `/mfa/enroll`. If verify instead returns `mfa_required` with `firstLogin: false`, surface error — user must sign in again (unexpected after verify).
 6. Wrong-email affordance returns to signup; duplicate email on re-signup → `409`.
 
 ## Wire-format contract
@@ -41,7 +44,7 @@ applicable). No magic-link handoff to `leo-web`; no `?verified=success` on login
 
 ## Non-goals
 
-LSP email verify (LSP signup stays `leo-web`). Deep-link token verify from email app (future). Admin surfaces.
+A separate LSP verify UI — the `lsp` path reuses this same `/verify-email` screen via [`lsp-native-signup.md`](lsp-native-signup.md), not a parallel flow. Deep-link token verify from email app (future). Admin surfaces.
 
 ## Touches
 
