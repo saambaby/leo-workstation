@@ -30,7 +30,7 @@ View state is immutable (`freezed`). `go_router`'s `redirect` is keyed on auth s
 `auth` owns the `AuthState` union and `router` consumes it; the union **arm** signature is frozen as a shared contract. Arms: `unauthenticated(forgotPasswordSending?, resendCodeSending?, emailVerificationPending?)` · `loading(reason?)` · `error(message)` · `mfaRequired(firstLogin, enrollmentToken?, otpauthUrl?, secret?)` · `authenticated(role, tenantId?, onboardingRequired)`. `emailVerificationPending` is **router-consumed** metadata (exception to UI-only optional fields). Optional metadata fields on other arms are UI-only and invisible to router redirect.
 
 ### INV-CLIENT-STATE-3 — Centralized async state, derived UI providers
-Async and business state (loading, errors, lists fetched for UI, in-flight operations) is owned by the feature `Notifier` (`presentation/notifiers/`), not private fields on `State` / `ConsumerState`. Screens and widgets watch a derived `presentation/providers/<feature>_ui_provider.dart` for display helpers (`isLoading`, `errorMessage`, etc.) instead of pattern-matching the domain union on every build. Views never call repositories. Ephemeral UI-only state (`TextEditingController`, focus nodes, overlay open/close) may remain local. Reference: `features/auth/` (`AuthNotifier`, `authUiProvider`, `AuthFormShell`). (promoted 2026-06-30)
+Async and business state (loading, errors, lists fetched for UI, in-flight operations) is owned by the feature `Notifier` (`presentation/notifiers/`), not private fields on `State` / `ConsumerState`. Notifier state and derived UI helpers are `@freezed` under `presentation/state/` (`<feature>_state.dart`, `<feature>_ui_state.dart`). The derived UI `Provider` (`<feature>UiProvider`) is **co-located on the notifier file** — not a separate `presentation/providers/` file. Screens watch that provider for `isLoading`, `errorMessage`, etc. instead of pattern-matching the notifier union on every build. Views never call repositories. Ephemeral UI-only state (`TextEditingController`, focus nodes, overlay open/close) may remain local. Session transitions (login, logout, onboarding complete) navigate via `redirect` + `AuthState`, not imperative role-home `context.go`. Large notifiers may extract plain ops modules; they must not become separate providers that mutate the router contract. Reference: `features/auth/` (`AuthNotifier`, `authUiProvider`, ops modules), `features/onboarding/` (`SignupNotifier`, `OnboardingNotifier`). Cursor: `.cursor/rules/state-management.mdc`. (promoted 2026-06-30; refined 2026-07-11)
 
 ### INV-CLIENT-TEST-1 — No Flutter tests unless requested
 Do not add or expand unit/widget/integration tests in this repo unless the user explicitly asks. Verification for agent work is `flutter analyze` (+ `build_runner` when codegen changes). Existing tests may be kept passing but must not be extended by default. (promoted 2026-06-30)
@@ -40,7 +40,7 @@ Do not add or expand unit/widget/integration tests in this repo unless the user 
 ## Client boundary (BD7)
 
 ### INV-CLIENT-ROUTE-1 — No back-office in Flutter
-No admin CRUD, reports, rate-card, or billing-export routes exist in this app. **LSP signup + LSP onboarding** live in **`leo-web`**. **Personal (interpreter) + customer signup, email verification, and onboarding are in-app** (decided 2026-06-29; see [state.md](state.md) and [features/onboarding.md](features/onboarding.md)). LSP Admin reaches web surfaces via an external link, never an in-app route. (client-map, BD7 line 223)
+No admin CRUD, reports, rate-card, or billing-export routes exist in this app. **LSP onboarding** (languages/partners/pricing) and all LSP back-office stay in **`leo-web`**. **LSP signup** (account creation → OTP verify → MFA enroll) is in-app as a P2 delta reusing the personal/customer signup screens (`features/lsp-native-signup.md`, ships after `v0.0.1-p2-onboarding`) — softened 2026-07-11; not yet shipped, see phase doc. **Personal (interpreter) + customer signup, email verification, and onboarding are in-app** (decided 2026-06-29; see [state.md](state.md) and [features/onboarding.md](features/onboarding.md)). LSP Admin reaches back-office web surfaces via an external link, never an in-app route. (client-map, BD7 line 223)
 
 ### INV-CLIENT-CONTRACT-1 — Thin, untrusted client
 All business rules and billing live in `leo-api`. The client never computes a charge and never starts the billing meter; it reflects state pushed over WSS. (arch §6)
@@ -73,8 +73,14 @@ Every authenticated request carries the access JWT via the single `dio` intercep
 ### INV-CLIENT-NET-1 — Certificate pinning
 API calls verify a pinned server cert (SHA-256) with rotation support; a pin mismatch refuses the connection. (D6/D13)
 
+### INV-CLIENT-NET-2 — Typed error envelope + safe response bodies
+Parse leo-api failures as `{ statusCode, message, error, code }` via `lib/core/network/api_error.dart` (mirrors platform `INV-ERROR-1`). **Show `message` in alerts/forms** — do not maintain a client code→copy map. **Branch on `code`** (`ApiErrorCode`) only when UX differs (redirect, field highlight, session teardown); never branch on `message` text. `mapUserFacingError` returns server `message` or a generic/fallback for non-envelope failures. Successful JSON bodies use `requireJsonMap` / `requireJsonList` (`api_response.dart`) — never `response.data!` into `fromJson`. (promoted 2026-07-11)
+
 ### INV-CLIENT-PHI-1 — No PHI at rest
 No patient data is persisted on device. Session caches are ephemeral and cleared on sign-off and on backgrounding. (mirrors platform INV-PHI-1; ps §16)
+
+### INV-CLIENT-CONSENT-1 — Client-side consent gate before submit
+Every consent-bearing submit (`/auth/signup`, `/invitations/accept`, and LSP signup) gates on all required consent booleans being `true` **client-side** — an incomplete or false consent object is never sent to the network, not merely rejected server-side. Consent itself stays append-only server-side (`INV-CONSENT-1`, platform); this invariant is only about when the client is allowed to fire the request. Honored by `auth.md` AC6, `onboarding.md` AC2, `lsp-native-signup.md` AC2. (promoted 2026-07-11 from cross-spec audit — invariant-promotion candidate #1)
 
 ### INV-CLIENT-MEDIA-1 — Media tokens only, media never via Leo
 The client exchanges encrypted A/V **directly** with Vonage (video) / Twilio (telephony) using short-lived tokens minted by `leo-api`. Media never transits the client's backend path. (mirrors platform INV-MEDIA-1; arch §6)
