@@ -4,37 +4,24 @@ import '../../../../core/auth/data/auth_repository.dart';
 import '../../../../core/network/api_error.dart';
 import '../../../auth/presentation/notifiers/auth_notifier.dart';
 import '../../domain/onboarding_entities.dart';
+import '../state/signup_state.dart';
+import '../state/signup_ui_state.dart';
+
+export '../state/signup_ui_state.dart';
 
 final signupNotifierProvider =
-    NotifierProvider<SignupNotifier, SignupUiState>(SignupNotifier.new);
+    NotifierProvider<SignupNotifier, SignupState>(SignupNotifier.new);
 
-class SignupUiState {
-  const SignupUiState({
-    this.loading = false,
-    this.resendVerifySending = false,
-    this.error,
-  });
+/// Derived UI helpers from [SignupState] — screens watch this instead of
+/// reading raw notifier loading/error fields.
+final signupUiProvider = Provider<SignupUiState>((ref) {
+  final state = ref.watch(signupNotifierProvider);
+  return SignupUiState.from(state);
+});
 
-  final bool loading;
-  final bool resendVerifySending;
-  final String? error;
-
-  SignupUiState copyWith({
-    bool? loading,
-    bool? resendVerifySending,
-    String? error,
-  }) {
-    return SignupUiState(
-      loading: loading ?? this.loading,
-      resendVerifySending: resendVerifySending ?? this.resendVerifySending,
-      error: error,
-    );
-  }
-}
-
-class SignupNotifier extends Notifier<SignupUiState> {
+class SignupNotifier extends Notifier<SignupState> {
   @override
-  SignupUiState build() => const SignupUiState();
+  SignupState build() => const SignupState();
 
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 
@@ -86,7 +73,7 @@ class SignupNotifier extends Notifier<SignupUiState> {
     state = state.copyWith(loading: true, error: null);
     try {
       final result = await call();
-      state = const SignupUiState();
+      state = const SignupState();
       if (!result.emailVerificationRequired) return false;
       ref.read(authNotifierProvider.notifier).setEmailVerificationPending(
             VerifyEmailPendingContext(
@@ -97,7 +84,7 @@ class SignupNotifier extends Notifier<SignupUiState> {
           );
       return true;
     } catch (e) {
-      state = SignupUiState(
+      state = SignupState(
         loading: false,
         error: mapUserFacingError(e),
       );
@@ -117,10 +104,10 @@ class SignupNotifier extends Notifier<SignupUiState> {
             email: email,
             fromEmailVerify: true,
           );
-      state = const SignupUiState();
+      state = const SignupState();
       return true;
     } catch (e) {
-      state = SignupUiState(
+      state = SignupState(
         loading: false,
         error: mapUserFacingError(
           e,
@@ -135,8 +122,12 @@ class SignupNotifier extends Notifier<SignupUiState> {
     state = state.copyWith(resendVerifySending: true, error: null);
     try {
       await _repo.resendVerifyEmail(email: email);
-    } finally {
       state = state.copyWith(resendVerifySending: false);
+    } catch (e) {
+      state = SignupState(
+        resendVerifySending: false,
+        error: mapUserFacingError(e),
+      );
     }
   }
 }

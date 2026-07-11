@@ -9,7 +9,6 @@ import '../../../auth/presentation/widgets/otp_input_row.dart';
 import '../../domain/onboarding_entities.dart';
 import '../../l10n/onboarding_strings.dart';
 import '../notifiers/signup_notifier.dart';
-import '../providers/signup_ui_provider.dart';
 import '../widgets/leo_wizard_steps.dart';
 
 class VerifyEmailScreen extends ConsumerStatefulWidget {

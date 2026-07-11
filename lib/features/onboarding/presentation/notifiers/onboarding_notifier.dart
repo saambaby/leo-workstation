@@ -3,47 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/notifiers/auth_notifier.dart';
 import '../../data/onboarding_repository.dart';
 import '../../domain/onboarding_entities.dart';
+import '../state/onboarding_state.dart';
+import '../state/onboarding_ui_state.dart';
+
+export '../state/onboarding_ui_state.dart';
 
 final onboardingNotifierProvider =
-    NotifierProvider<OnboardingNotifier, OnboardingUiState>(
+    NotifierProvider<OnboardingNotifier, OnboardingState>(
   OnboardingNotifier.new,
 );
 
-class OnboardingUiState {
-  const OnboardingUiState({
-    this.loading = false,
-    this.error,
-    this.languages = const [],
-    this.certifications = const [],
-    this.catalogLoaded = false,
-  });
+/// Derived UI helpers from [OnboardingState] — screens watch this instead of
+/// reading raw notifier loading/error/catalog fields.
+final onboardingUiProvider = Provider<OnboardingUiState>((ref) {
+  final state = ref.watch(onboardingNotifierProvider);
+  return OnboardingUiState.from(state);
+});
 
-  final bool loading;
-  final String? error;
-  final List<CatalogLanguage> languages;
-  final List<CatalogCertification> certifications;
-  final bool catalogLoaded;
-
-  OnboardingUiState copyWith({
-    bool? loading,
-    String? error,
-    List<CatalogLanguage>? languages,
-    List<CatalogCertification>? certifications,
-    bool? catalogLoaded,
-  }) {
-    return OnboardingUiState(
-      loading: loading ?? this.loading,
-      error: error,
-      languages: languages ?? this.languages,
-      certifications: certifications ?? this.certifications,
-      catalogLoaded: catalogLoaded ?? this.catalogLoaded,
-    );
-  }
-}
-
-class OnboardingNotifier extends Notifier<OnboardingUiState> {
+class OnboardingNotifier extends Notifier<OnboardingState> {
   @override
-  OnboardingUiState build() => const OnboardingUiState();
+  OnboardingState build() {
+    Future.microtask(loadCatalog);
+    return const OnboardingState();
+  }
 
   OnboardingRepository get _repo => ref.read(onboardingRepositoryProvider);
 
@@ -53,13 +35,13 @@ class OnboardingNotifier extends Notifier<OnboardingUiState> {
     try {
       final langs = await _repo.fetchLanguages();
       final certs = await _repo.fetchCertifications();
-      state = OnboardingUiState(
+      state = OnboardingState(
         languages: langs,
         certifications: certs,
         catalogLoaded: true,
       );
     } catch (_) {
-      state = const OnboardingUiState(
+      state = const OnboardingState(
         error: 'Could not load catalog. Please try again.',
       );
     }

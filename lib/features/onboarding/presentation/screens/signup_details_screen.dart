@@ -68,15 +68,15 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
             privacy: _privacy,
           );
     if (!mounted) return;
-    if (!ok && ref.read(signupNotifierProvider).error == null) {
+    if (!ok && ref.read(signupUiProvider).errorMessage == null) {
       context.go('/login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final ui = ref.watch(signupNotifierProvider);
-    final error = _localError ?? ui.error;
+    final ui = ref.watch(signupUiProvider);
+    final error = _localError ?? ui.errorMessage;
 
     return AuthStage(
       child: AuthCard(
@@ -153,7 +153,7 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
             LeoButton(
               label: OnboardingStrings.createAccount,
               fullWidth: true,
-              enabled: !ui.loading,
+              enabled: !ui.isLoading,
               onPressed: _submit,
             ),
             Center(

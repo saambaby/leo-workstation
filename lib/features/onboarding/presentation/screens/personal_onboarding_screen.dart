@@ -27,21 +27,13 @@ class _PersonalOnboardingScreenState
   final _certEntries = <InterpreterCertEntry>[];
 
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(
-      () => ref.read(onboardingNotifierProvider.notifier).loadCatalog(),
-    );
-  }
-
-  @override
   void dispose() {
     _displayName.dispose();
     super.dispose();
   }
 
   Future<void> _finish() async {
-    final ok = await ref.read(onboardingNotifierProvider.notifier).completePersonal(
+    await ref.read(onboardingNotifierProvider.notifier).completePersonal(
           InterpreterProfileInput(
             displayName: _displayName.text.trim(),
             timezone: _timezone,
@@ -49,13 +41,11 @@ class _PersonalOnboardingScreenState
             certifications: _certEntries,
           ),
         );
-    if (!mounted || !ok) return;
-    context.go('/idle');
   }
 
   @override
   Widget build(BuildContext context) {
-    final ui = ref.watch(onboardingNotifierProvider);
+    final ui = ref.watch(onboardingUiProvider);
 
     return AuthStage(
       child: AuthCard(
@@ -84,8 +74,8 @@ class _PersonalOnboardingScreenState
                 WizardStep(label: OnboardingStrings.stepAffiliate),
               ],
             ),
-            if (ui.error != null) ...[
-              AuthErrorBanner(message: ui.error!),
+            if (ui.errorMessage != null) ...[
+              AuthErrorBanner(message: ui.errorMessage!),
               const SizedBox(height: 16),
             ],
             Row(
@@ -190,7 +180,7 @@ class _PersonalOnboardingScreenState
                 ),
                 LeoButton(
                   label: OnboardingStrings.nextAffiliate,
-                  enabled: !ui.loading && _displayName.text.trim().isNotEmpty,
+                  enabled: !ui.isLoading && _displayName.text.trim().isNotEmpty,
                   onPressed: _finish,
                 ),
               ],

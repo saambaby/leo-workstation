@@ -56,6 +56,40 @@ void main() {
       );
     });
 
+    test('authenticated without onboardingRequired exits onboarding to role home',
+        () {
+      expect(
+        authRedirect(
+          const AuthState.authenticated(role: LeoRoles.interpreter),
+          DeviceClass.desktop,
+          '/onboarding/personal',
+        ),
+        '/idle',
+      );
+      expect(
+        authRedirect(
+          const AuthState.authenticated(role: LeoRoles.customerUser),
+          DeviceClass.desktop,
+          '/onboarding/customer',
+        ),
+        '/call',
+      );
+    });
+
+    test('authenticated with onboardingRequired stays on onboarding', () {
+      expect(
+        authRedirect(
+          const AuthState.authenticated(
+            role: LeoRoles.interpreter,
+            onboardingRequired: true,
+          ),
+          DeviceClass.desktop,
+          '/onboarding/personal',
+        ),
+        isNull,
+      );
+    });
+
     test('mfaRequired first login goes to enroll', () {
       expect(
         authRedirect(
