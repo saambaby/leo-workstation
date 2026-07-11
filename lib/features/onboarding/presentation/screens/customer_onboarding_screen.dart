@@ -48,22 +48,19 @@ class _CustomerOnboardingScreenState
         )
         .toList();
 
-    final ok =
-        await ref.read(onboardingNotifierProvider.notifier).completeCustomer(
-              org: CustomerOrgInput(
-                name: _orgName.text.trim(),
-                industry: _industry,
-                registeredAddress: _address.text.trim(),
-              ),
-              invites: invites,
-            );
-    if (!mounted || !ok) return;
-    context.go('/call');
+    await ref.read(onboardingNotifierProvider.notifier).completeCustomer(
+          org: CustomerOrgInput(
+            name: _orgName.text.trim(),
+            industry: _industry,
+            registeredAddress: _address.text.trim(),
+          ),
+          invites: invites,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    final ui = ref.watch(onboardingNotifierProvider);
+    final ui = ref.watch(onboardingUiProvider);
 
     return AuthStage(
       child: AuthCard(
@@ -93,8 +90,8 @@ class _CustomerOnboardingScreenState
                 WizardStep(label: OnboardingStrings.stepDone),
               ],
             ),
-            if (ui.error != null) ...[
-              AuthErrorBanner(message: ui.error!),
+            if (ui.errorMessage != null) ...[
+              AuthErrorBanner(message: ui.errorMessage!),
               const SizedBox(height: 16),
             ],
             Row(
@@ -285,7 +282,7 @@ class _CustomerOnboardingScreenState
                 ),
                 LeoButton(
                   label: OnboardingStrings.finishAndCall,
-                  enabled: !ui.loading && _orgName.text.trim().isNotEmpty,
+                  enabled: !ui.isLoading && _orgName.text.trim().isNotEmpty,
                   onPressed: _finish,
                 ),
               ],

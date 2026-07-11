@@ -123,6 +123,10 @@ String? _redirectAuthenticated(
     return onboardingEntryForRole(role);
   }
 
+  if (!onboardingRequired && _isOnboardingPath(loc)) {
+    return home;
+  }
+
   if (publicRoutes.contains(loc) && !_isOnboardingPath(loc)) {
     return home;
   }
