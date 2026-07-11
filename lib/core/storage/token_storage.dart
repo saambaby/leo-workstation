@@ -19,7 +19,10 @@ class TokenStorage {
 
 final flutterSecureStorageProvider = Provider<FlutterSecureStorage>(
   (ref) => const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(),
+    // Skip Data Protection Keychain so unsigned macOS debug builds don't need
+    // keychain-access-groups / an Apple development certificate.
+    mOptions: MacOsOptions(usesDataProtectionKeychain: false),
   ),
 );
 
