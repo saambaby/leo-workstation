@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
-import '../providers/auth_ui_provider.dart';
+import '../state/auth_state.dart';
 import '../widgets/auth_form_shell.dart';
 import '../widgets/auth_screen_layout.dart';
 
@@ -24,7 +24,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  var _rememberDevice = false;
 
   @override
   void dispose() {
@@ -43,6 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final ui = ref.watch(authUiProvider);
+    final signingIn = ui.loadingReason == AuthLoadingReason.login;
 
     return AuthFormShell(
       subtitle: AuthStrings.loginSub,
@@ -74,25 +74,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 18),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                LeoCheckbox(
-                  label: AuthStrings.rememberDevice,
-                  value: _rememberDevice,
-                  onChanged: (v) => setState(() => _rememberDevice = v),
-                ),
-                LeoLink(
-                  label: AuthStrings.forgotPassword,
-                  onPressed: () => context.push('/forgot-password'),
-                ),
-              ],
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: LeoLink(
+                label: AuthStrings.forgotPassword,
+                onPressed: () => context.push('/forgot-password'),
+              ),
             ),
           ),
           LeoButton(
-            label: ui.isLoading ? AuthStrings.signingIn : AuthStrings.signIn,
+            label: signingIn ? AuthStrings.signingIn : AuthStrings.signIn,
             fullWidth: true,
-            enabled: !ui.isLoading,
+            enabled: !signingIn,
             onPressed: _submit,
           ),
           LeoNote(
