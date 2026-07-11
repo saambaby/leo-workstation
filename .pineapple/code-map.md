@@ -27,6 +27,8 @@ lib/
   core/
     config/    app_config.dart          # apiBaseUrl, realtimeWsUrl (env-scoped)
     network/   dio_provider.dart         # Dio + Bearer interceptor (+ cert pin)
+               api_error.dart            # INV-ERROR-1 envelope + ApiErrorCode branching
+               api_response.dart         # requireJsonMap / requireJsonList
     router/    app_router.dart           # composition root: routerProvider + ShellRoute
                device_class_scope.dart   # DeviceClassScope wrapper for route builders
                role_home_routes.dart     # P1 role-home placeholders

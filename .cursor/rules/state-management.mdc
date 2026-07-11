@@ -1,0 +1,46 @@
+---
+description: Riverpod + freezed presentation state — notifier, UI provider, router contract
+globs: lib/features/**/presentation/**/*
+alwaysApply: true
+---
+
+# Presentation state management
+
+Canonical pattern for feature ViewModels. References: `lib/features/auth/`, `lib/features/onboarding/` (`INV-CLIENT-STATE-1`…`3`).
+
+## Layout
+
+| Piece | Path | Role |
+|---|---|---|
+| Notifier state | `presentation/state/<feature>_state.dart` | `@freezed` business/async state the notifier emits |
+| UI state | `presentation/state/<feature>_ui_state.dart` | `@freezed` display helpers; `factory *.from(NotifierState)` |
+| ViewModel | `presentation/notifiers/<feature>_notifier.dart` | Sole async/repo owner; co-locate `<feature>UiProvider` here |
+| Ops modules (optional) | `presentation/notifiers/<feature>_*_ops.dart` | Plain classes for large notifiers; **not** separate Riverpod providers |
+
+Do **not** put derived UI state in a separate `presentation/providers/` file. Co-locate the UI `Provider` on the notifier file (see `authUiProvider`, `signupUiProvider`, `onboardingUiProvider`).
+
+## Rules
+
+1. **Async/business state lives in the Notifier** — never private `_loading`, `_submitting`, fetched lists, etc. on screens/widgets.
+2. **Screens watch the derived UI provider** — `ref.watch(<feature>UiProvider)` for `isLoading`, `errorMessage`, catalogs, etc. Do not pattern-match notifier unions/`state is XLoading` in every build.
+3. **Dispatch intents via the notifier** — `ref.read(<feature>NotifierProvider.notifier).method()`; no `ref.read(<repo>Provider)` in `presentation/screens` or `widgets`.
+4. **Ephemeral UI only in widgets** — `TextEditingController`, focus nodes, overlay open/close, sync client-side validation before submit.
+5. **Router-owned transitions are redirect-driven** — login/logout/session/onboarding-complete navigate via `go_router` + `AuthState` (`INV-CLIENT-STATE-1`). Do not `context.go` role homes after `completeOnboarding()` / login success; let `redirect.dart` react.
+6. **Do not add `AuthState` union arms** without updating `.pineapple` specs + `core/router/redirect.dart` (`INV-CLIENT-STATE-2`). Optional UI-only metadata on existing arms is fine; `emailVerificationPending` is router-consumed.
+7. **One router-contract owner** — `authNotifierProvider` is the sole writer of `AuthState`. Other features call thin hooks (`setEmailVerificationPending`, `applyLoginResult`, `completeOnboarding`) — they do not mint tokens or set `currentAccessTokenProvider`.
+8. **Large notifiers** — keep a thin coordinator `Notifier` that owns `state`; extract flow logic into ops classes sharing a host. Do not split into multiple providers that each mutate the router contract.
+9. **API errors in notifiers** — `mapUserFacingError(e)` for display copy (server `message`); `hasApiErrorCode` / `ApiErrorCode` only when UX branches (e.g. `EMAIL_NOT_VERIFIED` redirect). See `INV-CLIENT-NET-2` in `.pineapple/invariants-client.md`.
+
+## Naming
+
+- Notifier emits `SignupState` / `OnboardingState` / `AuthState` (business).
+- Derived display type is `SignupUiState` / `OnboardingUiState` / `AuthUiState` (UI).
+- Do not name the notifier’s raw state `*UiState` — that name is reserved for the derived view model.
+
+## Scaffold checklist (new feature)
+
+1. `presentation/state/<feature>_state.dart` — freezed
+2. `presentation/state/<feature>_ui_state.dart` — freezed + `.from(...)`
+3. `presentation/notifiers/<feature>_notifier.dart` — emits state; exports `final <feature>UiProvider = Provider(...)`
+4. Screens: watch UI provider; read notifier for actions
+5. `build_runner` after freezed changes; `flutter analyze` on edited files

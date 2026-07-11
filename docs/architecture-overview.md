@@ -63,7 +63,7 @@ flowchart LR
 | **Response** (matches domain) | `domain/<feature>_entities.dart` | `factory Entity.fromJson(Map<String, dynamic>)` on the existing class — do **not** duplicate a parallel wire type. Discriminated unions (e.g. `LoginResult`) use a custom `fromJson` factory. |
 | **Response** (differs from domain) | `data/dto/` + mapper in repository | Rare; map DTO → entity in the repository before returning. |
 
-**Never:** private `_mapFoo` methods, inline `{'snake_key': value}` maps in repositories, DTOs in `domain/` / `presentation/`, or `*_models.dart` filenames — use `*_entities.dart` for domain types.
+**Never:** private `_mapFoo` methods, inline `{'snake_key': value}` maps in repositories, `response.data!` into `fromJson` (use `requireJsonMap` / `requireJsonList`), DTOs in `domain/` / `presentation/`, or `*_models.dart` filenames — use `*_entities.dart` for domain types. API failures: show `message`; parse `code` only to branch when UX differs (`INV-CLIENT-NET-2`).
 
 **Codegen:** `dart run build_runner build --delete-conflicting-outputs` after changing `freezed` / `json_serializable` types. Reference: `core/auth/`, `features/onboarding/`.
 
@@ -73,14 +73,14 @@ When adding a new slice under `lib/features/<name>/`:
 
 1. `domain/<feature>_entities.dart` — feature entities; `fromJson` when wire shape matches what notifiers consume.
 2. `data/dto/<feature>_dto.dart` — wire request DTOs (`toJson()`).
-3. `presentation/state/<feature>_state.dart` — `freezed` union or struct (router contract arms are frozen once wired to `go_router`).
-4. `presentation/notifiers/<feature>_notifier.dart` — sole owner of async/business state for the slice.
-5. `presentation/providers/<feature>_ui_provider.dart` — derived UI helpers (`isLoading`, `errorMessage`, etc.) so screens do not pattern-match state on every build.
-6. Screens are `ConsumerWidget` unless they hold ephemeral `TextEditingController` / focus state.
-7. No `data/` imports in views; no repository calls from widgets — dispatch intents via `ref.read(<notifier>.notifier)`.
+3. `presentation/state/<feature>_state.dart` — `freezed` notifier/business state (router contract arms are frozen once wired to `go_router`).
+4. `presentation/state/<feature>_ui_state.dart` — `freezed` derived display helpers (`isLoading`, `errorMessage`, …) with `factory *.from(NotifierState)`.
+5. `presentation/notifiers/<feature>_notifier.dart` — sole owner of async/business state; **co-locate** `final <feature>UiProvider = Provider(...)` on this file (do not add a separate `presentation/providers/` UI file). Optional plain `*_ops.dart` modules for large coordinators.
+6. Screens are `ConsumerWidget` unless they hold ephemeral `TextEditingController` / focus state; they **watch the UI provider**, not raw notifier pattern-matching.
+7. No `data/` imports in views; no repository calls from widgets — dispatch intents via `ref.read(<notifier>.notifier)`. Session nav is redirect-driven (`INV-CLIENT-STATE-1`).
 8. `presentation/routes/<feature>_routes.dart` — exports `List<RouteBase>` (and path constants for the redirect table when the feature owns public routes). Composed in `core/router/app_router.dart`; redirect guard stays in `core/router/redirect.dart`.
 
-Reference implementation: `features/auth/` (`AuthNotifier`, `AuthUiState`, `AuthFormShell`).
+Reference implementations: `features/auth/` (`AuthNotifier`, `AuthUiState`, `authUiProvider`, ops modules, `AuthFormShell`); `features/onboarding/` (`SignupNotifier` / `OnboardingNotifier` + UI providers). Cursor rule: `.cursor/rules/state-management.mdc`.
 
 **Verification:** `flutter analyze` (+ `build_runner` when codegen changes). Do not add Flutter tests unless explicitly requested (`INV-CLIENT-TEST-1`).
 
@@ -97,6 +97,8 @@ lib/
                domain/auth_entities.dart, email_verification.dart, signup_entities.dart
     config/    app_config.dart            # apiBaseUrl, realtimeWsUrl, webAdminBaseUrl (env-scoped)
     network/   dio_provider.dart          # Dio + auth interceptor (Bearer JWT)
+               api_error.dart             # INV-ERROR-1 envelope parse + ApiErrorCode
+               api_response.dart          # requireJsonMap / requireJsonList (no data!)
     router/    app_router.dart            # composition root: routerProvider + ShellRoute
                redirect.dart, route_guards.dart
                device_class_scope.dart    # DeviceClassScope wrapper for route builders
