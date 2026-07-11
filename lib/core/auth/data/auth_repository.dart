@@ -59,6 +59,16 @@ abstract class AuthRepository {
     required bool privacy,
   });
 
+  Future<SignupResult> signupLsp({
+    required String email,
+    required String password,
+    required String orgName,
+    required String timezone,
+    required bool tos,
+    required bool privacy,
+    required bool baaAck,
+  });
+
   Future<void> acceptInvite({
     required String token,
     required String password,
@@ -234,6 +244,32 @@ class ApiAuthRepository implements AuthRepository {
         name: orgName,
         timezone: timezone,
         consent: ConsentDto(tos: tos, privacy: privacy),
+      ).toJson(),
+    );
+    return SignupResult.fromJson(
+      requireJsonMap(response, endpoint: endpoint),
+    );
+  }
+
+  @override
+  Future<SignupResult> signupLsp({
+    required String email,
+    required String password,
+    required String orgName,
+    required String timezone,
+    required bool tos,
+    required bool privacy,
+    required bool baaAck,
+  }) async {
+    const endpoint = '/auth/signup';
+    final response = await _dio.post<Map<String, dynamic>>(
+      endpoint,
+      data: SignupLspRequestDto(
+        email: email,
+        password: password,
+        name: orgName,
+        timezone: timezone,
+        consent: ConsentDto(tos: tos, privacy: privacy, baaAck: baaAck),
       ).toJson(),
     );
     return SignupResult.fromJson(
