@@ -17,7 +17,7 @@ it never writes tenancy rows itself.
 `a-signup` offers **Personal** (interpreter) and **Customer** (business that books
 interpreters). Choosing "we provide interpreters / LSP" opens the `leo-web` signup URL
 externally — no native LSP signup. Personal/customer submit email + password + consent
-→ `a-verify` (magic-link pending screen — open email, verify in browser via `leo-web`, then sign in) → onboarding:
+→ `a-verify` (6-digit OTP in-app — enter code, resend) → onboarding:
 
 - **Interpreter** (`o-personal`): display name + timezone; languages picked from the
   **read-only global catalog**; certifications from the catalog with optional proof
@@ -38,7 +38,7 @@ get a minimal profile step, then their role home.
 1. The account-type picker offers **personal** and **customer** only; selecting the LSP option opens the configured `leo-web` signup URL externally (no native LSP signup transaction).
 2. Personal signup calls `POST /auth/signup {account_type:'personal'}` with `consent {tos, privacy}`; success requires email verification before any login (no `organizations`/`memberships` created).
 3. Customer signup calls `POST /auth/signup {account_type:'business', business_type:'customer'}` with `consent {tos, privacy}`; the customer org is created `active`; success → email verification.
-4. `a-verify` shows a **magic-link pending** screen (no OTP): link sent to email, open-email CTA, sign-in CTA; verification is consumed by `leo-web` at `APP_PUBLIC_URL/verify-email?token=`; wrong-email returns to signup (duplicate email → `409` on re-signup); after web verify, user signs in and routes to the correct onboarding entry (interpreter → profile, customer → org).
+4. `a-verify` shows an **OTP entry screen** (`/verify-email`): 6-digit code, resend, wrong-email back to signup; calls `POST /auth/verify-email` via `authRepositoryProvider`; success → `AuthNotifier.applyLoginResult` → role home or MFA/onboarding; signup success sets `emailVerificationPending` (router redirect, no `push`).
 5. Interpreter onboarding captures profile (name, timezone) + languages from the **read-only catalog** + certifications (optional proof upload); it completes by handing off to the **affiliation** step (owned by the `affiliations` feature); the account stays tenant-less.
 6. Customer onboarding captures org profile (name, industry, registered address) + team invites via `POST /invitations` (`customer_user`/`customer_admin`); it does **not** collect PHI/billing-popup fields; completes to `/call`.
 7. Invited members land (via `/invite/accept`) in a minimal profile-completion step then role home — no signup, no org creation.
@@ -54,12 +54,12 @@ get a minimal profile step, then their role home.
 
 - **`POST /auth/signup`** (`@Public()`) body: `{ account_type: 'personal'|'business', business_type?: 'customer', email, password, consent: { tos: bool, privacy: bool } }` — snake_case on the wire; the client emits only `personal` and `business+customer`. Response: `{ user_id, organization_id, status, email_verification_required: true }` where for **personal** `organization_id` and `status` are **present-as-`null`** (not omitted) — the client must handle null, not missing. Duplicate email → `409`; missing/false consent → rejected.
   > **Dual "no-tenancy" convention (D5, known):** the signup response encodes "no org" as **`organization_id: null` present**, but the access-token JWT (`auth.md`) encodes it as **`tenant_id` absent/omitted**. Two payloads, two opposite encodings — the parser for each must be written accordingly (don't assume one rule). Both are backend-owned.
-- **`POST /auth/verify-email`** `{ token }` → `200`; consumed by `leo-web` (Flutter shows pending screen only; no in-app token handling). Until verified, login is refused with `401` + `"Email not verified"`.
+- **`POST /auth/verify-email`** `{ email, code }` → `LoginResult` (same discriminated shape as login). **`POST /auth/resend-verify`** `{ email }` → `200`.
 - **Catalog (read-only, global):** `GET /catalog/languages`, `/catalog/certifications` — `is_signed`/`is_active` are JSON **booleans**; `code` is a BCP-47-style string; client never sets ids.
 - **Invitations:** `POST /invitations { email, role }` (`customer_user`|`customer_admin`).
 - **Interpreter profile + cert proof upload** are backend `interpreter-profiles` surface (alpha.5/P2) — likely S3 presigned upload; **confirm availability** (Open questions).
 - **Consent** is append-only server-side (backend `INV-CONSENT-1`); the client submits booleans only.
-- **Transformation owner:** `OnboardingRepository`/`AuthRepository` (snake_case→camelCase entities/DTOs via `@JsonKey`), the only wire-aware layer (`INV-CLIENT-ARCH-1`).
+- **Transformation owner:** `core/auth/data/AuthRepository` for signup + verify (`INV-CLIENT-AUTH-REPO-1`); `OnboardingRepository` for catalog, profiles, org, invitations only (`INV-CLIENT-ARCH-1`).
 
 ## Key decisions (with rejected alternatives)
 
@@ -82,16 +82,18 @@ Platform admin. No tenancy writes in the client (`INV-CLIENT-CONTRACT-1`).
 
 ## Touches
 
-`INV-CLIENT-ROUTE-1` (personal+customer signup/onboarding allowed in-app; **LSP** excluded) / `INV-CLIENT-ROUTE-2` (`customer_admin`/interpreter homes), `INV-CLIENT-AUTH-1/2`, `INV-CLIENT-AUTH-3` (tenant-less interpreter), `INV-CLIENT-STATE-1` / `INV-CLIENT-STATE-2` (resumable via `onboardingRequired` on the `AuthState` contract), `INV-CLIENT-ARCH-1` (`OnboardingRepository` is the only wire-aware layer), `INV-CLIENT-A11Y-1` + `INV-CLIENT-UI-1` (Cupertino wizard, semantics), `INV-CLIENT-I18N-1` (wizard copy via `intl`), `INV-CLIENT-PHI-1` (no PHI collected — consent only), `INV-CLIENT-CONTRACT-1`. Backend: `INV-CONSENT-1`.
+`INV-CLIENT-AUTH-REPO-1`, `INV-CLIENT-ROUTE-1` (personal+customer signup/onboarding allowed in-app; **LSP** excluded) / `INV-CLIENT-ROUTE-2` (`customer_admin`/interpreter homes), `INV-CLIENT-AUTH-1/2`, `INV-CLIENT-AUTH-3` (tenant-less interpreter), `INV-CLIENT-STATE-1` / `INV-CLIENT-STATE-2` (resumable via `onboardingRequired`; `emailVerificationPending` for verify redirect), `INV-CLIENT-ARCH-1`, `INV-CLIENT-A11Y-1` + `INV-CLIENT-UI-1` (Cupertino wizard, semantics), `INV-CLIENT-I18N-1` (wizard copy via `intl`), `INV-CLIENT-PHI-1` (no PHI collected — consent only), `INV-CLIENT-CONTRACT-1`. Backend: `INV-CONSENT-1`.
 
 ## Depends on
 
-`auth` (signup/verify/token, tenant-less session, `/invite/accept`) · `core-shell` (dio/config/theme) · `router` (onboarding-required gate) · `affiliations` (alpha.5, interpreter final step) · backend `unified-signup`, `interpreter-profiles` (alpha.5/P2), catalog read endpoints, `POST /invitations`. Via [`platform-references.md`](../../docs/platform-references.md).
+`core/auth` (signup/verify wire) · `auth` (session, `emailVerificationPending`, `/invite/accept`) · `otp-email-verification.md` · `core-shell` (dio/config/theme) · `router` (onboarding-required gate, verify context guards) · `affiliations` (alpha.5, interpreter final step) · backend `unified-signup`, `interpreter-profiles` (alpha.5/P2), catalog read endpoints, `POST /invitations`. Via [`platform-references.md`](../../docs/platform-references.md).
 
 ## Open questions / Out of scope
 
-- **Backend `interpreter-profiles` + cert proof upload (S3 presigned)** — confirm endpoints + timing (alpha.5 vs P2); the interpreter onboarding step 5 depends on them.
+- **Backend `interpreter-profiles` + cert proof upload (S3 presigned)** — confirm endpoints + timing (alpha.5 vs P2); the interpreter onboarding step 5 depends on them. **Action:** track as cross-repo ask; do not block P1 verify/signup taskgraph.
 - **Success-metric numbers** — founder to set funnel-completion targets.
-- **MFA for personal interpreters** — a pre-affiliation interpreter has no org policy; confirm MFA is not forced until affiliated (design says "interpreters per org policy").
+- **MFA for personal interpreters** — confirm MFA is not forced until affiliated (org policy). **Action:** confirm with backend/product before enforcing interpreter MFA in onboarding.
 - **Resume signal — RESOLVED 2026-06-29:** `authenticated.onboardingRequired` on the `AuthState` contract (`INV-CLIENT-STATE-2`), server-derived. Remaining: confirm the backend surfaces onboarding-completeness (token claim or `/auth/me`) so `auth` can populate it.
 - **LSP web→workstation** — after LSP signs up on web, `lsp_admin` simply logs into the workstation for dispatch (no native LSP onboarding); confirm.
+- **"Remember device"** — open product question; no client wire impact yet (see `auth.md`).
+- **Production verification email format** — confirm OTP email template with backend ops.

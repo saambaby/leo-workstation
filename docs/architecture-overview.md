@@ -65,7 +65,7 @@ flowchart LR
 
 **Never:** private `_mapFoo` methods, inline `{'snake_key': value}` maps in repositories, DTOs in `domain/` / `presentation/`, or `*_models.dart` filenames — use `*_entities.dart` for domain types.
 
-**Codegen:** `dart run build_runner build --delete-conflicting-outputs` after changing `freezed` / `json_serializable` types. Reference: `features/auth/`, `features/onboarding/`.
+**Codegen:** `dart run build_runner build --delete-conflicting-outputs` after changing `freezed` / `json_serializable` types. Reference: `core/auth/`, `features/onboarding/`.
 
 ### Feature scaffold checklist (P2+)
 
@@ -93,24 +93,27 @@ lib/
   main.dart                     # ProviderScope + runApp(LeoApp)
   app.dart                      # LeoApp: (Cupertino)App.router, theme, watches authNotifier
   core/
-    config/    app_config.dart            # apiBaseUrl, realtimeWsUrl (env-scoped)
+    auth/      data/auth_repository.dart, dto/auth_dto.dart
+               domain/auth_entities.dart, email_verification.dart, signup_entities.dart
+    config/    app_config.dart            # apiBaseUrl, realtimeWsUrl, webAdminBaseUrl (env-scoped)
     network/   dio_provider.dart          # Dio + auth interceptor (Bearer JWT)
     router/    app_router.dart            # composition root: routerProvider + ShellRoute
+               redirect.dart, route_guards.dart
                device_class_scope.dart    # DeviceClassScope wrapper for route builders
                role_home_routes.dart       # P1 role-home placeholders (/idle, /call, /dispatch)
-               redirect.dart               # pure auth redirect guard
-    theme/     app_theme.dart             # Cupertino theme (light/dark/night) — migrating from Material 3
+    theme/     app_theme.dart             # Cupertino theme (light/dark/night)
     providers/ auth_refresh_listenable.dart  # bridges authNotifier → GoRouter.refreshListenable
   features/
     auth/
-      data/        auth_repository.dart, token_storage.dart
-                   dto/auth_dto.dart         (+ .freezed/.g)
-      domain/      auth_entities.dart        (+ .freezed)
+      data/        auth_repository.dart   # re-export → core/auth
       presentation/
-        routes/    auth_routes.dart            # auth GoRoute tree + path constants
-        screens/   login_screen.dart
-        notifiers/ auth_notifier.dart          # ViewModel
-        state/     auth_state.dart             # freezed union
+        routes/    auth_routes.dart
+        screens/   login_screen.dart, mfa_screen.dart, forgot/reset, invite
+        notifiers/ auth_notifier.dart
+        state/     auth_state.dart
+    onboarding/
+      data/        onboarding_repository.dart  # catalog, profiles, org — not /auth/*
+      presentation/ signup + verify-email OTP + onboarding wizards
     idle/
       data/        interpreter_repository.dart
       domain/      idle_entities.dart

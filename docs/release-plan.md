@@ -15,7 +15,7 @@
 | [`v0.0.1-alpha.1`](#v001-alpha1--p1--app-shell) | P1 | App shell — auth, router, theme, WSS | P1 auth spine |
 | [`v0.0.1-alpha.2`](#v001-alpha2--no-client-release) | P1+ | **No client release** — backend-only (platform admin bootstrap CLI) | Platform admin bootstrap |
 | [`v0.0.1-alpha.3`](#v001-alpha3--no-client-release-deprecated-path) | P1+ | **No client release** — superseded by alpha.4 | LSP public signup (deprecated) |
-| [`v0.0.1-alpha.4`](#v001-alpha4--auth-contract--multi-membership) | P1+ | **Auth contract:** multi-membership login, tenant picker, `switch-tenant`, tenant-less token | Unified identity & signup |
+| [`v0.0.1-alpha.4`](#v001-alpha4--auth-contract--client-subset) | P1+ | **Auth contract (client subset):** single-membership login auto-resolve, tenant-less token, MFA; picker/switcher cut (D1/D2) | Unified identity & signup |
 | [`v0.0.1-alpha.5`](#v001-alpha5--minimal-pre-p2) | P1+ | Minimal pre-P2: `platform_admin` slug, affiliation context if needed | Interpreter affiliations |
 | [`v0.0.1`](#v001--p2--mvp--first-dollar) | P2 | **MVP** — Vonage loop, customer desktop/tablet, dispatch | P2 session/matching |
 | [`v0.1.0`](#v010--p3--scheduled--telephone--customer-mobile) | P3 | Scheduled + OPI + **customer smartphone** + sub_admin | P3 scheduled/telephone |
@@ -99,11 +99,16 @@ CLI only (`make bootstrap-platform-admin`); onboarding reuses existing `POST /au
 
 ---
 
-## `v0.0.1-alpha.4` — Auth contract — multi-membership
+## `v0.0.1-alpha.4` — Auth contract — client subset
 
-**Goal:** *Does the client's auth flow honor the unified identity contract — one signup surface (web), and a login that derives tenant context for accounts with **zero or many** memberships?*
+**Goal:** *Does the client's auth flow honor the unified identity contract — login that
+derives tenant context (including **zero** memberships for tenant-less interpreters)?*
 
-This is the **load-bearing auth tag for the client.** The backend replaced `lsp-signup` with a unified `POST /auth/signup`, reworked login to mint an active-tenant token (or a tenant-less token for 0-membership interpreters), and added `POST /auth/switch-tenant`. The client builds its P1 auth against this contract from day one.
+The backend added unified signup and `POST /auth/switch-tenant`. The **client P1
+implementation** auto-resolves single active membership at login (`auth.md` D1) and
+**cuts** the pre-login picker and in-app workspace switcher — no memberships-list
+endpoint exists (`auth.md` D2). `switch-tenant` remains defined server-side but has no
+v1 caller in the workstation.
 
 ### Client work (folded into P1 auth)
 
@@ -111,29 +116,31 @@ This is the **load-bearing auth tag for the client.** The backend replaced `lsp-
 |---|---|
 | Role slug | `platform_admin` everywhere — **not** `superadmin` |
 | JWT claims | `{ sub, role, tenant_id? }` — `tenant_id` optional (tenant-less interpreters) |
-| Multi-membership login | 2+ active memberships → **tenant/membership picker** before role redirect |
-| Tenant-less login | 0-membership interpreter → tenant-less token → redirect to `/idle` |
-| Switch tenant | `POST /auth/switch-tenant` re-mints token on LSP-context change |
-| MFA | Challenged on **login and switch-tenant** for `platform_admin`, `lsp_admin`, `sub_admin` |
-| New UI | `tenant_picker_screen.dart` or inline picker on the login flow |
+| Login | Server auto-picks active membership; no pre-login picker (`auth.md` D1) |
+| Tenant-less login | 0-membership interpreter → tenant-less token → `/idle` |
+| `platform_admin` | Session rejected at mint in workstation — use `leo-web` |
+| MFA | Login + `/auth/mfa/enroll`; resubmit `/auth/login` with `totp_code` for challenge |
+| Workspace switcher | **Cut** for v1 — revisit when memberships-list endpoint exists (D2) |
 | Deprecated | Do **not** call `POST /auth/lsp-signup` |
 
 Detail: [`auth.md`](../.pineapple/features/auth.md).
 
-### API dependencies (`../leo-api` alpha.4)
+### API dependencies (`../leo-api` alpha.4+)
 
-- `POST /auth/login` — active-tenant token; tenant-less `{ sub }` token for 0-membership users
-- `POST /auth/switch-tenant` — re-mint for a held membership; non-held tenant → `404`
-- **Removed:** `POST /auth/lsp-signup` (use nothing in its place client-side)
-- MFA at every privileged token mint (login or switch)
+- `POST /auth/login` — active-tenant or tenant-less token
+- `POST /auth/switch-tenant` — defined; **no v1 client caller**
+- OTP verify/reset (alpha.6): `/auth/verify-email`, `/auth/resend-verify`, `/auth/reset-password/verify`
 
 ### Definition of Done
 
-- [ ] Multi-membership login → tenant picker → correct role home
-- [ ] Tenant-less interpreter login → `/idle` without error
-- [ ] `switch-tenant` re-mints token; MFA re-challenged for privileged roles
-- [ ] JWT handling uses `platform_admin` slug (no `superadmin` in code or docs)
-- [ ] All alpha.1 app-shell gates still pass
+- [x] Single-membership login → correct role home
+- [x] Tenant-less interpreter login → `/idle` without error
+- [x] MFA enroll/challenge for privileged roles
+- [x] `platform_admin` rejected in workstation
+- [x] JWT handling uses `platform_admin` slug (no `superadmin`)
+- [x] All alpha.1 app-shell gates still pass
+
+> **Deferred:** multi-membership picker + `switch-tenant` UI — [`auth.md`](../.pineapple/features/auth.md) D1/D2.
 
 ---
 

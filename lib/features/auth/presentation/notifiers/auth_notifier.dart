@@ -1,20 +1,24 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/auth/data/auth_repository.dart';
+import '../../../../core/auth/domain/auth_entities.dart';
+import '../../../../core/auth/domain/email_verification.dart';
+import '../../../../core/auth/leo_roles.dart';
 import '../../../../core/network/api_error.dart';
 import '../../../../core/network/dio_provider.dart';
 import '../../../../core/storage/onboarding_completion_storage.dart';
 import '../../../../core/storage/token_storage.dart';
-import '../../data/auth_repository.dart';
-import '../../domain/auth_entities.dart';
+import '../../l10n/auth_strings.dart';
 import '../state/auth_state.dart';
 
 final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );
 
-/// Auth ViewModel (P1-T-03): sole writer of [currentAccessTokenProvider].
 class AuthNotifier extends Notifier<AuthState> {
+  var _opGeneration = 0;
+
   @override
   AuthState build() {
     Future.microtask(restoreSession);
@@ -23,10 +27,8 @@ class AuthNotifier extends Notifier<AuthState> {
 
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 
-  /// Held only across the MFA round-trip (login → enroll/required → resubmit
-  /// with a TOTP code) — the real backend has no separate verify token, so
-  /// the original credentials must be resent. Never persisted or logged;
-  /// cleared as soon as the round-trip resolves either way.
+  bool _isStaleOp(int op) => op != _opGeneration;
+
   String? _pendingEmail;
   String? _pendingPassword;
 
@@ -35,52 +37,65 @@ class AuthNotifier extends Notifier<AuthState> {
     _pendingPassword = null;
   }
 
-  /// Cold-start: restore from secure storage or route to unauthenticated.
+  void setEmailVerificationPending(VerifyEmailPendingContext context) {
+    state = AuthState.unauthenticated(emailVerificationPending: context);
+  }
+
+  void clearEmailVerificationPending() {
+    final current = state;
+    if (current is AuthUnauthenticated &&
+        current.emailVerificationPending != null) {
+      state = const AuthState.unauthenticated();
+    }
+  }
+
   Future<void> restoreSession() async {
+    final op = ++_opGeneration;
     state = const AuthState.loading(reason: AuthLoadingReason.session);
     try {
       final refresh = await ref.read(tokenStorageProvider).readRefreshToken();
+      if (_isStaleOp(op)) return;
       if (refresh == null || refresh.isEmpty) {
         state = const AuthState.unauthenticated();
         return;
       }
       final session = await _repo.refreshSession(refreshToken: refresh);
+      if (_isStaleOp(op)) return;
       await _applySession(session);
     } catch (_) {
+      if (_isStaleOp(op)) return;
       await ref.read(tokenStorageProvider).clear();
       ref.read(currentAccessTokenProvider.notifier).state = null;
       state = const AuthState.unauthenticated();
     }
   }
 
-  /// Returns [email] when the API refused login because email is not verified.
-  Future<String?> login({
+  Future<void> login({
     required String email,
     required String password,
   }) async {
+    final op = ++_opGeneration;
     state = const AuthState.loading(reason: AuthLoadingReason.login);
     try {
       final result = await _repo.login(email: email, password: password);
+      if (_isStaleOp(op)) return;
       await _handleLoginResult(result, email: email, password: password);
-      return null;
     } catch (e) {
+      if (_isStaleOp(op)) return;
       _clearPendingCredentials();
-      if (e is DioException) {
-        final status = e.response?.statusCode;
-        if (status == 401 && apiErrorMessage(e) == 'Email not verified') {
-          state = const AuthState.unauthenticated();
-          return email;
-        }
+      if (e is DioException && isEmailNotVerified(e)) {
+        state = AuthState.unauthenticated(
+          emailVerificationPending: VerifyEmailPendingContext(
+            email: email,
+            source: VerifyEmailSource.login,
+          ),
+        );
+        return;
       }
-      state = AuthState.error(message: _mapError(e));
-      return null;
+      state = AuthState.error(message: mapUserFacingError(e));
     }
   }
 
-  /// First-time enrollment verifies via `/auth/mfa/enroll` (the enrollment
-  /// token, not the credentials). An already-enrolled challenge has no
-  /// separate verify endpoint — it resubmits the held credentials plus
-  /// [code] to `login` instead.
   Future<void> submitMfa({required String code}) async {
     final current = state;
     if (current is! AuthMfaRequired) return;
@@ -113,7 +128,7 @@ class AuthNotifier extends Notifier<AuthState> {
       await _handleLoginResult(result, email: email, password: password);
     } catch (e) {
       _clearPendingCredentials();
-      state = AuthState.error(message: _mapError(e));
+      state = AuthState.error(message: mapUserFacingError(e));
     }
   }
 
@@ -135,24 +150,67 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<void> applyLoginResult(
+    LoginResult result, {
+    String email = '',
+    bool fromEmailVerify = false,
+  }) async {
+    final op = ++_opGeneration;
+    state = const AuthState.loading(reason: AuthLoadingReason.login);
+    if (_isStaleOp(op)) return;
+
+    if (fromEmailVerify && result is LoginMfaRequired && !result.firstLogin) {
+      state = const AuthState.error(
+        message:
+            'Unexpected MFA state after verification. Please sign in again.',
+      );
+      return;
+    }
+
+    await _handleLoginResult(result, email: email, password: '');
+    clearEmailVerificationPending();
+  }
+
+  Future<String?> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    state = const AuthState.loading(reason: AuthLoadingReason.passwordReset);
+    try {
+      final ticket = await _repo.verifyResetCode(email: email, code: code);
+      state = const AuthState.unauthenticated();
+      return ticket.resetTicket;
+    } catch (e) {
+      state = AuthState.error(
+        message: mapUserFacingError(
+          e,
+          fallback: 'Invalid or expired reset code. Request a new one.',
+        ),
+      );
+      return null;
+    }
+  }
+
   Future<bool> resetPassword({
-    required String token,
+    required String resetTicket,
     required String password,
   }) async {
     state = const AuthState.loading(reason: AuthLoadingReason.passwordReset);
     try {
-      await _repo.resetPassword(token: token, password: password);
+      await _repo.resetPassword(resetTicket: resetTicket, password: password);
       state = const AuthState.unauthenticated();
       return true;
     } catch (e) {
-      state = AuthState.error(message: _mapResetError(e));
+      state = AuthState.error(
+        message: mapUserFacingError(
+          e,
+          fallback: 'Invalid or expired reset session. Request a new code.',
+        ),
+      );
       return false;
     }
   }
 
-  /// Creates the membership but does not mint tokens (real-backend
-  /// contract) — on success the caller logs in normally. Returns whether it
-  /// succeeded so the screen can navigate to `/login`.
   Future<bool> acceptInvite({
     required String token,
     required String password,
@@ -172,7 +230,7 @@ class AuthNotifier extends Notifier<AuthState> {
       state = const AuthState.unauthenticated();
       return true;
     } catch (e) {
-      state = AuthState.error(message: _mapError(e));
+      state = AuthState.error(message: mapUserFacingError(e));
       return false;
     }
   }
@@ -194,9 +252,7 @@ class AuthNotifier extends Notifier<AuthState> {
     if (refresh != null) {
       try {
         await _repo.logout(refreshToken: refresh);
-      } catch (_) {
-        // Best-effort server logout; always clear local state.
-      }
+      } catch (_) {}
     }
     ref.read(currentAccessTokenProvider.notifier).state = null;
     await ref.read(tokenStorageProvider).clear();
@@ -219,7 +275,7 @@ class AuthNotifier extends Notifier<AuthState> {
         :final secret,
       ):
         _pendingEmail = email;
-        _pendingPassword = password;
+        _pendingPassword = password.isEmpty ? null : password;
         state = AuthState.mfaRequired(
           firstLogin: firstLogin,
           enrollmentToken: enrollmentToken,
@@ -230,6 +286,13 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> _applySession(AuthSession session) async {
+    if (session.claims.role == LeoRoles.platformAdmin) {
+      ref.read(currentAccessTokenProvider.notifier).state = null;
+      await ref.read(tokenStorageProvider).clear();
+      state = AuthState.error(message: AuthStrings.platformAdminUseWeb);
+      return;
+    }
+
     ref.read(currentAccessTokenProvider.notifier).state = session.accessToken;
     await ref.read(tokenStorageProvider).saveRefreshToken(session.refreshToken);
     final locallyComplete = await ref
@@ -242,24 +305,5 @@ class AuthNotifier extends Notifier<AuthState> {
       tenantId: session.claims.tenantId,
       onboardingRequired: onboardingRequired,
     );
-  }
-
-  String _mapError(Object error) {
-    if (error is DioException) {
-      final status = error.response?.statusCode;
-      if (status == 401) return 'Invalid email or password';
-      if (status == 404) return 'Workspace not found or no longer available';
-    }
-    return 'Something went wrong. Please try again.';
-  }
-
-  String _mapResetError(Object error) {
-    if (error is DioException) {
-      final status = error.response?.statusCode;
-      if (status == 400 || status == 410) {
-        return 'Invalid or expired reset code. Request a new one.';
-      }
-    }
-    return 'Something went wrong. Please try again.';
   }
 }

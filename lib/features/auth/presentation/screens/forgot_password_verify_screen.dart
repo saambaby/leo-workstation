@@ -30,9 +30,14 @@ class _ForgotPasswordVerifyScreenState
         .resendResetCode(email: widget.email);
   }
 
-  void _continue() {
-    if (_code.length != 6) return;
-    context.push('/reset-password?token=$_code');
+  Future<void> _continue([String? completed]) async {
+    final code = completed ?? _code;
+    if (code.length != 6) return;
+    final ticket = await ref
+        .read(authNotifierProvider.notifier)
+        .verifyResetCode(email: widget.email, code: code);
+    if (!mounted || ticket == null) return;
+    context.go('/reset-password', extra: ticket);
   }
 
   @override
@@ -42,6 +47,7 @@ class _ForgotPasswordVerifyScreenState
 
     return AuthFormShell(
       subtitle: AuthStrings.forgotVerifySub,
+      error: ui.errorMessage,
       header: [
         LeoNote(
           variant: LeoNoteVariant.info,
@@ -74,14 +80,15 @@ class _ForgotPasswordVerifyScreenState
           ),
           const SizedBox(height: 6),
           OtpInputRow(
+            enabled: !ui.isLoading,
             onChanged: (code) => setState(() => _code = code),
-            onCompleted: (_) => _continue(),
+            onCompleted: _continue,
           ),
           LeoButton(
             label: AuthStrings.continueToNewPassword,
             fullWidth: true,
-            enabled: _code.length == 6,
-            onPressed: _continue,
+            enabled: !ui.isLoading && _code.length == 6,
+            onPressed: () => _continue(),
           ),
           Padding(
             padding: const EdgeInsets.only(top: 14),

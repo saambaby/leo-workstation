@@ -41,7 +41,14 @@ abstract final class OnboardingStrings {
 
   static const verifySub = 'Verify your email';
   static const verifyLoginSub =
-      'Sign in after you verify the link we emailed you';
+      'Enter the verification code we emailed you';
+  static const verifyNotePrefix = 'We sent a 6-digit code to ';
+  static const verifyNoteSuffix = '.';
+  static const verificationCode = 'Verification code';
+  static const verifyEmail = 'Verify email';
+  static const resendCode = 'Resend code';
+  static const resendIn = 'Resend in';
+  static const changeEmail = 'Change email';
   static const verifyPendingTitle = 'Check your email';
   static const verifyLinkSentPrefix = 'We sent a verification link to ';
   static const verifyLinkSentSuffix =

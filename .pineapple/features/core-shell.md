@@ -50,7 +50,7 @@ entitled to, routes are absent (gating enforced by `router`, derived here).
 
 ## Wire-format contract
 
-- **`AppConfig`** is loaded from `.env` at startup (`flutter_dotenv`). Copy `.env.template` → `.env` for local dev. No runtime mutation; it's a `Provider<AppConfig>` of an immutable struct. **`webAdminBaseUrl` is the single source** for both the `lsp_admin` "Admin dashboard" link (here) and `router`'s `platform_admin` `/web-handoff` interstitial.
+- **`AppConfig`** is loaded from `.env` at startup (`flutter_dotenv`). Copy `.env.template` → `.env` for local dev. No runtime mutation; it's a `Provider<AppConfig>` of an immutable struct. **`webAdminBaseUrl` is the single source** for the `lsp_admin` "Admin dashboard" external link in the chrome rail footer. Empty = link hidden. `platform_admin` has no in-app route — sessions are rejected at mint in `auth` (`INV-CLIENT-ROUTE-2`).
 - **Bearer seam (`INV-CLIENT-AUTH-4`, avoids a circular dep):** `dioProvider`'s interceptor **reads** `currentAccessTokenProvider` (in-memory holder, default `null`); core-shell defines the holder + interceptor but never writes it — **`auth` (`AuthNotifier`) is the sole writer**. Header is exactly `Authorization: Bearer <token>` when non-null, omitted otherwise.
 - **Theme tokens:** design CSS custom properties (`--black-900 #0A0A0B` … `--signal-live #22C55E`, `--signal-white #F8F8FA`) map to `Color(0xFF…)` constants; spacing/radius tokens (`--r-md` etc.) to `double`s. Owner: `app_theme.dart`. Night ≠ dark — night is a separate, dimmer variant, not a brightness toggle.
 - **Cert pin:** SHA-256 base64 pin list compiled in (or from config); `badCertificateCallback` returns `true` only on a pin match.

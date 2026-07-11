@@ -1,22 +1,20 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/auth/domain/email_verification.dart';
+
 part 'auth_state.freezed.dart';
 
-/// Distinguishes loading operations without changing router redirect behavior.
 enum AuthLoadingReason {
   session,
   login,
   mfa,
-  tenantSwitch,
   passwordReset,
   inviteAccept,
   forgotPassword,
   resendCode,
 }
 
-/// Auth→router contract (INV-CLIENT-STATE-2). Signature is frozen — router
-/// consumes this union; do not add arms without updating both specs.
-/// Optional fields on existing arms are UI/metadata only.
+/// Auth→router contract (INV-CLIENT-STATE-2).
 @freezed
 sealed class AuthState with _$AuthState {
   const AuthState._();
@@ -24,6 +22,8 @@ sealed class AuthState with _$AuthState {
   const factory AuthState.unauthenticated({
     @Default(false) bool forgotPasswordSending,
     @Default(false) bool resendCodeSending,
+    /// Drives redirect to `/verify-email` (login-unverified or post-signup).
+    VerifyEmailPendingContext? emailVerificationPending,
   }) = AuthUnauthenticated;
 
   const factory AuthState.loading({

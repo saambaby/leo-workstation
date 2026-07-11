@@ -52,28 +52,23 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
 
     setState(() => _localError = null);
     final notifier = ref.read(signupNotifierProvider.notifier);
-    final VerifyEmailPendingContext? ctx;
-    if (_isCustomer) {
-      ctx = await notifier.submitCustomer(
-        email: _email.text.trim(),
-        password: _password.text,
-        orgName: _orgName.text.trim(),
-        timezone: _timezone,
-        tos: _tos,
-        privacy: _privacy,
-      );
-    } else {
-      ctx = await notifier.submitPersonal(
-        email: _email.text.trim(),
-        password: _password.text,
-        tos: _tos,
-        privacy: _privacy,
-      );
-    }
+    final ok = _isCustomer
+        ? await notifier.submitCustomer(
+            email: _email.text.trim(),
+            password: _password.text,
+            orgName: _orgName.text.trim(),
+            timezone: _timezone,
+            tos: _tos,
+            privacy: _privacy,
+          )
+        : await notifier.submitPersonal(
+            email: _email.text.trim(),
+            password: _password.text,
+            tos: _tos,
+            privacy: _privacy,
+          );
     if (!mounted) return;
-    if (ctx != null) {
-      context.push('/verify-email', extra: ctx);
-    } else if (ref.read(signupNotifierProvider).error == null) {
+    if (!ok && ref.read(signupNotifierProvider).error == null) {
       context.go('/login');
     }
   }

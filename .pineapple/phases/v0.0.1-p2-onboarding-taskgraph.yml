@@ -1,0 +1,110 @@
+apiVersion: pineapple/v1
+kind: TaskGraph
+metadata:
+  project: leo-workstation
+  phase: v0.0.1-p2-onboarding
+  status: running
+  created: 2026-07-11
+
+waves:
+  - id: W1
+    name: "OTP + signup integration"
+    gate: manual
+  - id: W2
+    name: "Onboarding wizards"
+    gate: manual
+  - id: W3
+    name: "E2E smoke"
+    gate: manual
+
+tasks:
+  - id: P2-O-T-01
+    title: "core/auth OTP wire: verify-email, resend-verify, reset-password/verify against alpha.6 backend"
+    wave: W1
+    feature_spec: .pineapple/features/otp-email-verification.md
+    area: core/auth
+    surface: frontend
+    model: high
+    depends_on: []
+    verification: manual
+    human_admin: false
+    acceptance_criteria:
+      - "POST /auth/verify-email {email, code} -> LoginResult; resend via POST /auth/resend-verify {email}."
+      - "POST /auth/reset-password/verify {email, code} -> {reset_ticket}; POST /auth/reset-password {reset_ticket, new_password} -> success."
+      - "Signup via AuthRepository.signupPersonal/signupCustomer; no signup methods on OnboardingRepository."
+      - "flutter analyze clean on lib/core/auth and lib/features/onboarding."
+    notes: "Backend contract: leo-api alpha.6 otp-verification spec. Scaffold largely on disk — task is integration verify + fix drift."
+
+  - id: P2-O-T-02
+    title: "signup + verify UX: emailVerificationPending redirect, no imperative push, login-unverified re-entry"
+    wave: W1
+    feature_spec: .pineapple/features/otp-email-verification.md
+    area: features/onboarding + features/auth
+    surface: frontend
+    model: standard
+    depends_on: [P2-O-T-01]
+    verification: manual
+    human_admin: false
+    acceptance_criteria:
+      - "Signup success sets AuthState.unauthenticated.emailVerificationPending; router lands on /verify-email (A1)."
+      - "Login 401 unverified sets same metadata with source=login."
+      - "Verify success calls AuthNotifier.applyLoginResult(fromEmailVerify: true); clears emailVerificationPending."
+      - "A7: mfa_required with firstLogin:false after verify surfaces error, not silent trap."
+      - "No login?verified=success query (A6)."
+    notes: "Specs: otp-email-verification.md, router.md AC-5/6."
+
+  - id: P2-O-T-03
+    title: "personal onboarding wizard: catalog, profile save, affiliation handoff copy"
+    wave: W2
+    feature_spec: .pineapple/features/onboarding.md
+    area: features/onboarding
+    surface: frontend
+    model: standard
+    depends_on: [P2-O-T-02]
+    verification: manual
+    human_admin: false
+    acceptance_criteria:
+      - "/onboarding/personal loads catalog (GET /catalog/languages, /catalog/certifications)."
+      - "saveInterpreterProfile via POST /interpreter-profiles/me; completeOnboarding clears onboardingRequired locally."
+      - "Final step shows affiliation handoff note; tenant-less session preserved."
+      - "Router sends onboardingRequired authenticated users to /onboarding/personal."
+    notes: "Affiliation feature (alpha.5) is link-only until affiliations slice ships."
+
+  - id: P2-O-T-04
+    title: "customer onboarding wizard: org profile, team invites"
+    wave: W2
+    feature_spec: .pineapple/features/onboarding.md
+    area: features/onboarding
+    surface: frontend
+    model: standard
+    depends_on: [P2-O-T-02]
+    verification: manual
+    human_admin: false
+    acceptance_criteria:
+      - "/onboarding/customer captures org profile via PATCH /organizations/me."
+      - "Team invites via POST /invitations (customer_user|customer_admin)."
+      - "completeOnboarding -> router sends customer_admin to /call."
+    notes: "Parallel with P2-O-T-03 after W1 gate."
+
+  - id: P2-O-T-05
+    title: "onboarding E2E smoke: personal + customer signup funnels"
+    wave: W3
+    feature_spec: .pineapple/features/onboarding.md
+    area: features/onboarding
+    surface: frontend
+    model: standard
+    depends_on: [P2-O-T-03, P2-O-T-04]
+    verification: manual
+    human_admin: true
+    acceptance_criteria:
+      - "Manual: personal signup -> OTP verify -> personal onboarding -> /idle (tenant-less)."
+      - "Manual: customer signup -> OTP verify -> customer onboarding -> /call."
+      - "LSP card opens leo-web signup externally (no native LSP transaction)."
+      - "Open questions (A8) documented — do not block ship: remember-device, interpreter MFA timing, email template, interpreter-profiles timing."
+    notes: "Founder/admin runs against staging leo-api alpha.6+."
+
+coordinator:
+  max_concurrent: 2
+  stuck_threshold_seconds: 5400
+  worktree_strategy: per-task
+  completion_strategy: review-gate

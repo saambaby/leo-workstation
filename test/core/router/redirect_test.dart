@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:leo_workstation/core/auth/domain/email_verification.dart';
 import 'package:leo_workstation/core/auth/leo_roles.dart';
 import 'package:leo_workstation/core/device/device_class.dart';
 import 'package:leo_workstation/core/router/redirect.dart';
@@ -17,25 +18,41 @@ void main() {
       );
     });
 
-    test('unauthenticated on signup route stays', () {
+    test('unauthenticated with verify metadata redirects to verify-email', () {
       expect(
         authRedirect(
-          const AuthState.unauthenticated(),
+          const AuthState.unauthenticated(
+            emailVerificationPending: VerifyEmailPendingContext(
+              email: 'a@b.com',
+              source: VerifyEmailSource.login,
+            ),
+          ),
           DeviceClass.desktop,
-          '/signup',
+          '/login',
         ),
-        isNull,
+        '/verify-email?email=a%40b.com&source=login&path=personal',
       );
     });
 
-    test('unauthenticated on protected route goes to login', () {
+    test('unauthenticated on verify-email without context goes to login', () {
       expect(
         authRedirect(
           const AuthState.unauthenticated(),
           DeviceClass.desktop,
-          '/idle',
+          '/verify-email',
         ),
         '/login',
+      );
+    });
+
+    test('authenticated on signup redirects to role home', () {
+      expect(
+        authRedirect(
+          const AuthState.authenticated(role: LeoRoles.interpreter),
+          DeviceClass.desktop,
+          '/signup',
+        ),
+        '/idle',
       );
     });
 
@@ -71,17 +88,6 @@ void main() {
         blockedSurfacePath,
       );
     });
-
-    test('platform_admin always routed to web handoff', () {
-      expect(
-        authRedirect(
-          const AuthState.authenticated(role: LeoRoles.platformAdmin),
-          DeviceClass.desktop,
-          '/idle',
-        ),
-        webHandoffPath,
-      );
-    });
   });
 
   group('redirect loop safety (router AC-8)', () {
@@ -97,7 +103,6 @@ void main() {
       '/invite/accept',
       '/mfa',
       '/mfa/enroll',
-      '/web-handoff',
       '/blocked-surface',
       '/idle',
       '/idle/requests',
@@ -114,6 +119,11 @@ void main() {
 
     final states = <AuthState>[
       const AuthState.unauthenticated(),
+      const AuthState.unauthenticated(
+        emailVerificationPending: VerifyEmailPendingContext(
+          email: 'a@b.com',
+        ),
+      ),
       const AuthState.loading(),
       const AuthState.error(message: 'err'),
       const AuthState.mfaRequired(firstLogin: false),
@@ -125,7 +135,6 @@ void main() {
       ),
       const AuthState.authenticated(role: LeoRoles.customerUser),
       const AuthState.authenticated(role: LeoRoles.lspAdmin),
-      const AuthState.authenticated(role: LeoRoles.platformAdmin),
     ];
 
     for (final auth in states) {

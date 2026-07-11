@@ -1,25 +1,24 @@
 import '../../core/auth/leo_roles.dart';
+import '../../core/auth/domain/email_verification.dart';
 import '../../core/device/device_class.dart';
 import '../../features/auth/presentation/routes/auth_routes.dart';
 import '../../features/auth/presentation/state/auth_state.dart';
 import '../../features/onboarding/presentation/routes/onboarding_routes.dart';
+import 'route_guards.dart';
 import 'route_paths.dart';
 
 export 'route_paths.dart';
 
-/// Public routes reachable while signed out.
 const publicRoutes = {
   ...authPublicRoutes,
   ...onboardingPublicRoutes,
 };
 
-/// Auth-transition + public auth screens (error state may stay here).
 const authFlowRoutes = {
   ...publicRoutes,
   ...authTransitionRoutes,
 };
 
-/// Canonical role→home map (INV-CLIENT-ROUTE-2).
 String roleHome(String role) {
   switch (role) {
     case LeoRoles.interpreter:
@@ -30,8 +29,6 @@ String roleHome(String role) {
     case LeoRoles.subAdmin:
     case LeoRoles.lspAdmin:
       return '/dispatch';
-    case LeoRoles.platformAdmin:
-      return webHandoffPath;
     default:
       return '/login';
   }
@@ -53,7 +50,8 @@ bool _isOnboardingPath(String loc) => loc.startsWith('/onboarding');
 
 bool _isCustomerRoute(String loc) => loc == '/call' || loc.startsWith('/call/');
 
-/// Device entitlement backstop (INV-CLIENT-DEVICE-1).
+String _routePath(String loc) => Uri.parse(loc).path;
+
 bool isRouteAllowedForDevice(String loc, String role, DeviceClass device) {
   if (device == DeviceClass.smartphone &&
       (role == LeoRoles.customerUser || role == LeoRoles.customerAdmin) &&
@@ -63,16 +61,49 @@ bool isRouteAllowedForDevice(String loc, String role, DeviceClass device) {
   return true;
 }
 
-/// Pure redirect guard (INV-CLIENT-STATE-1). Returns a path or `null` (stay).
-String? authRedirect(AuthState auth, DeviceClass device, String loc) {
+String? authRedirect(
+  AuthState auth,
+  DeviceClass device,
+  String loc, {
+  Object? extra,
+  Map<String, String> queryParameters = const {},
+}) {
+  final path = _routePath(loc);
   return switch (auth) {
     AuthLoading() => null,
-    AuthUnauthenticated() => publicRoutes.contains(loc) ? null : '/login',
-    AuthError() => authFlowRoutes.contains(loc) ? null : '/login',
-    AuthMfaRequired(:final firstLogin) => _redirectMfa(firstLogin, loc),
+    AuthUnauthenticated(:final emailVerificationPending) =>
+      _redirectUnauthenticated(
+        path,
+        emailVerificationPending: emailVerificationPending,
+        extra: extra,
+        queryParameters: queryParameters,
+      ),
+    AuthError() => authFlowRoutes.contains(path) ? null : '/login',
+    AuthMfaRequired(:final firstLogin) => _redirectMfa(firstLogin, path),
     AuthAuthenticated(:final role, :final onboardingRequired) =>
-      _redirectAuthenticated(role, onboardingRequired, device, loc),
+      _redirectAuthenticated(role, onboardingRequired, device, path),
   };
+}
+
+String? _redirectUnauthenticated(
+  String path, {
+  VerifyEmailPendingContext? emailVerificationPending,
+  Object? extra,
+  Map<String, String> queryParameters = const {},
+}) {
+  final contextGuard = guardPublicRouteContext(
+    path,
+    emailVerificationPending: emailVerificationPending,
+    extra: extra,
+    queryParameters: queryParameters,
+  );
+  if (contextGuard != null) return contextGuard;
+
+  if (emailVerificationPending != null && path != '/verify-email') {
+    return verifyEmailLocation(emailVerificationPending);
+  }
+
+  return publicRoutes.contains(path) ? null : '/login';
 }
 
 String? _redirectMfa(bool firstLogin, String loc) {
@@ -88,12 +119,12 @@ String? _redirectAuthenticated(
 ) {
   final home = roleHome(role);
 
-  if (role == LeoRoles.platformAdmin) {
-    return loc == webHandoffPath ? null : webHandoffPath;
-  }
-
   if (onboardingRequired && !_isOnboardingPath(loc)) {
     return onboardingEntryForRole(role);
+  }
+
+  if (publicRoutes.contains(loc) && !_isOnboardingPath(loc)) {
+    return home;
   }
 
   if (_authScreens.contains(loc)) {
@@ -125,7 +156,6 @@ bool _knownRoute(String loc) {
   if (publicRoutes.contains(loc) ||
       authFlowRoutes.contains(loc) ||
       loc == blockedSurfacePath ||
-      loc == webHandoffPath ||
       _isOnboardingPath(loc)) {
     return true;
   }
@@ -151,16 +181,23 @@ bool _isAllowedDeepRoute(String role, String loc) {
   }
 }
 
-/// Simulates redirect chains for loop-safety tests (router AC-8).
 String resolveRedirectChain(
   AuthState auth,
   DeviceClass device,
   String startLoc, {
+  Object? extra,
+  Map<String, String> queryParameters = const {},
   int maxSteps = 10,
 }) {
   var loc = startLoc;
   for (var i = 0; i < maxSteps; i++) {
-    final next = authRedirect(auth, device, loc);
+    final next = authRedirect(
+      auth,
+      device,
+      loc,
+      extra: extra,
+      queryParameters: queryParameters,
+    );
     if (next == null) return loc;
     if (next == loc) {
       throw StateError('Redirect loop at $loc');

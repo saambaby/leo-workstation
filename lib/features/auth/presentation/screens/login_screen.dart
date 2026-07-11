@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../onboarding/domain/onboarding_entities.dart';
-import '../../../onboarding/l10n/onboarding_strings.dart';
 import '../../l10n/auth_strings.dart';
 import '../notifiers/auth_notifier.dart';
 import '../providers/auth_ui_provider.dart';
@@ -15,11 +13,9 @@ class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({
     super.key,
     this.passwordResetSuccess = false,
-    this.emailVerifiedSuccess = false,
   });
 
   final bool passwordResetSuccess;
-  final bool emailVerifiedSuccess;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -38,20 +34,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    final unverifiedEmail = await ref.read(authNotifierProvider.notifier).login(
+    await ref.read(authNotifierProvider.notifier).login(
           email: _email.text.trim(),
           password: _password.text,
         );
-    if (!mounted) return;
-    if (unverifiedEmail != null) {
-      context.push(
-        '/verify-email',
-        extra: VerifyEmailPendingContext(
-          email: unverifiedEmail,
-          source: VerifyEmailSource.login,
-        ),
-      );
-    }
   }
 
   @override
@@ -68,13 +54,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: CupertinoIcons.checkmark_circle,
             margin: const EdgeInsets.only(bottom: 16),
             child: const Text(AuthStrings.resetSuccessLoginNote),
-          ),
-        if (widget.emailVerifiedSuccess)
-          LeoNote(
-            variant: LeoNoteVariant.info,
-            icon: CupertinoIcons.checkmark_circle,
-            margin: const EdgeInsets.only(bottom: 16),
-            child: const Text(OnboardingStrings.verifiedLoginNote),
           ),
       ],
       child: Column(
