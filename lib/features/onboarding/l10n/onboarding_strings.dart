@@ -15,18 +15,19 @@ abstract final class OnboardingStrings {
   static const customerSubtitle = 'type=customer · books interpreters';
   static const lspTitle = 'LSP';
   static const lspSubtitle = 'type=lsp · provides interpreters';
-  static const lspExternalNote =
-      'LSP signup and onboarding run in Leo Web — opens in your browser.';
+  static const lspInAppNote =
+      'LSP account signup continues in-app — org details, email verify, then MFA enroll.';
   static const lspUrlUnset = 'Web signup URL is not configured for this build.';
   static const resultingPath = 'RESULTING ONBOARDING PATH →';
   static const pathPersonal = 'Personal → interpreter profile';
   static const pathCustomer = 'Customer → org + members';
-  static const pathLsp = 'LSP → languages + pricing (web)';
+  static const pathLsp = 'LSP → dispatch (MFA required)';
   static const backToSignIn = '← Back to sign in';
   static const continueLabel = 'Continue →';
 
   static const detailsSubPersonal = 'Create your interpreter account';
   static const detailsSubCustomer = 'Create your customer organization';
+  static const detailsSubLsp = 'Create your LSP organization';
   static const orgName = 'Organization name';
   static const timezone = 'Timezone';
   static const email = 'Email';
@@ -34,6 +35,8 @@ abstract final class OnboardingStrings {
   static const confirmPassword = 'Confirm password';
   static const acceptTos = 'I accept the Terms of Service';
   static const acceptPrivacy = 'I accept the Privacy Policy';
+  static const acceptBaa =
+      'I acknowledge the Business Associate Agreement (BAA)';
   static const createAccount = 'Create account';
   static const passwordMismatch = 'Passwords do not match';
   static const consentRequired = 'You must accept the terms to continue';

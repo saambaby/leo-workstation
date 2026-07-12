@@ -1,9 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/widgets/auth_screen_layout.dart';
 import '../../domain/onboarding_entities.dart';
@@ -29,33 +27,11 @@ class _SignupTypeScreenState extends ConsumerState<SignupTypeScreen> {
   SignupPath? get _selectedPath {
     if (_top == _TopLevel.personal) return SignupPath.personal;
     if (_business == _BusinessType.customer) return SignupPath.customer;
+    if (_business == _BusinessType.lsp) return SignupPath.lsp;
     return null;
   }
 
-  Future<void> _continue() async {
-    if (_top == _TopLevel.business && _business == _BusinessType.lsp) {
-      final url = ref.read(appConfigProvider).webAdminBaseUrl;
-      if (url.isEmpty) {
-        if (!mounted) return;
-        showCupertinoDialog<void>(
-          context: context,
-          builder: (ctx) => CupertinoAlertDialog(
-            title: const Text(OnboardingStrings.lspUrlUnset),
-            actions: [
-              CupertinoDialogAction(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-        return;
-      }
-      final uri = Uri.parse('$url/signup');
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-      return;
-    }
-
+  void _continue() {
     final path = _selectedPath;
     if (path == null) return;
     context.push('/signup/details', extra: SignupDraft(path: path));
@@ -150,7 +126,7 @@ class _SignupTypeScreenState extends ConsumerState<SignupTypeScreen> {
                   variant: LeoNoteVariant.info,
                   icon: CupertinoIcons.globe,
                   margin: EdgeInsets.only(top: 12),
-                  child: Text(OnboardingStrings.lspExternalNote),
+                  child: Text(OnboardingStrings.lspInAppNote),
                 ),
             ],
             const SizedBox(height: 16),
