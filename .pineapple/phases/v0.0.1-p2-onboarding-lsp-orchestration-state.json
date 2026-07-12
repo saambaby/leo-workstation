@@ -1,0 +1,57 @@
+{
+  "phase": "v0.0.1-p2-onboarding-lsp",
+  "overall_status": "completed",
+  "generated_by": "ledger.py",
+  "generated_at": "2026-07-12T17:49:42.894138+00:00",
+  "tasks": {
+    "LSP-T-01": {
+      "status": "merged",
+      "attempts": 3,
+      "model_tier": "mechanical",
+      "model_id": "composer",
+      "tracker_issue": 31,
+      "commit": "8d607b61384f5cd591afcd5038d49b2b1f33c129",
+      "stalled": false,
+      "budget_exceeded": false,
+      "failure_class": null,
+      "verdicts": [
+        {
+          "result": "skipped",
+          "reason": "mechanical + verify.sh exit 0 + worker Step-7 echo-back (PR #35 opened)"
+        }
+      ],
+      "last_seen": "2026-07-12T17:43:06.069774+00:00"
+    },
+    "LSP-T-02": {
+      "status": "merged",
+      "attempts": 1,
+      "model_tier": "mechanical",
+      "model_id": "composer",
+      "tracker_issue": 32,
+      "commit": "dedf4680ba8d14296adb896555252621b759b468",
+      "stalled": false,
+      "budget_exceeded": false,
+      "failure_class": null,
+      "verdicts": [
+        {
+          "result": "skipped",
+          "reason": "mechanical + verify.sh exit 0 + worker Step-7 echo-back (PR #36)"
+        }
+      ],
+      "last_seen": "2026-07-12T17:47:11.906611+00:00"
+    },
+    "LSP-T-03": {
+      "status": "merged",
+      "attempts": 0,
+      "model_tier": "n/a",
+      "model_id": null,
+      "tracker_issue": 33,
+      "commit": "deferred",
+      "stalled": false,
+      "budget_exceeded": false,
+      "failure_class": null,
+      "verdicts": [],
+      "last_seen": "2026-07-12T17:49:42.829084+00:00"
+    }
+  }
+}
