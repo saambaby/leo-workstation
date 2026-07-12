@@ -11,7 +11,7 @@
 | **auth** | `v0.0.1-alpha.1` (alpha.4 contract) | `features/auth/` presentation + `core/auth/` wire | [`auth.md`](auth.md) ✅ drafted — login/MFA/session/token storage; wire in `core/auth` |
 | **otp-email-verification** | P1 signup/verify (alpha.4+) | `core/auth/` wire · `onboarding/` + `auth/` presentation | [`otp-email-verification.md`](otp-email-verification.md) ✅ drafted — 6-digit OTP verify, resend, login re-entry via `emailVerificationPending` |
 | **onboarding** | P2 `v0.0.1` (signup primitives alpha.4) | `features/onboarding/` (+ `core/auth` for signup/verify wire) | [`onboarding.md`](onboarding.md) ✅ drafted — native signup+verify+onboarding for personal+customer; LSP *onboarding*→leo-web (LSP *signup* delta owned by `lsp-native-signup.md`); self-service from pilot |
-| **lsp-native-signup** | P2 delta (scheduling vs. `v0.0.1-p2-onboarding` unconfirmed) | `features/onboarding/` + `core/auth` | [`lsp-native-signup.md`](lsp-native-signup.md) ✅ drafted — in-app LSP signup→OTP→MFA reusing onboarding/auth screens; admin stays leo-web; no API changes; cross-spec-audit reconciled 2026-07-11 |
+| **lsp-native-signup** | P2 delta ✅ shipped 2026-07-12 (E2E deferred) | `features/onboarding/` + `core/auth` | [`lsp-native-signup.md`](lsp-native-signup.md) ✅ drafted — in-app LSP signup→OTP→MFA; admin stays leo-web |
 | **realtime** | `v0.0.1-alpha.1` | `features/realtime/` | _pending_ |
 | **router** | `v0.0.1-alpha.1` | `core/router/` | [`router.md`](router.md) ✅ drafted — go_router + pure redirect table (auth×device×location), role homes, device gating |
 | **interpreter-workstation** | `v0.0.1` (P2) | `features/idle/`, `features/session/` | _pending_ |
