@@ -27,9 +27,17 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
   var _timezone = OnboardingStrings.timezones.first;
   var _tos = false;
   var _privacy = false;
+  var _baaAck = false;
   String? _localError;
 
   bool get _isCustomer => widget.draft.path == SignupPath.customer;
+  bool get _isLsp => widget.draft.path == SignupPath.lsp;
+  bool get _needsOrgFields => _isCustomer || _isLsp;
+
+  bool get _consentsOk {
+    if (_isLsp) return _tos && _privacy && _baaAck;
+    return _tos && _privacy;
+  }
 
   @override
   void dispose() {
@@ -45,28 +53,38 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
       setState(() => _localError = OnboardingStrings.passwordMismatch);
       return;
     }
-    if (!_tos || !_privacy) {
+    if (!_consentsOk) {
       setState(() => _localError = OnboardingStrings.consentRequired);
       return;
     }
 
     setState(() => _localError = null);
     final notifier = ref.read(signupNotifierProvider.notifier);
-    final ok = _isCustomer
-        ? await notifier.submitCustomer(
+    final ok = _isLsp
+        ? await notifier.submitLsp(
             email: _email.text.trim(),
             password: _password.text,
             orgName: _orgName.text.trim(),
             timezone: _timezone,
             tos: _tos,
             privacy: _privacy,
+            baaAck: _baaAck,
           )
-        : await notifier.submitPersonal(
-            email: _email.text.trim(),
-            password: _password.text,
-            tos: _tos,
-            privacy: _privacy,
-          );
+        : _isCustomer
+            ? await notifier.submitCustomer(
+                email: _email.text.trim(),
+                password: _password.text,
+                orgName: _orgName.text.trim(),
+                timezone: _timezone,
+                tos: _tos,
+                privacy: _privacy,
+              )
+            : await notifier.submitPersonal(
+                email: _email.text.trim(),
+                password: _password.text,
+                tos: _tos,
+                privacy: _privacy,
+              );
     if (!mounted) return;
     if (!ok && ref.read(signupUiProvider).errorMessage == null) {
       context.go('/login');
@@ -77,6 +95,11 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
   Widget build(BuildContext context) {
     final ui = ref.watch(signupUiProvider);
     final error = _localError ?? ui.errorMessage;
+    final subtitle = _isLsp
+        ? OnboardingStrings.detailsSubLsp
+        : _isCustomer
+            ? OnboardingStrings.detailsSubCustomer
+            : OnboardingStrings.detailsSubPersonal;
 
     return AuthStage(
       child: AuthCard(
@@ -85,11 +108,7 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const LeoLogo(),
-            LeoAuthSub(
-              _isCustomer
-                  ? OnboardingStrings.detailsSubCustomer
-                  : OnboardingStrings.detailsSubPersonal,
-            ),
+            LeoAuthSub(subtitle),
             const LeoWizardSteps(
               steps: [
                 WizardStep(label: OnboardingStrings.stepAccountType, done: true),
@@ -101,7 +120,7 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
               AuthErrorBanner(message: error),
               const SizedBox(height: 16),
             ],
-            if (_isCustomer) ...[
+            if (_needsOrgFields) ...[
               LeoTextField(
                 label: OnboardingStrings.orgName,
                 controller: _orgName,
@@ -149,12 +168,21 @@ class _SignupDetailsScreenState extends ConsumerState<SignupDetailsScreen> {
                 onChanged: (v) => setState(() => _privacy = v),
               ),
             ),
+            if (_isLsp)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: LeoCheckbox(
+                  label: OnboardingStrings.acceptBaa,
+                  value: _baaAck,
+                  onChanged: (v) => setState(() => _baaAck = v),
+                ),
+              ),
             const SizedBox(height: 16),
             LeoButton(
               label: OnboardingStrings.createAccount,
               fullWidth: true,
               enabled: !ui.isLoading,
-              onPressed: _submit,
+              onPressed: (_consentsOk && !ui.isLoading) ? _submit : null,
             ),
             Center(
               child: Padding(

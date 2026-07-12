@@ -65,6 +65,30 @@ class SignupNotifier extends Notifier<SignupState> {
     );
   }
 
+  Future<bool> submitLsp({
+    required String email,
+    required String password,
+    required String orgName,
+    required String timezone,
+    required bool tos,
+    required bool privacy,
+    required bool baaAck,
+  }) async {
+    return _submit(
+      () => _repo.signupLsp(
+        email: email,
+        password: password,
+        orgName: orgName,
+        timezone: timezone,
+        tos: tos,
+        privacy: privacy,
+        baaAck: baaAck,
+      ),
+      email,
+      SignupPath.lsp,
+    );
+  }
+
   Future<bool> _submit(
     Future<SignupResult> Function() call,
     String email,
