@@ -22,7 +22,7 @@ Cross-spec audit: [`cross-spec-audit.md`](../cross-spec-audit.md) ✅ PASS (2026
 | P1 | `v0.0.1-alpha.1` | ✅ shipped (core-shell, auth, router) | [`v0.0.1-alpha.1.md`](v0.0.1-alpha.1.md) · taskgraph: [`v0.0.1-alpha.1-taskgraph.md`](v0.0.1-alpha.1-taskgraph.md) (revised 2026-07-11) |
 | P1 (auth correction) | `v0.0.1-alpha.1-auth-live` | ✅ shipped | [`v0.0.1-alpha.1-auth-live-taskgraph.md`](v0.0.1-alpha.1-auth-live-taskgraph.md) |
 | P2 (onboarding) | `v0.0.1-p2-onboarding` | **running** — orchestrated 2026-07-11 ([#23](https://github.com/saambaby/leo-workstation/issues/23)) | [`v0.0.1-p2-onboarding.md`](v0.0.1-p2-onboarding.md) · taskgraph: [`v0.0.1-p2-onboarding-taskgraph.md`](v0.0.1-p2-onboarding-taskgraph.md) |
-| P2 delta (LSP signup) | `v0.0.1-p2-onboarding-lsp` | **taskgraph approved** (Gate 1, 2026-07-11) — not yet orchestrated; fold-in vs. separate-pass timing vs. the row above is still an open founder call | [`v0.0.1-p2-onboarding-lsp.md`](v0.0.1-p2-onboarding-lsp.md) · taskgraph: [`v0.0.1-p2-onboarding-lsp-taskgraph.md`](v0.0.1-p2-onboarding-lsp-taskgraph.md) |
+| P2 delta (LSP signup) | `v0.0.1-p2-onboarding-lsp` | ✅ complete (2026-07-12) — T-01/02 merged; T-03 E2E deferred | [`v0.0.1-p2-onboarding-lsp.md`](v0.0.1-p2-onboarding-lsp.md) · taskgraph: [`v0.0.1-p2-onboarding-lsp-taskgraph.md`](v0.0.1-p2-onboarding-lsp-taskgraph.md) |
 | — | `v0.0.1-alpha.2/3` | n/a (no client release) | release-plan |
 | — | `v0.0.1-alpha.4` | folded into P1 auth contract (picker cut) | `features/auth.md` |
 | — | `v0.0.1-alpha.5` | minimal pre-P2 (`platform_admin`, affiliations if needed) | release-plan |

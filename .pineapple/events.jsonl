@@ -1,0 +1,61 @@
+{"ts":"2026-07-11T19:20:14.755347+00:00","kind":"run_started","phase":"v0.0.1-p2-onboarding-lsp","tasks":3,"max_concurrent":2}
+{"ts":"2026-07-11T19:20:36.411054+00:00","kind":"task_dispatched","task_id":"LSP-T-01","phase":"v0.0.1-p2-onboarding-lsp","issue":31,"branch":"pin-31/signup-lsp-wire","model_tier":"mechanical","wave":1}
+{"ts":"2026-07-11T19:20:50.597928+00:00","kind":"task_dispatched","task_id":"LSP-T-01","phase":"v0.0.1-p2-onboarding-lsp","issue":31,"worktree":"pin-31-signup-lsp-wire","branch":"pin-31/signup-lsp-wire","model_tier":"mechanical","wave":1,"note":"re-dispatch after invalid worktree name"}
+{"ts":"2026-07-11T19:21:33.796675+00:00","kind":"task_dispatched","task_id":"LSP-T-01","phase":"v0.0.1-p2-onboarding-lsp","issue":31,"worktree":"pin-31-signup-lsp-wire","branch":"pin-31/signup-lsp-wire","model_tier":"mechanical","wave":1,"note":"re-dispatch on existing worktree workspace"}
+{"ts":"2026-07-11T19:21:57.082762+00:00","kind":"task_claimed","task_id":"LSP-T-01","model_id":"composer","lease_ttl_min":35,"budget_max_min":35}
+{"ts":"2026-07-11T19:22:59.346738+00:00","kind":"task_done","task_id":"LSP-T-01","pr":"https://github.com/saambaby/leo-workstation/pull/35","verify_exit":0}
+{"ts":"2026-07-11T19:23:09.929513+00:00","kind":"context_update","task_id":"LSP-T-01","surfaces":[".claude/context/sessions/LSP-T-01.md"],"skipped":[".pineapple/state.md",".pineapple/code-map.md"]}
+{"ts":"2026-07-11T19:23:33.097952+00:00","kind":"reviewer_skipped","task_id":"LSP-T-01","phase":"v0.0.1-p2-onboarding-lsp","reason":"mechanical + verify.sh exit 0 + worker Step-7 echo-back (PR #35 opened)","pr":35,"verify_rc":0}
+{"ts":"2026-07-11T19:23:33.149731+00:00","kind":"task_awaiting_human_merge","task_id":"LSP-T-01","phase":"v0.0.1-p2-onboarding-lsp","pr":35,"url":"https://github.com/saambaby/leo-workstation/pull/35","policy":"merge_requires_human_approval"}
+{"ts":"2026-07-12T17:43:06.069774+00:00","kind":"merge","task_id":"LSP-T-01","phase":"v0.0.1-p2-onboarding-lsp","commit":"8d607b61384f5cd591afcd5038d49b2b1f33c129","pr":35}
+{"ts":"2026-07-12T17:43:11.594870+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"wire.SignupPath.lsp","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:11.647985+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"wire.verifyEmailLocation.path-lsp","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:11.700545+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.SignupLspRequestDto","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:11.753118+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.SignupLspRequestDto.business_type_lsp","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:11.806045+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.ConsentDto.baa_ack","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:11.860264+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:11.914167+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp.uses_SignupLspRequestDto","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:11.967023+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp.posts_baaAck","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:12.018368+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"route.verify-email.path-lsp","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:12.072342+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.wave2-deferred","result":"pass","detail":"(submitLsp not present yet)"}
+{"ts":"2026-07-12T17:43:12.124516+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"env.none-declared","result":"pass","detail":""}
+{"ts":"2026-07-12T17:43:30.777070+00:00","kind":"task_dispatched","task_id":"LSP-T-02","phase":"v0.0.1-p2-onboarding-lsp","issue":32,"worktree":"pin-32-lsp-signup-ui","branch":"pin-32/lsp-signup-ui","model_tier":"mechanical","wave":2}
+{"ts":"2026-07-12T17:43:55.080206+00:00","kind":"task_claimed","task_id":"LSP-T-02","model_id":"composer","lease_ttl_min":30,"budget_max_min":45}
+{"ts":"2026-07-12T17:45:19.474535+00:00","kind":"task_done","task_id":"LSP-T-02","pr":true}
+{"ts":"2026-07-12T17:45:19.534085+00:00","kind":"context_update","task_id":"LSP-T-02"}
+{"ts":"2026-07-12T17:45:43.980226+00:00","kind":"reviewer_skipped","task_id":"LSP-T-02","phase":"v0.0.1-p2-onboarding-lsp","reason":"mechanical + verify.sh exit 0 + worker Step-7 echo-back (PR #36)","pr":36,"verify_rc":0}
+{"ts":"2026-07-12T17:45:44.036909+00:00","kind":"task_awaiting_human_merge","task_id":"LSP-T-02","phase":"v0.0.1-p2-onboarding-lsp","pr":36,"url":"https://github.com/saambaby/leo-workstation/pull/36","policy":"merge_requires_human_approval"}
+{"ts":"2026-07-12T17:47:02.264908+00:00","kind":"run_started","phase":"v0.0.1-p2-onboarding-lsp","tasks":3,"max_concurrent":2}
+{"ts":"2026-07-12T17:47:11.906611+00:00","kind":"merge","task_id":"LSP-T-02","phase":"v0.0.1-p2-onboarding-lsp","commit":"dedf4680ba8d14296adb896555252621b759b468","pr":36}
+{"ts":"2026-07-12T17:47:17.390287+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"wire.SignupPath.lsp","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.443848+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"wire.verifyEmailLocation.path-lsp","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.498574+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.SignupLspRequestDto","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.551439+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.SignupLspRequestDto.business_type_lsp","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.604581+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.ConsentDto.baa_ack","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.659653+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.713333+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp.uses_SignupLspRequestDto","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.767080+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp.posts_baaAck","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.819841+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"route.verify-email.path-lsp","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.872463+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.submitLsp","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.927142+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.type-screen.no-launchUrl","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:17.980468+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.details.baaAck","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:18.030240+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.strings.acceptBaa","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:18.082479+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"env.none-declared","result":"pass","detail":"","wave":2}
+{"ts":"2026-07-12T17:47:19.273718+00:00","kind":"task_parked","task_id":"LSP-T-03","phase":"v0.0.1-p2-onboarding-lsp","reason":"model_tier n/a + verification manual \u2014 human E2E smoke","issue":33,"label":"needs-human-verification"}
+{"ts":"2026-07-12T17:49:03.799171+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"wire.SignupPath.lsp","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:03.853479+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"wire.verifyEmailLocation.path-lsp","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:03.908515+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.SignupLspRequestDto","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:03.961319+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.SignupLspRequestDto.business_type_lsp","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.015920+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"dto.ConsentDto.baa_ack","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.068751+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.121411+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp.uses_SignupLspRequestDto","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.176064+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"repo.signupLsp.posts_baaAck","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.231147+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"route.verify-email.path-lsp","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.286611+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.submitLsp","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.339040+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.type-screen.no-launchUrl","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.396694+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.details.baaAck","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.455990+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"ui.strings.acceptBaa","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.512488+00:00","kind":"assembly_check","phase":"v0.0.1-p2-onboarding-lsp","field":"env.none-declared","result":"pass","detail":"","wave":"final"}
+{"ts":"2026-07-12T17:49:04.566332+00:00","kind":"task_deferred","task_id":"LSP-T-03","phase":"v0.0.1-p2-onboarding-lsp","reason":"human requested skip of manual E2E smoke (S1-S7); code path LSP-T-01/02 merged and assembly green","issue":33}
+{"ts":"2026-07-12T17:49:28.206634+00:00","kind":"phase_completed","phase":"v0.0.1-p2-onboarding-lsp","deferred":["LSP-T-03"],"merged":["LSP-T-01","LSP-T-02"],"assembly":"pass"}
+{"ts":"2026-07-12T17:49:42.829084+00:00","kind":"merge","task_id":"LSP-T-03","phase":"v0.0.1-p2-onboarding-lsp","commit":"deferred","note":"operator skip of manual E2E; no code commit","issue":33}

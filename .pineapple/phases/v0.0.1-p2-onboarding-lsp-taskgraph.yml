@@ -3,8 +3,9 @@ kind: TaskGraph
 metadata:
   project: leo-workstation
   phase: v0.0.1-p2-onboarding-lsp
-  status: approved
+  status: completed
   created: 2026-07-11
+  completed: 2026-07-12
 
 integration_contract:
   owner_task: LSP-T-01
