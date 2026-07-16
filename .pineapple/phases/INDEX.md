@@ -39,5 +39,7 @@ targets integration + E2E smoke. **realtime** still deferred. Full P2 MVP
 
 ## Pineapple adoption note
 
-Next: `/pineapple:orchestrate v0.0.1-p2-onboarding` (after reviewing
-[`cross-spec-audit.md`](../cross-spec-audit.md)).
+LSP signup delta (`v0.0.1-p2-onboarding-lsp`) ✅ closed 2026-07-12.
+Parent onboarding phase (`v0.0.1-p2-onboarding`) still has manual E2E [#28](https://github.com/saambaby/leo-workstation/issues/28).
+Next product loop: feature-spec `realtime` (then session/call/dispatch) — see
+[`features/INDEX.md`](../features/INDEX.md).

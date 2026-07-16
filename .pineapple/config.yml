@@ -57,3 +57,11 @@ coordinator_policy:
   # `origin/main` (fetch + compare); push local `main` first if it's ahead, or a
   # PR's diff will silently include whatever local-only commits sit underneath.
   verify_main_synced_before_branching: true
+  # FM-PROCESS-3: Cursor `--worktree` names cannot contain `/`. Sanitize
+  # `branch_format` (replace `/` with `-`) for the worktree folder; keep the
+  # slash form only as the git branch / PR head inside the worker prompt.
+  cursor_worktree_name_sanitize_slashes: true
+  # FM-PROCESS-4: after cursor-agent spawn, require liveness within ~30s
+  # (process alive OR non-trivial stdout OR commits ahead of base); else
+  # re-dispatch with `--workspace <existing-worktree>` + `--output-format text`.
+  cursor_agent_require_liveness_check: true
